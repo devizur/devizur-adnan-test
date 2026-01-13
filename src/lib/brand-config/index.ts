@@ -5,6 +5,7 @@ export interface BrandConfig {
     primary: string;
     secondary: string;
     accent: string;
+    background: string;
     radius: string;
   };
   content: {

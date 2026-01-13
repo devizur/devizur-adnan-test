@@ -40,6 +40,7 @@ export default function RootLayout({
       "--primary": config.theme.primary,
       "--secondary": config.theme.secondary,
       "--accent": config.theme.accent,
+      "--background": config.theme.background,
       "--radius": config.theme.radius,
     }}>
       <body

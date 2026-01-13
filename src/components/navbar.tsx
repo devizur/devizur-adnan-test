@@ -1,8 +1,14 @@
+"use client";
+
 import { getBrandConfig } from "@/lib/brand-config";
 import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
 
 export function Navbar() {
     const config = getBrandConfig();
+    const pathname = usePathname();
+
+    if (pathname === "/brands") return null;
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

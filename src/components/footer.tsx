@@ -1,8 +1,13 @@
+"use client";
 import { getBrandConfig } from "@/lib/brand-config";
 import { Separator } from "@/components/ui/separator";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
     const config = getBrandConfig();
+    const pathname = usePathname();
+
+    if (pathname === "/brands") return null;
 
     return (
         <footer className="w-full border-t bg-muted/30">
@@ -16,7 +21,7 @@ export function Footer() {
                             <span className="text-lg font-bold">{config.name}</span>
                         </div>
                         <p className="text-sm text-muted-foreground max-w-xs">
-                            {config.content.heroSubtitle}
+                            {config.content.home.heroSubtitle}
                         </p>
                     </div>
 

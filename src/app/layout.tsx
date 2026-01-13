@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { BrandGuard } from "@/components/brand-guard";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const brandKey = process.env.NEXT_PUBLIC_BRAND;
   const config = getBrandConfig();
 
   return (
@@ -43,6 +45,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
+        <BrandGuard currentBrand={brandKey} />
         <Navbar />
         <main className="flex-1">
           {children}

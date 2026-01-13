@@ -1,0 +1,33 @@
+{
+    "name": "Luxe Dining",
+    "logo": "/logos/luxe-dining.svg",
+    "theme": {
+        "primary": "oklch(0.6 0.15 250)",
+        "secondary": "oklch(0.9 0.05 250)",
+        "accent": "oklch(0.7 0.2 300)",
+        "radius": "0.5rem"
+    },
+    "content": {
+        "heroTitle": "Luxe Dining: Elegance on a Plate",
+        "heroSubtitle": "Experience fine dining at its peak with our curated gourmet selections.",
+        "footerText": "© 2026 Luxe Dining Group. All rights reserved."
+    },
+    "navItems": [
+        {
+            "label": "Home",
+            "href": "/"
+        },
+        {
+            "label": "Services",
+            "href": "/services"
+        },
+        {
+            "label": "Menu",
+            "href": "/menu"
+        },
+        {
+            "label": "Contact",
+            "href": "/contact"
+        }
+    ]
+}

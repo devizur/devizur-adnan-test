@@ -1,0 +1,36 @@
+import { getBrandConfig } from "@/lib/brand-config";
+import { Button } from "@/components/ui/button";
+
+export function Navbar() {
+    const config = getBrandConfig();
+
+    return (
+        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center justify-between px-4 md:px-8 mx-auto">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 flex items-center justify-center rounded bg-primary text-primary-foreground font-bold">
+                        {config.name.charAt(0)}
+                    </div>
+                    <span className="text-xl font-bold tracking-tight">{config.name}</span>
+                </div>
+
+                <div className="hidden md:flex items-center gap-6">
+                    {config.navItems.map((item) => (
+                        <a
+                            key={item.href}
+                            href={item.href}
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                        >
+                            {item.label}
+                        </a>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" className="hidden sm:inline-flex">Login</Button>
+                    <Button size="sm">Book Now</Button>
+                </div>
+            </div>
+        </nav>
+    );
+}

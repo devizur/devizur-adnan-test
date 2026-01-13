@@ -8,8 +8,89 @@
         "radius": "0.5rem"
     },
     "content": {
-        "heroTitle": "Luxe Dining: Elegance on a Plate",
-        "heroSubtitle": "Experience fine dining at its peak with our curated gourmet selections.",
+        "home": {
+            "heroTitle": "Luxe Dining: Elegance on a Plate",
+            "heroSubtitle": "Experience fine dining at its peak with our curated gourmet selections.",
+            "features": [
+                {
+                    "title": "Elegant Ambience",
+                    "description": "Atmosphere designed for sophistication and comfort.",
+                    "colorType": "accent"
+                },
+                {
+                    "title": "Master Chefs",
+                    "description": "Our kitchen is led by award-winning culinary artists.",
+                    "colorType": "primary"
+                },
+                {
+                    "title": "Fresh Ingredients",
+                    "description": "We source the finest local and international produce.",
+                    "colorType": "secondary"
+                }
+            ]
+        },
+        "services": {
+            "title": "Bespoke Dining Services",
+            "items": [
+                {
+                    "title": "Fine Dining",
+                    "description": "A classic seated dinner experience with silver service."
+                },
+                {
+                    "title": "Wine Tasting",
+                    "description": "Guided tours through our world-class wine selection."
+                },
+                {
+                    "title": "Corporate Events",
+                    "description": "Professional catering and spaces for business needs."
+                }
+            ]
+        },
+        "menu": {
+            "title": "Seasonal Gourmet Menu",
+            "subtitle": "Discover the flavors of the season through our chef's eyes.",
+            "categories": [
+                {
+                    "name": "Starters",
+                    "items": [
+                        {
+                            "name": "Oysters Rockefeller",
+                            "description": "Baked oysters with spinach, herbs, and breadcrumbs.",
+                            "price": "$24"
+                        },
+                        {
+                            "name": "Foie Gras",
+                            "description": "Seared foie gras with fig compote on brioche.",
+                            "price": "$28"
+                        }
+                    ]
+                },
+                {
+                    "name": "Mains",
+                    "items": [
+                        {
+                            "name": "Rack of Lamb",
+                            "description": "Herb-crusted lamb with mint jus and pea purée.",
+                            "price": "$45"
+                        },
+                        {
+                            "name": "Duck L'Orange",
+                            "description": "Crispy duck breast with classic orange reduction.",
+                            "price": "$38"
+                        }
+                    ]
+                }
+            ]
+        },
+        "contact": {
+            "title": "Get in Touch",
+            "subtitle": "We are here to provide you with the best service.",
+            "location": "789 Elite Blvd, Sky Tower, New York",
+            "hours": {
+                "week": "11am - 10pm",
+                "weekend": "10am - 11pm"
+            }
+        },
         "footerText": "© 2026 Luxe Dining Group. All rights reserved."
     },
     "navItems": [

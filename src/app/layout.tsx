@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { getBrandConfig } from "@/lib/brand-config";
-import { BrandThemeProvider } from "@/components/brand-theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
   return {
     title: config.name,
-    description: config.content.heroSubtitle,
+    description: config.content.home.heroSubtitle,
   };
 }
 

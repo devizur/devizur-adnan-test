@@ -8,8 +8,29 @@ export interface BrandConfig {
     radius: string;
   };
   content: {
-    heroTitle: string;
-    heroSubtitle: string;
+    home: {
+      heroTitle: string;
+      heroSubtitle: string;
+      features: Array<{ title: string; description: string; colorType: "accent" | "primary" | "secondary" }>;
+    };
+    services: {
+      title: string;
+      items: Array<{ title: string; description: string }>;
+    };
+    menu: {
+      title: string;
+      subtitle: string;
+      categories: Array<{
+        name: string;
+        items: Array<{ name: string; description: string; price: string }>;
+      }>;
+    };
+    contact: {
+      title: string;
+      subtitle: string;
+      location: string;
+      hours: { week: string; weekend: string };
+    };
     footerText: string;
   };
   navItems: Array<{

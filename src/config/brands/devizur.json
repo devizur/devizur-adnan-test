@@ -8,8 +8,89 @@
         "radius": "1rem"
     },
     "content": {
-        "heroTitle": "Devizur: Fine Dining Excellence",
-        "heroSubtitle": "Savor the artistry of flavored cuisine crafted by master chefs.",
+        "home": {
+            "heroTitle": "Devizur: Fine Dining Excellence",
+            "heroSubtitle": "Savor the artistry of flavored cuisine crafted by master chefs.",
+            "features": [
+                {
+                    "title": "Gourmet Experience",
+                    "description": "Expertly crafted dishes using premium ingredients.",
+                    "colorType": "accent"
+                },
+                {
+                    "title": "Prime Location",
+                    "description": "Located in the heart of the city's culinary district.",
+                    "colorType": "primary"
+                },
+                {
+                    "title": "Exclusive Wine Cellar",
+                    "description": "A curated collection of the world's finest vintages.",
+                    "colorType": "secondary"
+                }
+            ]
+        },
+        "services": {
+            "title": "Exclusive Culinary Services",
+            "items": [
+                {
+                    "title": "Private Dining",
+                    "description": "Host your intimate events in our luxury private suites."
+                },
+                {
+                    "title": "Wedding Catering",
+                    "description": "Premium catering services for your special day."
+                },
+                {
+                    "title": "Chef's Table",
+                    "description": "A personalized multi-course journey with our head chef."
+                }
+            ]
+        },
+        "menu": {
+            "title": "The Masterwork Menu",
+            "subtitle": "Seasonal excellence refined for the sophisticated palate.",
+            "categories": [
+                {
+                    "name": "Appetizers",
+                    "items": [
+                        {
+                            "name": "Lobster Bisque",
+                            "description": "Rich velvet cream with cognac and fresh lobster.",
+                            "price": "$18"
+                        },
+                        {
+                            "name": "Truffle Tartare",
+                            "description": "Prime beef with aged truffle and egg yolk.",
+                            "price": "$22"
+                        }
+                    ]
+                },
+                {
+                    "name": "Entrées",
+                    "items": [
+                        {
+                            "name": "Miso Glazed Sea Bass",
+                            "description": "Wild-caught sea bass with ginger-infused rice.",
+                            "price": "$42"
+                        },
+                        {
+                            "name": "Filet Mignon",
+                            "description": "8oz grass-fed beef with red wine reduction.",
+                            "price": "$48"
+                        }
+                    ]
+                }
+            ]
+        },
+        "contact": {
+            "title": "Reserve Your Experience",
+            "subtitle": "Join us at Devizur for an unforgettable evening.",
+            "location": "456 Artisan Way, Gourmet Plaza, NYC",
+            "hours": {
+                "week": "5pm - 11pm",
+                "weekend": "4pm - Midnight"
+            }
+        },
         "footerText": "© 2026 Devizur Culinary Group."
     },
     "navItems": [

@@ -8,8 +8,89 @@
         "radius": "0.3rem"
     },
     "content": {
-        "heroTitle": "Urban Bite: Fast. Fresh. Tasty.",
-        "heroSubtitle": "Street food evolved. Get the best bites in the heart of the city.",
+        "home": {
+            "heroTitle": "Urban Bite: Fast. Fresh. Tasty.",
+            "heroSubtitle": "Street food evolved. Get the best bites in the heart of the city.",
+            "features": [
+                {
+                    "title": "Street Flavors",
+                    "description": "Authentic city tastes with a modern culinary twist.",
+                    "colorType": "accent"
+                },
+                {
+                    "title": "Fast & Fresh",
+                    "description": "Speedy service without compromising on quality.",
+                    "colorType": "primary"
+                },
+                {
+                    "title": "Urban Aesthetic",
+                    "description": "Dine in a space designed for the modern city dweller.",
+                    "colorType": "secondary"
+                }
+            ]
+        },
+        "services": {
+            "title": "Urban Comfort Services",
+            "items": [
+                {
+                    "title": "Quick Grab",
+                    "description": "Perfect for the busy urban professional on the move."
+                },
+                {
+                    "title": "Late Night",
+                    "description": "We stay open late to satisfy your midnight cravings."
+                },
+                {
+                    "title": "Event Boxes",
+                    "description": "Catering boxes designed for casual office gatherings."
+                }
+            ]
+        },
+        "menu": {
+            "title": "Street Eats Menu",
+            "subtitle": "Bold, fast, and satisfying favorites.",
+            "categories": [
+                {
+                    "name": "Quick Bites",
+                    "items": [
+                        {
+                            "name": "Loaded Street Fries",
+                            "description": "Hand-cut fries with brisket, cheese, and jalapeños.",
+                            "price": "$12"
+                        },
+                        {
+                            "name": "Bao Buns",
+                            "description": "Pork belly or spicy tofu with pickled slaw.",
+                            "price": "$14"
+                        }
+                    ]
+                },
+                {
+                    "name": "Hearty Bowls",
+                    "items": [
+                        {
+                            "name": "Spicy Poke Bowl",
+                            "description": "Tuna or salmon with avocado and sriracha mayo.",
+                            "price": "$18"
+                        },
+                        {
+                            "name": "Urban Ramen",
+                            "description": "12-hour broth with slow-cooked pork and egg.",
+                            "price": "$16"
+                        }
+                    ]
+                }
+            ]
+        },
+        "contact": {
+            "title": "Stop By Urban Bite",
+            "subtitle": "No reservations needed, just bring your appetite.",
+            "location": "12 Subway Path, Central Station, New York",
+            "hours": {
+                "week": "8am - Midnight",
+                "weekend": "10am - 2am"
+            }
+        },
         "footerText": "© 2026 Urban Bite Street Food."
     },
     "navItems": [

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const config = getBrandConfig();
+  const { home } = config.content;
 
   return (
     <div className="flex flex-col items-center justify-center p-8 md:p-24">
@@ -12,44 +13,32 @@ export default function Home() {
         </div>
 
         <h1 className="text-4xl font-extrabold tracking-tight lg:text-7xl">
-          {config.content.heroTitle}
+          {home.heroTitle}
         </h1>
 
         <p className="text-xl text-muted-foreground max-w-[700px] leading-relaxed">
-          {config.content.heroSubtitle}
+          {home.heroSubtitle}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button size="lg" className="px-8 py-6 text-lg rounded-[var(--radius)]">
-            Book Your Stay
+            Book Now
           </Button>
           <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-[var(--radius)]">
-            View Gallery
+            View Menu
           </Button>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-          <div className="p-6 border rounded-[var(--radius)] bg-card text-left space-y-2">
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mb-4">
-              <div className="w-4 h-4 bg-accent rounded-full" />
+          {home.features.map((feature, index) => (
+            <div key={index} className="p-6 border rounded-[var(--radius)] bg-card text-left space-y-2">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 bg-${feature.colorType}/20`}>
+                <div className={`w-4 h-4 rounded-full bg-${feature.colorType}`} />
+              </div>
+              <h3 className="font-bold">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
             </div>
-            <h3 className="font-bold">Premium Suites</h3>
-            <p className="text-sm text-muted-foreground">Handpicked luxury for your comfort and style.</p>
-          </div>
-          <div className="p-6 border rounded-[var(--radius)] bg-card text-left space-y-2">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-              <div className="w-4 h-4 bg-primary rounded-full" />
-            </div>
-            <h3 className="font-bold">Central Location</h3>
-            <p className="text-sm text-muted-foreground">Right in the heart of everything you love.</p>
-          </div>
-          <div className="p-6 border rounded-[var(--radius)] bg-card text-left space-y-2">
-            <div className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center mb-4">
-              <div className="w-4 h-4 bg-secondary-foreground rounded-full" />
-            </div>
-            <h3 className="font-bold">World-class Service</h3>
-            <p className="text-sm text-muted-foreground">Dedicated team available 24/7 for your needs.</p>
-          </div>
+          ))}
         </div>
 
         <div className="mt-20 p-8 border rounded-[var(--radius)] bg-primary/5 w-full text-left">

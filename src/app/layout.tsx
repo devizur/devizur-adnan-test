@@ -51,9 +51,12 @@ export default function RootLayout({
   return (
     <html lang="en" style={{
       // @ts-ignore
-      "--primary": config.theme.primary,
-      "--secondary": config.theme.secondary,
-      "--accent": config.theme.accent,
+      "--primary": config.theme["primary-1"],
+      "--primary-2": config.theme["primary-2"],
+      "--secondary": config.theme["secondary-1"],
+      "--secondary-2": config.theme["secondary-2"],
+      "--accent": config.theme["secondary-3"],
+      "--text-primary-color": config.theme["text-primary-color"],
       "--background": config.theme.background,
       "--radius": config.theme.radius,
       "--brand-font": activeFontFamily,

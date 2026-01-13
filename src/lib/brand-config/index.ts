@@ -2,12 +2,15 @@ export interface BrandConfig {
   name: string;
   logo: string;
   theme: {
-    primary: string;
-    secondary: string;
-    accent: string;
+    "primary-1": string;
+    "primary-2": string;
+    "secondary-1": string;
+    "secondary-2": string;
+    "secondary-3": string;
+    "text-primary-color": string;
     background: string;
     fontFamily: string;
-    fontUrl?: string; // Optional URL for external font imports
+    fontUrl?: string;
     radius: string;
   };
   content: {

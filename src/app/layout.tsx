@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope, Inter } from "next/font/google";
 import "./globals.css";
 
 import { getBrandConfig } from "@/lib/brand-config";
@@ -11,6 +11,16 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -34,6 +44,10 @@ export default function RootLayout({
   const brandKey = process.env.NEXT_PUBLIC_BRAND;
   const config = getBrandConfig();
 
+  // Determine font-family variable. 
+  // We use the exact name from config to support external fonts.
+  const activeFontFamily = config.theme.fontFamily ? `'${config.theme.fontFamily}', sans-serif` : "var(--font-geist-sans)";
+
   return (
     <html lang="en" style={{
       // @ts-ignore
@@ -42,9 +56,15 @@ export default function RootLayout({
       "--accent": config.theme.accent,
       "--background": config.theme.background,
       "--radius": config.theme.radius,
+      "--brand-font": activeFontFamily,
     }}>
+      <head>
+        {config.theme.fontUrl && (
+          <link rel="stylesheet" href={config.theme.fontUrl} />
+        )}
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${inter.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
         <BrandGuard currentBrand={brandKey} />
         <Navbar />

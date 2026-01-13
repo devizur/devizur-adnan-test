@@ -2,10 +2,12 @@
     "name": "Devizur",
     "logo": "/logos/devizur.svg",
     "theme": {
-        "primary": "oklch(0.6 0.2 30)",
+        "primary": "#FFFF00",
         "secondary": "oklch(0.9 0.05 30)",
         "accent": "oklch(0.7 0.15 45)",
-        "background": "oklch(0.98 0.01 30)",
+        "background": "#171717",
+        "fontFamily": "Manrope",
+        "fontUrl": "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap",
         "radius": "1rem"
     },
     "content": {

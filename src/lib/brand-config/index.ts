@@ -6,6 +6,8 @@ export interface BrandConfig {
     secondary: string;
     accent: string;
     background: string;
+    fontFamily: string;
+    fontUrl?: string; // Optional URL for external font imports
     radius: string;
   };
   content: {

@@ -6,6 +6,8 @@
         "secondary": "oklch(0.95 0.02 140)",
         "accent": "oklch(0.7 0.1 160)",
         "background": "oklch(0.99 0.01 140)",
+        "fontFamily": "Shadows Into Light",
+        "fontUrl": "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap",
         "radius": "0.3rem"
     },
     "content": {

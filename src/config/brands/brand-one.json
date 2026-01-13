@@ -6,6 +6,8 @@
         "secondary": "oklch(0.9 0.05 250)",
         "accent": "oklch(0.7 0.2 300)",
         "background": "oklch(0.98 0.01 250)",
+        "fontFamily": "Oswald",
+        "fontUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap",
         "radius": "0.5rem"
     },
     "content": {

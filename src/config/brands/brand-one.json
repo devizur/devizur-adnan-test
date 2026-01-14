@@ -97,7 +97,9 @@
                 "weekend": "10am - 11pm"
             }
         },
-        "footerText": "© 2026 Luxe Dining Group. All rights reserved."
+        "footer": {
+            "footerText": "© 2026 Luxe Dining Group. All rights reserved."
+        }
     },
     "navItems": [
         {

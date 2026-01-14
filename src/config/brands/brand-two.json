@@ -97,7 +97,9 @@
                 "weekend": "10am - 2am"
             }
         },
-        "footerText": "© 2026 Urban Bite Street Food."
+        "footer": {
+            "footerText": "© 2026 Urban Bite Street Food."
+        }
     },
     "navItems": [
         {

@@ -1,7 +1,8 @@
-import { HomeConfig } from "../../app/homeContentConfig";
-import { ServicesConfig } from "../../app/services/servicesContentConfig";
-import { MenuConfig } from "../../app/menu/menuContentConfig";
-import { ContactConfig } from "../../app/contact/contactContentConfig";
+import { HomeConfig } from "../../app/home-content-config";
+import { ServicesConfig } from "../../app/services/services-content-config";
+import { MenuConfig } from "../../app/menu/menu-content-config";
+import { ContactConfig } from "../../app/contact/contact-content-config";
+import { FooterConfig } from "../../app/footer-content-config";
 
 export interface BrandConfig {
   name: string;
@@ -23,7 +24,7 @@ export interface BrandConfig {
     services: ServicesConfig;
     menu: MenuConfig;
     contact: ContactConfig;
-    footerText: string;
+    footer: FooterConfig;
   };
   navItems: Array<{
     label: string;

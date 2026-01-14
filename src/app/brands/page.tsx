@@ -28,7 +28,7 @@ export default function BrandsPage() {
                                 className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-2xl font-bold shadow-inner"
                                 style={{
                                     backgroundColor: config.theme["primary-1"],
-                                    color: config.theme["text-primary-color"]
+                                    color: config.theme["primary"]
                                 }}
                             >
                                 {config.name.charAt(0)}

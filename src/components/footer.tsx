@@ -15,10 +15,10 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 flex items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold">
+                            <div className="w-6 h-6 flex items-center justify-center rounded bg-primary-1 text-primary text-xs font-bold">
                                 {config.name.charAt(0)}
                             </div>
-                            <span className="text-lg font-bold">{config.name}</span>
+                            <span className="text-lg font-bold text-primary">{config.name}</span>
                         </div>
                         <p className="text-sm text-muted-foreground max-w-xs">
                             {config.content.home.heroSubtitle}
@@ -28,9 +28,9 @@ export function Footer() {
                     <div className="space-y-4">
                         <h4 className="text-sm font-semibold uppercase tracking-wider">Links</h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
+                            <li><a href="#" className="hover:text-primary-1 transition-colors">About Us</a></li>
+                            <li><a href="#" className="hover:text-primary-1 transition-colors">Privacy Policy</a></li>
+                            <li><a href="#" className="hover:text-primary-1 transition-colors">Terms of Service</a></li>
                         </ul>
                     </div>
 

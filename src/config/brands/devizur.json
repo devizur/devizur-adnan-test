@@ -7,7 +7,7 @@
         "secondary-1": "#171717",
         "secondary-2": "#252525",
         "secondary-3": "#7F7F7F",
-        "text-primary-color": "#FFFFFF",
+        "primary": "#FFFFFF",
         "background": "#171717",
         "fontFamily": "Manrope",
         "fontUrl": "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap",
@@ -15,8 +15,9 @@
     },
     "content": {
         "home": {
-            "heroTitle": "Devizur: Fine Dining Excellence",
-            "heroSubtitle": "Savor the artistry of flavored cuisine crafted by master chefs.",
+            "heroTitle": "Book Activities & Order Foods",
+            "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
+            "heroTag": "All-in-one Booking + Ordering",
             "features": [
                 {
                     "title": "Gourmet Experience",

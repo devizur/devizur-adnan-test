@@ -1,6 +1,5 @@
 import { getBrandConfig } from "@/lib/brand-config";
 import { Hero } from "@/components/homepage/hero";
-import ColorComponent from "@/components/color/color";
 
 export default function Home() {
   const config = getBrandConfig();
@@ -8,7 +7,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center p-8 md:p-24 space-y-24">
-      <Hero  />
+      <Hero />
 
       <div className="max-w-4xl w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
@@ -22,8 +21,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-        <ColorComponent/>
       </div>
     </div>
   );

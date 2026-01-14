@@ -1,3 +1,8 @@
+import { HomeConfig } from "../../app/homeContentConfig";
+import { ServicesConfig } from "../../app/services/servicesContentConfig";
+import { MenuConfig } from "../../app/menu/menuContentConfig";
+import { ContactConfig } from "../../app/contact/contactContentConfig";
+
 export interface BrandConfig {
   name: string;
   logo: string;
@@ -7,36 +12,17 @@ export interface BrandConfig {
     "secondary-1": string;
     "secondary-2": string;
     "secondary-3": string;
-    "text-primary-color": string;
+    primary: string;
     background: string;
     fontFamily: string;
     fontUrl?: string;
     radius: string;
   };
   content: {
-    home: {
-      heroTitle: string;
-      heroSubtitle: string;
-      features: Array<{ title: string; description: string; colorType: "accent" | "primary" | "secondary" }>;
-    };
-    services: {
-      title: string;
-      items: Array<{ title: string; description: string }>;
-    };
-    menu: {
-      title: string;
-      subtitle: string;
-      categories: Array<{
-        name: string;
-        items: Array<{ name: string; description: string; price: string }>;
-      }>;
-    };
-    contact: {
-      title: string;
-      subtitle: string;
-      location: string;
-      hours: { week: string; weekend: string };
-    };
+    home: HomeConfig;
+    services: ServicesConfig;
+    menu: MenuConfig;
+    contact: ContactConfig;
     footerText: string;
   };
   navItems: Array<{

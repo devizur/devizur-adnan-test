@@ -1,20 +1,21 @@
 "use client"
 import { getBrandConfig } from "@/lib/brand-config";
 import { Search } from 'lucide-react';
+import PopularActivities from "./PopularActivities";
 export function Hero() {
     const config = getBrandConfig();
     const { home } = config.content;
 
     return (
         <>
-            <section className="   relative pt-32 pb-40 px-6 overflow-hidden">
+            <section className="   relative pt-32   px-6 overflow-hidden">
                 {/* Decorative Glow */}
-                <div className="absolute top-15 left-40 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-blue-400/20 blur-[150px] rounded-full pointer-events-none z-0"></div>
+                <div className="absolute top-25 left-40 -translate-x-1/2 -translate-y-1/2 w-250 h-150 bg-blue-400/25 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-                <div className="  mt-15  flex flex-col items-center justify-center space-y-5  z-10 relative">
+                <div className="  my-15  flex flex-col items-center justify-center space-y-5  z-10 relative">
 
                     {/* Badge */}
-                    <div className=" flex px-3 py-1  bg-primary-1 rounded-full">
+                    <div className=" flex px-3 py-1  mb-12 bg-primary-1 rounded-full">
                         <span className="text-black text-[11px] font-bold tracking-tight">
                             {home.heroTag}
                         </span>
@@ -31,7 +32,7 @@ export function Hero() {
                     </p>
 
                     {/* Search Bar - Icon on the right as per screenshot */}
-                    <div className="relative w-full max-w-126.75 group mt-10">
+                    <div className="relative w-full max-w-126.75 group my-8">
                         <input
                             type="text"
                             placeholder="Search activities, games, tags..."
@@ -44,7 +45,7 @@ export function Hero() {
 
                 </div>
 
-
+                <PopularActivities />
 
             </section>
         </>

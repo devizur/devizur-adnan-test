@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
-import logo from '@/../public/images/logo/devizurLogo.svg'
 export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
@@ -20,9 +19,12 @@ export function Navbar() {
             <nav className="w-full h-24 px-8 md:px-16 flex items-center justify-between z-50 absolute   top-0 ">
                 {/* Logo: DEV [Yellow Box with Star] ZUR */}
                 <div className="">
-
-                    <Image src={logo} alt="Logo" width={98} height={32} />
-
+                    <Image
+                        src={navContent.logoPath || config.logo}
+                        alt="Logo"
+                        width={98}
+                        height={32}
+                    />
                 </div>
 
                 {/* Navigation Links */}

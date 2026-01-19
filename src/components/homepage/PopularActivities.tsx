@@ -155,12 +155,20 @@ const PopularActivities: React.FC = () => {
                                 </div>
                             </div>
 
-                            <Button className="w-full py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary">
+                            <Button className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary">
                                 Book Now
                             </Button>
                         </CardContent>
                     </Card>
                 ))}
+            </div>
+
+
+            <div className="flex py-10 justify-center">
+
+                   <button className="hidden md:block px-16 py-3 border  bg-primary-1/10 border-primary-1 text-primary-1 text-base font-semibold rounded-sm hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer">
+                     View All Activities
+                    </button>
             </div>
         </section>
     );

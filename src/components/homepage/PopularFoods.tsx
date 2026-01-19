@@ -3,6 +3,7 @@
 import React from 'react';
 import ProductCard from "@/components/ui/reused/ProductCard";
 import { useFoods } from "@/lib/api/hooks";
+import Link from 'next/link';
 
 // Re-export Food type for backward compatibility
 export type { Food } from "@/lib/api/types";
@@ -63,9 +64,11 @@ const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
 
             {!normalized && (
                 <div className="flex py-10 justify-center">
-                    <button className="hidden md:block px-16 py-3 border  bg-primary-1/10 border-primary-1 text-primary-1 text-base font-semibold rounded-sm hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer">
-                        View All Foods
-                    </button>
+                    <Link href="/foods">
+                        <button className="hidden md:block px-16 py-3 border  bg-primary-1/10 border-primary-1 text-primary-1 text-base font-semibold rounded-sm hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer">
+                            View All Foods
+                        </button>
+                    </Link>
                 </div>
             )}
         </section>

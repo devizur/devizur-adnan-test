@@ -23,9 +23,10 @@ export default function Home() {
         onSearchChange={setSearchTerm}
       >
         <PopularActivities limit={6} searchTerm={searchTerm} />
+        <PopularFoods limit={6} searchTerm={searchTerm} />
+        <PopularPackage limit={6} searchTerm={searchTerm} />
       </HeroSection>
-      <PopularFoods limit={6} searchTerm={searchTerm} />
-      <PopularPackage limit={6} searchTerm={searchTerm} />
+
     </div>
   );
 }

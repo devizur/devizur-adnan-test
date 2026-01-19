@@ -1,22 +1,43 @@
 "use client";
 import React from "react";
 import ProductCard from "@/components/ui/reused/ProductCard";
-import { popularPackagesData } from "./PopularPackage";
+import { usePackages } from "@/lib/api/hooks";
 
 interface PackagesPageSectionProps {
     searchTerm?: string;
 }
 
 const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm }) => {
+    const { data: packages = [], isLoading, error } = usePackages();
     const normalized = searchTerm?.toLowerCase().trim() || "";
 
     const filtered = normalized
-        ? popularPackagesData.filter(
+        ? packages.filter(
               (pkg) =>
                   pkg.title.toLowerCase().includes(normalized) ||
                   pkg.category.toLowerCase().includes(normalized)
           )
-        : popularPackagesData;
+        : packages;
+
+    if (isLoading) {
+        return (
+            <section className="container mx-auto pb-20">
+                <div className="text-center py-20">
+                    <p className="text-primary">Loading packages...</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="container mx-auto pb-20">
+                <div className="text-center py-20">
+                    <p className="text-red-500">Error loading packages: {error.message}</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="container mx-auto pb-20">

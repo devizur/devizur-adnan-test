@@ -1,158 +1,11 @@
+"use client";
 
 import React from 'react';
-import ProductCard, { ProductItem } from "@/components/ui/reused/ProductCard";
+import ProductCard from "@/components/ui/reused/ProductCard";
+import { usePackages } from "@/lib/api/hooks";
 
-export interface Package extends ProductItem {
-    id: number;
-    category: string;
-}
-
-export const popularPackagesData: Package[] = [
-    {
-        id: 1,
-        title: "Beach Day & Seafood Feast",
-        category: "Food & Activity Combo",
-        price: "$180",
-        unit: "per person",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800",
-        duration: "Full Day",
-        discount: "20% OFF",
-        timeSlots: ["All Day"]
-    },
-    {
-        id: 2,
-        title: "Hiking & Gourmet Lunch",
-        category: "Food & Activity Combo",
-        price: "$220",
-        unit: "per person",
-        rating: 5.0,
-        image: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&q=80&w=800",
-        duration: "6 Hours",
-        discount: "25% OFF",
-        timeSlots: ["Morning", "Afternoon"]
-    },
-    {
-        id: 3,
-        title: "Snorkeling & Beach BBQ",
-        category: "Food & Activity Combo",
-        price: "$195",
-        unit: "per person",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-        duration: "5 Hours",
-        discount: "15% OFF",
-        timeSlots: ["Morning"]
-    },
-    {
-        id: 4,
-        title: "Sunset Cruise & Fine Dining",
-        category: "Food & Activity Combo",
-        price: "$165",
-        unit: "per person",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&q=80&w=800",
-        duration: "4 Hours",
-        discount: "18% OFF",
-        timeSlots: ["Evening"]
-    },
-    {
-        id: 5,
-        title: "Water Sports & Premium Buffet",
-        category: "Food & Activity Combo",
-        price: "$299",
-        unit: "per person",
-        rating: 5.0,
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800",
-        duration: "Full Day",
-        discount: "30% OFF",
-        timeSlots: ["All Day"]
-    },
-    {
-        id: 6,
-        title: "Kayaking & Brunch Special",
-        category: "Food & Activity Combo",
-        price: "$145",
-        unit: "per person",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-        duration: "3 Hours",
-        discount: "12% OFF",
-        timeSlots: ["Morning", "Brunch"]
-    },
-    {
-        id: 7,
-        title: "City Tour & Street Food Crawl",
-        category: "Food & Activity Combo",
-        price: "$160",
-        unit: "per person",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&q=80&w=800",
-        duration: "7 Hours",
-        discount: "15% OFF",
-        timeSlots: ["Afternoon", "Evening"]
-    },
-    {
-        id: 8,
-        title: "Theme Park Entry & Dinner Buffet",
-        category: "Food & Activity Combo",
-        price: "$250",
-        unit: "per person",
-        rating: 5.0,
-        image: "https://images.unsplash.com/photo-1508261306211-45a1c5c2a5c5?auto=format&fit=crop&q=80&w=800",
-        duration: "Full Day",
-        discount: "22% OFF",
-        timeSlots: ["All Day"]
-    },
-    {
-        id: 9,
-        title: "Spa Retreat & Healthy Brunch",
-        category: "Wellness & Food",
-        price: "$210",
-        unit: "per person",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=800",
-        duration: "5 Hours",
-        discount: "18% OFF",
-        timeSlots: ["Morning", "Afternoon"]
-    },
-    {
-        id: 10,
-        title: "Mountain Cabin Stay & BBQ Night",
-        category: "Stay & Food",
-        price: "$320",
-        unit: "per person",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
-        duration: "Overnight",
-        discount: "20% OFF",
-        timeSlots: ["All Day"]
-    },
-    {
-        id: 11,
-        title: "Cooking Class & Wine Tasting",
-        category: "Experience & Food",
-        price: "$185",
-        unit: "per person",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&q=80&w=800",
-        duration: "4 Hours",
-        discount: "10% OFF",
-        timeSlots: ["Afternoon", "Evening"]
-    },
-    {
-        id: 12,
-        title: "Camping, Bonfire & Grill Night",
-        category: "Adventure & Food",
-        price: "$275",
-        unit: "per person",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&q=80&w=800",
-        duration: "Overnight",
-        discount: "25% OFF",
-        timeSlots: ["Evening", "Night"]
-    }
-];
+// Re-export Package type for backward compatibility
+export type { Package } from "@/lib/api/types";
 
 interface PopularPackageProps {
     limit?: number;
@@ -160,18 +13,39 @@ interface PopularPackageProps {
 }
 
 const PopularPackage: React.FC<PopularPackageProps> = ({ limit, searchTerm }) => {
+    const { data: packages = [], isLoading, error } = usePackages();
     const normalized = searchTerm?.toLowerCase().trim() || "";
 
     const filtered = normalized
-        ? popularPackagesData.filter(
+        ? packages.filter(
               (pkg) =>
                   pkg.title.toLowerCase().includes(normalized) ||
                   pkg.category.toLowerCase().includes(normalized)
           )
-        : popularPackagesData;
+        : packages;
 
     const itemsToShow =
         normalized || !limit ? filtered : filtered.slice(0, limit);
+
+    if (isLoading) {
+        return (
+            <section className="container mx-auto px-6 pb-20">
+                <div className="text-center py-20">
+                    <p className="text-primary">Loading packages...</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="container mx-auto px-6 pb-20">
+                <div className="text-center py-20">
+                    <p className="text-red-500">Error loading packages: {error.message}</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="container mx-auto px-6  pb-20">

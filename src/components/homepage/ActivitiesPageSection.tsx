@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 import ProductCard from "@/components/ui/reused/ProductCard";
-import { activities } from "./PopularActivities";
+import { useActivities } from "@/lib/api/hooks";
 
 interface ActivitiesPageSectionProps {
     searchTerm?: string;
 }
 
 const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTerm }) => {
+    const { data: activities = [], isLoading, error } = useActivities();
     const normalized = searchTerm?.toLowerCase().trim() || "";
 
     const filtered = normalized
@@ -17,6 +18,26 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
                   activity.category.toLowerCase().includes(normalized)
           )
         : activities;
+
+    if (isLoading) {
+        return (
+            <section className="container mx-auto pb-20">
+                <div className="text-center py-20">
+                    <p className="text-primary">Loading activities...</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="container mx-auto pb-20">
+                <div className="text-center py-20">
+                    <p className="text-red-500">Error loading activities: {error.message}</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="container mx-auto pb-20">

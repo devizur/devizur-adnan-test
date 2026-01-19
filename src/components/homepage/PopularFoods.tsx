@@ -1,243 +1,11 @@
+"use client";
 
 import React from 'react';
-import ProductCard, { ProductItem } from "@/components/ui/reused/ProductCard";
+import ProductCard from "@/components/ui/reused/ProductCard";
+import { useFoods } from "@/lib/api/hooks";
 
-export interface Food extends ProductItem {
-    id: number;
-    category: string;
-}
-
-export const foods: Food[] = [
-    {
-        id: 1,
-        title: "Gourmet Beef Burger",
-        category: "Burgers",
-        price: "$12.99",
-        unit: "per item",
-        rating: 4.5,
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800",
-        duration: "15 mins",
-        discount: "$ 3 off",
-        timeSlots: ["11:00 AM", "12:30 PM", "02:00 PM"]
-    },
-    {
-        id: 2,
-        title: "Authentic Italian Pizza",
-        category: "Pizza",
-        price: "$18.00",
-        unit: "per pizza",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800",
-        duration: "20 mins",
-        timeSlots: ["12:00 PM", "01:30 PM", "07:00 PM"]
-    },
-    {
-        id: 3,
-        title: "Fresh Sushi Platter",
-        category: "Japanese",
-        price: "$35.00",
-        unit: "per platter",
-        rating: 5.0,
-        image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&q=80&w=800",
-        duration: "25 mins",
-        discount: "$ 5 off",
-        timeSlots: ["12:00 PM", "01:00 PM", "06:30 PM"]
-    },
-    {
-        id: 4,
-        title: "Classic Caesar Salad",
-        category: "Salads",
-        price: "$9.99",
-        unit: "per bowl",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&q=80&w=800",
-        duration: "10 mins",
-        discount: "$ 2 off",
-        timeSlots: ["11:30 AM", "01:00 PM", "02:30 PM"]
-    },
-    {
-        id: 5,
-        title: "Spicy Chicken Tacos",
-        category: "Mexican",
-        price: "$14.99",
-        unit: "per serving",
-        rating: 4.6,
-        image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&q=80&w=800",
-        duration: "15 mins",
-        timeSlots: ["12:00 PM", "02:00 PM", "07:00 PM"]
-    },
-    {
-        id: 6,
-        title: "Chocolate Lava Cake",
-        category: "Desserts",
-        price: "$8.50",
-        unit: "per slice",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&q=80&w=800",
-        duration: "12 mins",
-        discount: "$ 1 off",
-        timeSlots: ["01:00 PM", "03:00 PM", "08:00 PM"]
-    },
-    {
-        id: 7,
-        title: "Grilled Salmon Fillet",
-        category: "Seafood",
-        price: "$22.50",
-        unit: "per plate",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&q=80&w=800",
-        duration: "20 mins",
-        discount: "$ 4 off",
-        timeSlots: ["01:00 PM", "02:30 PM", "07:30 PM"]
-    },
-    {
-        id: 8,
-        title: "Margherita Flatbread",
-        category: "Pizza",
-        price: "$13.50",
-        unit: "per flatbread",
-        rating: 4.4,
-        image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&q=80&w=800",
-        duration: "18 mins",
-        timeSlots: ["11:30 AM", "01:00 PM", "06:00 PM"]
-    },
-    {
-        id: 9,
-        title: "Thai Green Curry",
-        category: "Asian",
-        price: "$17.99",
-        unit: "per bowl",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1604908176997-1251884b08a3?auto=format&fit=crop&q=80&w=800",
-        duration: "25 mins",
-        discount: "$ 2 off",
-        timeSlots: ["12:00 PM", "02:00 PM", "07:00 PM"]
-    },
-    {
-        id: 10,
-        title: "Mediterranean Mezze Platter",
-        category: "Mediterranean",
-        price: "$21.00",
-        unit: "per platter",
-        rating: 4.6,
-        image: "https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&q=80&w=800",
-        duration: "20 mins",
-        timeSlots: ["01:00 PM", "03:00 PM", "08:00 PM"]
-    },
-    {
-        id: 11,
-        title: "Penne Alfredo Pasta",
-        category: "Pasta",
-        price: "$15.50",
-        unit: "per plate",
-        rating: 4.5,
-        image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&q=80&w=800",
-        duration: "18 mins",
-        timeSlots: ["12:00 PM", "01:30 PM", "06:30 PM"]
-    },
-    {
-        id: 12,
-        title: "BBQ Chicken Wings",
-        category: "Starters",
-        price: "$11.99",
-        unit: "per dozen",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1615937691194-96f162d6c123?auto=format&fit=crop&q=80&w=800",
-        duration: "16 mins",
-        discount: "$ 3 off",
-        timeSlots: ["05:00 PM", "06:30 PM", "09:00 PM"]
-    },
-    {
-        id: 13,
-        title: "Vegan Buddha Bowl",
-        category: "Healthy",
-        price: "$14.50",
-        unit: "per bowl",
-        rating: 4.4,
-        image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800",
-        duration: "15 mins",
-        timeSlots: ["11:00 AM", "01:00 PM", "07:00 PM"]
-    },
-    {
-        id: 14,
-        title: "Loaded Nachos Supreme",
-        category: "Starters",
-        price: "$13.99",
-        unit: "per platter",
-        rating: 4.6,
-        image: "https://images.unsplash.com/photo-1608038509085-7bb9d5c0d5b3?auto=format&fit=crop&q=80&w=800",
-        duration: "12 mins",
-        discount: "$ 2 off",
-        timeSlots: ["04:00 PM", "06:00 PM", "09:30 PM"]
-    },
-    {
-        id: 15,
-        title: "Chicken Biryani",
-        category: "Indian",
-        price: "$16.50",
-        unit: "per plate",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&q=80&w=800",
-        duration: "30 mins",
-        timeSlots: ["12:30 PM", "02:00 PM", "08:00 PM"]
-    },
-    {
-        id: 16,
-        title: "Beef Steak with Fries",
-        category: "Grill",
-        price: "$27.00",
-        unit: "per plate",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1544022613-8c07aaca2e68?auto=format&fit=crop&q=80&w=800",
-        duration: "28 mins",
-        timeSlots: ["01:00 PM", "03:00 PM", "09:00 PM"]
-    },
-    {
-        id: 17,
-        title: "Chicken Caesar Wrap",
-        category: "Wraps",
-        price: "$10.50",
-        unit: "per wrap",
-        rating: 4.3,
-        image: "https://images.unsplash.com/photo-1585238342028-1f9b8bc90a0c?auto=format&fit=crop&q=80&w=800",
-        duration: "12 mins",
-        timeSlots: ["11:00 AM", "01:00 PM", "05:00 PM"]
-    },
-    {
-        id: 18,
-        title: "Pancake Breakfast Stack",
-        category: "Breakfast",
-        price: "$9.50",
-        unit: "per stack",
-        rating: 4.6,
-        image: "https://images.unsplash.com/photo-1587731556938-38755b4803a6?auto=format&fit=crop&q=80&w=800",
-        duration: "15 mins",
-        discount: "$ 1 off",
-        timeSlots: ["08:00 AM", "09:30 AM", "11:00 AM"]
-    },
-    {
-        id: 19,
-        title: "Avocado Toast",
-        category: "Breakfast",
-        price: "$8.99",
-        unit: "per slice",
-        rating: 4.5,
-        image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800",
-        duration: "10 mins",
-        timeSlots: ["08:00 AM", "09:00 AM", "10:30 AM"]
-    },
-    {
-        id: 20,
-        title: "Berry Smoothie Bowl",
-        category: "Healthy",
-        price: "$9.75",
-        unit: "per bowl",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1505259296240-38dc2f0b665a?auto=format&fit=crop&q=80&w=800",
-        duration: "8 mins",
-        timeSlots: ["08:00 AM", "09:30 AM", "12:00 PM"]
-    }
-];
+// Re-export Food type for backward compatibility
+export type { Food } from "@/lib/api/types";
 
 interface PopularFoodsProps {
     limit?: number;
@@ -245,6 +13,7 @@ interface PopularFoodsProps {
 }
 
 const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
+    const { data: foods = [], isLoading, error } = useFoods();
     const normalized = searchTerm?.toLowerCase().trim() || "";
 
     const filtered = normalized
@@ -257,6 +26,26 @@ const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
 
     const itemsToShow =
         normalized || !limit ? filtered : filtered.slice(0, limit);
+
+    if (isLoading) {
+        return (
+            <section className="container mx-auto px-6 pb-20">
+                <div className="text-center py-20">
+                    <p className="text-primary">Loading foods...</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="container mx-auto px-6 pb-20">
+                <div className="text-center py-20">
+                    <p className="text-red-500">Error loading foods: {error.message}</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="container mx-auto px-6  pb-20">

@@ -4,7 +4,7 @@ import HeroSection from "@/components/homepage/HeroSection";
 
 const AboutPage = () => {
     return (
-        <div className="h-full min-h-screen">
+        <div>
             <HeroSection
                 alignment="center"
                 badgeText="About"
@@ -13,6 +13,7 @@ const AboutPage = () => {
                 searchPlaceholder=""
                 showBadge={false}
                 showSearch={false}
+                fullHeight
             />
         </div>
     );

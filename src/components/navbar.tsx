@@ -11,7 +11,20 @@ export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
     const [activeLink, setActiveLink] = useState("Home");
+    const [isNotFound, setIsNotFound] = useState(false);
     const { navContent } = config.content;
+
+    // Check if we're on a 404 page
+    useEffect(() => {
+        const checkNotFound = () => {
+            const isNotFoundPage = document.body.getAttribute("data-page") === "not-found";
+            setIsNotFound(isNotFoundPage);
+        };
+        checkNotFound();
+        // Check periodically in case the attribute is set after mount
+        const interval = setInterval(checkNotFound, 100);
+        return () => clearInterval(interval);
+    }, []);
 
     // Sync active link with current path
     useEffect(() => {
@@ -21,7 +34,7 @@ export function Navbar() {
         }
     }, [pathname, config.navItems]);
 
-    if (pathname === "/brands") return null;
+    if (pathname === "/brands" || isNotFound) return null;
 
     return (
         <>

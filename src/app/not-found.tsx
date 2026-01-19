@@ -1,9 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { getBrandConfig } from "@/lib/brand-config";
+import { useEffect } from "react";
 
 export default function NotFound() {
   const config = getBrandConfig();
   const { home } = config.content;
+
+  // Hide navbar and footer by adding a class to body
+  useEffect(() => {
+    document.body.setAttribute("data-page", "not-found");
+    return () => {
+      document.body.removeAttribute("data-page");
+    };
+  }, []);
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -36,4 +47,3 @@ export default function NotFound() {
     </main>
   );
 }
-

@@ -3,7 +3,7 @@ import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export interface PopularItem {
+export interface ProductItem {
     id: number;
     title: string;
     price: string;
@@ -15,12 +15,12 @@ export interface PopularItem {
     timeSlots?: string[];
 }
 
-interface PopularCardProps {
-    item: PopularItem;
+interface ProductCardProps {
+    item: ProductItem;
     showTimeSlots?: boolean;
 }
 
-const PopularCard: React.FC<PopularCardProps> = ({ item, showTimeSlots = false }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }) => {
     return (
         <Card className="p-2 hover:border-primary-1/30 bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
             <div className="relative h-48 rounded-[10px] overflow-hidden">
@@ -91,5 +91,5 @@ const PopularCard: React.FC<PopularCardProps> = ({ item, showTimeSlots = false }
     );
 };
 
-export default PopularCard;
+export default ProductCard;
 

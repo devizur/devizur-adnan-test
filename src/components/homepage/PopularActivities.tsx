@@ -1,8 +1,8 @@
 
 import React from 'react';
-import PopularCard, { PopularItem } from "./PopularCard";
+import ProductCard, { ProductItem } from "@/components/ui/reused/ProductCard";
 
-interface Activity extends PopularItem {
+interface Activity extends ProductItem {
     id: number;
     category: string;
 }
@@ -18,7 +18,7 @@ const activities: Activity[] = [
         image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
         duration: "30 mins",
         discount: "$ 10 off",
-        timeSlots: ["08:00 AM", "08:30 AM", "09:00 AM"]
+        timeSlots: ["08:00 AM", "08:30 AM", "09:00 AM","08:00 AM", "08:30 AM", "09:00 AM"]
     },
     {
         id: 2,
@@ -29,7 +29,7 @@ const activities: Activity[] = [
         rating: 4.8,
         image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
         duration: "90 mins",
-        timeSlots: ["07:00 PM", "08:30 PM", "10:00 PM"]
+        timeSlots: ["07:00 PM", "08:30 PM", "10:00 PM","08:00 AM", "08:30 AM", "09:00 AM","08:00 AM", "08:30 AM", "09:00 AM"]
     },
     {
         id: 3,
@@ -54,7 +54,7 @@ const PopularActivities: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {activities.map((activity) => (
-                    <PopularCard key={activity.id} item={activity} showTimeSlots />
+                    <ProductCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>
 

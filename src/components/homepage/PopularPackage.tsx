@@ -1,8 +1,8 @@
 
 import React from 'react';
-import PopularCard, { PopularItem } from "./PopularCard";
+import ProductCard, { ProductItem } from "@/components/ui/reused/ProductCard";
 
-interface Package extends PopularItem {
+interface Package extends ProductItem {
     id: number;
     category: string;
 }
@@ -88,7 +88,7 @@ const PopularPackage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {popularPackagesData.map((pkg) => (
-                    <PopularCard key={pkg.id} item={pkg} />
+                    <ProductCard key={pkg.id} item={pkg} />
                 ))}
             </div>
 

@@ -1,8 +1,8 @@
 
 import React from 'react';
-import PopularCard, { PopularItem } from "./PopularCard";
+import ProductCard, { ProductItem } from "@/components/ui/reused/ProductCard";
 
-interface Food extends PopularItem {
+interface Food extends ProductItem {
     id: number;
     category: string;
 }
@@ -88,7 +88,7 @@ const PopularFoods: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {foods.map((food) => (
-                    <PopularCard key={food.id} item={food} />
+                    <ProductCard key={food.id} item={food} />
                 ))}
             </div>
 

@@ -1,26 +1,10 @@
 
 import React from 'react';
- 
-import { FaStar } from "react-icons/fa";
-import { Button } from "@/components/ui/button"
-import {
-    Card,
-    CardContent,
-    
-} from "@/components/ui/card"
+import PopularCard, { PopularItem } from "./PopularCard";
 
-
-interface Food {
+interface Food extends PopularItem {
     id: number;
-    title: string;
     category: string;
-    price: string;
-    unit: string;
-    rating: number;
-    image: string;
-    duration: string;
-    discount?: string;
-    timeSlots: string[];
 }
 const foods: Food[] = [
     {
@@ -104,46 +88,7 @@ const PopularFoods: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {foods.map((food) => (
-                    <Card key={food.id} className="p-2 hover:border-primary-1/30 bg-secondary-2 border border-transparent hover:border transition-transform duration-900  group">
-                        <div className="relative h-48 rounded-[10px] overflow-hidden    ">
-                            <img
-                                src={food.image}
-                                alt={food.title}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                            {food.discount && (
-                                <div className="absolute top-0 right-0 bg-primary-1 text-black px-5 py-2.5 rounded-bl-[16px] text-xs font-black">
-                                    {food.discount}
-                                </div>
-                            )}
-                            {food.rating && (
-                                <div className="absolute bottom-1.5 left-1.5 bg-primary-1 text-black px-2.5 py-1.5 rounded-l-[15px]  rounded-tr-[16px] text-xs  ">
-                                <FaStar  className="inline w-3 h-3 bg-s " />    {food.rating}
-                                </div>
-                            )}
-                        </div>
-
-                        <CardContent className="px-1.5 pb-2  ">
-                            <div className="flex justify-between items-start ">
-                                <h3 className="text-[14px] font-bold text-primary tracking-tight   leading-tight">
-                                    {food.title}
-                                </h3>
-                                <div className="text-right shrink-0">
-                                    <div className="text-primary-1 text-[18px] font-bold">{food.price}</div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-gray-500 text-xs font-medium">Duration: {food.duration}</span>
-                                <span className="text-gray-500 text-[10px] font-medium">{food.unit}</span>
-                            </div>
- 
-
-                            <Button className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary">
-                                Book Now
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <PopularCard key={food.id} item={food} />
                 ))}
             </div>
 

@@ -76,18 +76,177 @@ const foods: Food[] = [
         duration: "12 mins",
         discount: "$ 1 off",
         timeSlots: ["01:00 PM", "03:00 PM", "08:00 PM"]
+    },
+    {
+        id: 7,
+        title: "Grilled Salmon Fillet",
+        category: "Seafood",
+        price: "$22.50",
+        unit: "per plate",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&q=80&w=800",
+        duration: "20 mins",
+        discount: "$ 4 off",
+        timeSlots: ["01:00 PM", "02:30 PM", "07:30 PM"]
+    },
+    {
+        id: 8,
+        title: "Margherita Flatbread",
+        category: "Pizza",
+        price: "$13.50",
+        unit: "per flatbread",
+        rating: 4.4,
+        image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&q=80&w=800",
+        duration: "18 mins",
+        timeSlots: ["11:30 AM", "01:00 PM", "06:00 PM"]
+    },
+    {
+        id: 9,
+        title: "Thai Green Curry",
+        category: "Asian",
+        price: "$17.99",
+        unit: "per bowl",
+        rating: 4.8,
+        image: "https://images.unsplash.com/photo-1604908176997-1251884b08a3?auto=format&fit=crop&q=80&w=800",
+        duration: "25 mins",
+        discount: "$ 2 off",
+        timeSlots: ["12:00 PM", "02:00 PM", "07:00 PM"]
+    },
+    {
+        id: 10,
+        title: "Mediterranean Mezze Platter",
+        category: "Mediterranean",
+        price: "$21.00",
+        unit: "per platter",
+        rating: 4.6,
+        image: "https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&q=80&w=800",
+        duration: "20 mins",
+        timeSlots: ["01:00 PM", "03:00 PM", "08:00 PM"]
+    },
+    {
+        id: 11,
+        title: "Penne Alfredo Pasta",
+        category: "Pasta",
+        price: "$15.50",
+        unit: "per plate",
+        rating: 4.5,
+        image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&q=80&w=800",
+        duration: "18 mins",
+        timeSlots: ["12:00 PM", "01:30 PM", "06:30 PM"]
+    },
+    {
+        id: 12,
+        title: "BBQ Chicken Wings",
+        category: "Starters",
+        price: "$11.99",
+        unit: "per dozen",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1615937691194-96f162d6c123?auto=format&fit=crop&q=80&w=800",
+        duration: "16 mins",
+        discount: "$ 3 off",
+        timeSlots: ["05:00 PM", "06:30 PM", "09:00 PM"]
+    },
+    {
+        id: 13,
+        title: "Vegan Buddha Bowl",
+        category: "Healthy",
+        price: "$14.50",
+        unit: "per bowl",
+        rating: 4.4,
+        image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800",
+        duration: "15 mins",
+        timeSlots: ["11:00 AM", "01:00 PM", "07:00 PM"]
+    },
+    {
+        id: 14,
+        title: "Loaded Nachos Supreme",
+        category: "Starters",
+        price: "$13.99",
+        unit: "per platter",
+        rating: 4.6,
+        image: "https://images.unsplash.com/photo-1608038509085-7bb9d5c0d5b3?auto=format&fit=crop&q=80&w=800",
+        duration: "12 mins",
+        discount: "$ 2 off",
+        timeSlots: ["04:00 PM", "06:00 PM", "09:30 PM"]
+    },
+    {
+        id: 15,
+        title: "Chicken Biryani",
+        category: "Indian",
+        price: "$16.50",
+        unit: "per plate",
+        rating: 4.9,
+        image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&q=80&w=800",
+        duration: "30 mins",
+        timeSlots: ["12:30 PM", "02:00 PM", "08:00 PM"]
+    },
+    {
+        id: 16,
+        title: "Beef Steak with Fries",
+        category: "Grill",
+        price: "$27.00",
+        unit: "per plate",
+        rating: 4.8,
+        image: "https://images.unsplash.com/photo-1544022613-8c07aaca2e68?auto=format&fit=crop&q=80&w=800",
+        duration: "28 mins",
+        timeSlots: ["01:00 PM", "03:00 PM", "09:00 PM"]
+    },
+    {
+        id: 17,
+        title: "Chicken Caesar Wrap",
+        category: "Wraps",
+        price: "$10.50",
+        unit: "per wrap",
+        rating: 4.3,
+        image: "https://images.unsplash.com/photo-1585238342028-1f9b8bc90a0c?auto=format&fit=crop&q=80&w=800",
+        duration: "12 mins",
+        timeSlots: ["11:00 AM", "01:00 PM", "05:00 PM"]
+    },
+    {
+        id: 18,
+        title: "Pancake Breakfast Stack",
+        category: "Breakfast",
+        price: "$9.50",
+        unit: "per stack",
+        rating: 4.6,
+        image: "https://images.unsplash.com/photo-1587731556938-38755b4803a6?auto=format&fit=crop&q=80&w=800",
+        duration: "15 mins",
+        discount: "$ 1 off",
+        timeSlots: ["08:00 AM", "09:30 AM", "11:00 AM"]
+    },
+    {
+        id: 19,
+        title: "Avocado Toast",
+        category: "Breakfast",
+        price: "$8.99",
+        unit: "per slice",
+        rating: 4.5,
+        image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800",
+        duration: "10 mins",
+        timeSlots: ["08:00 AM", "09:00 AM", "10:30 AM"]
+    },
+    {
+        id: 20,
+        title: "Berry Smoothie Bowl",
+        category: "Healthy",
+        price: "$9.75",
+        unit: "per bowl",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1505259296240-38dc2f0b665a?auto=format&fit=crop&q=80&w=800",
+        duration: "8 mins",
+        timeSlots: ["08:00 AM", "09:30 AM", "12:00 PM"]
     }
 ];
 
-const PopularFoods: React.FC = () => {
+const PopularFoods: React.FC<{ limit?: number }> = ({ limit }) => {
     return (
-        <section className="max-w-7xl mx-auto px-16 pb-20">
+        <section className="container mx-auto px-6  pb-20">
             <div className="flex items-center justify-between mb-7">
                 <h2 className="text-2xl font-bold tracking-tight text-primary">Popular Foods</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {foods.map((food) => (
+                {foods.slice(0, limit).map((food) => (
                     <ProductCard key={food.id} item={food} />
                 ))}
             </div>

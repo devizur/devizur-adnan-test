@@ -45,7 +45,7 @@ export function Hero() {
 
                 </div>
 
-                <PopularActivities />
+                <PopularActivities  limit={6} />
 
             </section>
         </>

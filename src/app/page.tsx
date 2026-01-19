@@ -12,9 +12,9 @@ export default function Home() {
     <div className=" ">
 
       <Hero />
-      <PopularFoods />
-      <PopularPackage />
- 
+      <PopularFoods limit={6} />
+      <PopularPackage limit={6} />
+
     </div>
   );
 }

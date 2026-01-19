@@ -56,7 +56,7 @@ export function Navbar() {
                             <Link href={item.href}>
                                 <button
                                     onClick={() => setActiveLink(item.label)}
-                                    className={`relative text-[14px] font-medium transition-colors duration-300 ${
+                                    className={`relative text-[14px] font-medium transition-colors duration-300 cursor-pointer ${
                                         activeLink === item.label
                                             ? "text-primary-1"
                                             : "text-gray-300 hover:text-white"

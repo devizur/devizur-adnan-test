@@ -15,9 +15,9 @@
     },
     "content": {
         "home": {
+            "heroTag": "All-in-one Booking + Ordering",
             "heroTitle": "Book Activities & Order Foods",
             "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
-            "heroTag": "All-in-one Booking + Ordering",
             "features": [
                 {
                     "title": "Gourmet Experience",

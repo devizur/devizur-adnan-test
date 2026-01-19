@@ -7,7 +7,7 @@
         "secondary-1": "oklch(0.9 0.05 250)",
         "secondary-2": "oklch(0.8 0.1 250)",
         "secondary-3": "oklch(0.7 0.2 300)",
-        "primary": "#FFFFFF",
+        "primary": "#29AB87",
         "background": "oklch(0.98 0.01 250)",
         "fontFamily": "Oswald",
         "fontUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap",
@@ -15,6 +15,7 @@
     },
     "content": {
         "home": {
+            "heroTag": "All-in-one Booking + Ordering",
             "heroTitle": "Luxe Dining: Elegance on a Plate",
             "heroSubtitle": "Experience fine dining at its peak with our curated gourmet selections.",
             "features": [

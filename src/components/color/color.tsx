@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { Check, Copy } from 'lucide-react';
 
 const COLORS = [
-    { id: 'p1', name: 'Primary 1', variable: '--primary-1', class: 'bg-primary-1', description: 'Main Brand Accent' },
-    { id: 'p2', name: 'Primary 2', variable: '--primary-2', class: 'bg-primary-2', description: 'Subtle Brand Shade' },
-    { id: 's1', name: 'Secondary 1', variable: '--secondary', class: 'bg-secondary', description: 'System Secondary' },
-    { id: 's2', name: 'Secondary 2', variable: '--secondary-2', class: 'bg-secondary-2', description: 'Card Backgrounds' },
-    { id: 's3', name: 'Secondary 3', variable: '--accent', class: 'bg-accent', description: 'Accent Highlights' },
-    { id: 'pr', name: 'Primary Text', variable: '--primary', class: 'bg-primary', description: 'Main Typography' },
+    { id: 'p1', name: 'Primary 1', variable: '--primary-1', class: 'bg-primary-1', copyText: 'primary-1', description: 'Main Brand Accent' },
+    { id: 'p2', name: 'Primary 2', variable: '--primary-2', class: 'bg-primary-2', copyText: 'primary-2', description: 'Subtle Brand Shade' },
+    { id: 's1', name: 'Secondary 1', variable: '--secondary', class: 'bg-secondary', copyText: 'secondary', description: 'System Secondary' },
+    { id: 's2', name: 'Secondary 2', variable: '--secondary-2', class: 'bg-secondary-2', copyText: 'secondary-2', description: 'Card Backgrounds' },
+    { id: 's3', name: 'Secondary 3', variable: '--accent', class: 'bg-accent', copyText: 'accent', description: 'Accent Highlights' },
+    { id: 'pr', name: 'Primary', variable: '--primary', class: 'bg-primary', copyText: 'primary', description: 'Main Typography' },
 ];
 
 export default function ColorComponent() {
@@ -40,7 +40,7 @@ export default function ColorComponent() {
                         return (
                             <button
                                 key={color.id}
-                                onClick={() => handleCopy(color.id, color.class)}
+                                onClick={() => handleCopy(color.id, color.copyText)}
                                 className={`w-8 h-8 rounded-full transition-all duration-300 hover:scale-125 hover:z-10 shadow-2xl ${color.class} border ${color.id === 'pr' ? 'border-zinc-700' : 'border-white/10'} flex items-center justify-center relative group`}
                             >
                                 {isCopied ? (

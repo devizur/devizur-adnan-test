@@ -3,21 +3,30 @@
 import { getBrandConfig } from "@/lib/brand-config";
 import { usePathname } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+
 export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
-    const [activeLink, setActiveLink] = useState('Home');
-    const { navContent  } = config.content;
- 
-    if (pathname === "/brands") return null;
- 
-    return (
+    const [activeLink, setActiveLink] = useState("Home");
+    const { navContent } = config.content;
 
+    // Sync active link with current path
+    useEffect(() => {
+        const current = config.navItems.find((item) => item.href === pathname);
+        if (current) {
+            setActiveLink(current.label);
+        }
+    }, [pathname, config.navItems]);
+
+    if (pathname === "/brands") return null;
+
+    return (
         <>
-            <nav className="w-full h-24 px-8 md:px-16 flex items-center justify-between z-50 absolute   top-0 ">
-                {/* Logo: DEV [Yellow Box with Star] ZUR */}
+            <nav className="w-full h-24 px-8 md:px-16 flex items-center justify-between z-50 absolute top-0 ">
+                {/* Logo */}
                 <div className="">
                     <Image
                         src={navContent.logoPath || config.logo}
@@ -29,23 +38,26 @@ export function Navbar() {
 
                 {/* Navigation Links */}
                 <ul className="hidden lg:flex items-center space-x-10">
-  
-
-                    {config.navItems.map((item) => (
+                    {config.navItems.map((item: { label: string; href: string }) => (
                         <li key={item.href}>
-                            <button
-                                onClick={() => setActiveLink(item.label)}
-                                className={`relative text-[14px] font-medium transition-colors duration-300 ${activeLink === item.label ? 'text-primary-1' : 'text-gray-300 hover:text-white'
+                            <Link href={item.href}>
+                                <button
+                                    onClick={() => setActiveLink(item.label)}
+                                    className={`relative text-[14px] font-medium transition-colors duration-300 ${
+                                        activeLink === item.label
+                                            ? "text-primary-1"
+                                            : "text-gray-300 hover:text-white"
                                     }`}
-                            >
-                                {item.label}
-                                {activeLink === item.label && (
-                                    <div className="absolute -bottom-1.5 left-0 right-0 h-[1.5px] bg-primary-1 flex justify-between items-center px-0">
-                                        <div className="w-1 h-1 bg-primary-1 rotate-45 -ml-0.5"></div>
-                                        <div className="w-1 h-1 bg-primary-1 rotate-45 -mr-0.5"></div>
-                                    </div>
-                                )}
-                            </button>
+                                >
+                                    {item.label}
+                                    {activeLink === item.label && (
+                                        <div className="absolute -bottom-1.5 left-0 right-0 h-[1.5px] bg-primary-1 flex justify-between items-center px-0">
+                                            <div className="w-1 h-1 bg-primary-1 rotate-45 -ml-0.5"></div>
+                                            <div className="w-1 h-1 bg-primary-1 rotate-45 -mr-0.5"></div>
+                                        </div>
+                                    )}
+                                </button>
+                            </Link>
                         </li>
                     ))}
                 </ul>
@@ -65,7 +77,6 @@ export function Navbar() {
                     </div>
                 </div>
             </nav>
-         
         </>
     );
 }

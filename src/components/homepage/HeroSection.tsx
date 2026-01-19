@@ -49,7 +49,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 {showBadge && (
                     <div className={`w-full flex ${isCenter ? "justify-center" : "justify-start"}`}>
                         <div className="flex px-3 py-1 mb-12 bg-primary-1 rounded-full">
-                            <span className="text-black text-[11px] font-bold tracking-tight">
+                            <span className="text-black text-[14px] font-bold tracking-tight">
                                 {badgeText}
                             </span>
                         </div>

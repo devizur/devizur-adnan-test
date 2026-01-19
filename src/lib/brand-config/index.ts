@@ -22,10 +22,12 @@ export interface BrandConfig {
   content: {
     home: HomeConfig;
     services: ServicesConfig;
+    navContent: NavContactConfig;
     menu: MenuConfig;
     contact: ContactConfig;
     footer: FooterConfig;
   };
+
   navItems: Array<{
     label: string;
     href: string;
@@ -35,6 +37,7 @@ export interface BrandConfig {
 import devizur from "../../config/brands/devizur.json";
 import brandOne from "../../config/brands/brand-one.json";
 import brandTwo from "../../config/brands/brand-two.json";
+import { NavContactConfig } from "@/components/navbar-content-config";
 
 // Export brands for the brand list page
 export const brands: Record<string, BrandConfig> = {

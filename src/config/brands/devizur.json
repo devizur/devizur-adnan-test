@@ -14,6 +14,10 @@
         "radius": "1rem"
     },
     "content": {
+        "navContent":{
+            "bookings": "My Bookings",
+            "logoPath":""
+        },
         "home": {
             "heroTag": "All-in-one Booking + Ordering",
             "heroTitle": "Book Activities & Order Foods",
@@ -108,15 +112,23 @@
             "href": "/"
         },
         {
-            "label": "Services",
-            "href": "/services"
+            "label": "About",
+            "href": "/about"
         },
         {
-            "label": "Menu",
-            "href": "/menu"
+            "label": "Activities",
+            "href": "/activities"
         },
         {
-            "label": "Contact",
+            "label": "Food",
+            "href": "/food"
+        },
+        {
+            "label": "Packages",
+            "href": "/packages"
+        },
+        {
+            "label": "Contact Us",
             "href": "/contact"
         }
     ]

@@ -14,92 +14,96 @@
         "radius": "0.5rem"
     },
     "content": {
+        "navContent":{
+            "bookings": "My Bookings",
+            "logoPath":""
+        },
         "home": {
             "heroTag": "All-in-one Booking + Ordering",
-            "heroTitle": "Luxe Dining: Elegance on a Plate",
-            "heroSubtitle": "Experience fine dining at its peak with our curated gourmet selections.",
+            "heroTitle": "Book Activities & Order Foods",
+            "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
             "features": [
                 {
-                    "title": "Elegant Ambience",
-                    "description": "Atmosphere designed for sophistication and comfort.",
+                    "title": "Gourmet Experience",
+                    "description": "Expertly crafted dishes using premium ingredients.",
                     "colorType": "accent"
                 },
                 {
-                    "title": "Master Chefs",
-                    "description": "Our kitchen is led by award-winning culinary artists.",
+                    "title": "Prime Location",
+                    "description": "Located in the heart of the city's culinary district.",
                     "colorType": "primary"
                 },
                 {
-                    "title": "Fresh Ingredients",
-                    "description": "We source the finest local and international produce.",
+                    "title": "Exclusive Wine Cellar",
+                    "description": "A curated collection of the world's finest vintages.",
                     "colorType": "secondary"
                 }
             ]
         },
         "services": {
-            "title": "Bespoke Dining Services",
+            "title": "Exclusive Culinary Services",
             "items": [
                 {
-                    "title": "Fine Dining",
-                    "description": "A classic seated dinner experience with silver service."
+                    "title": "Private Dining",
+                    "description": "Host your intimate events in our luxury private suites."
                 },
                 {
-                    "title": "Wine Tasting",
-                    "description": "Guided tours through our world-class wine selection."
+                    "title": "Wedding Catering",
+                    "description": "Premium catering services for your special day."
                 },
                 {
-                    "title": "Corporate Events",
-                    "description": "Professional catering and spaces for business needs."
+                    "title": "Chef's Table",
+                    "description": "A personalized multi-course journey with our head chef."
                 }
             ]
         },
         "menu": {
-            "title": "Seasonal Gourmet Menu",
-            "subtitle": "Discover the flavors of the season through our chef's eyes.",
+            "title": "The Masterwork Menu",
+            "subtitle": "Seasonal excellence refined for the sophisticated palate.",
             "categories": [
                 {
-                    "name": "Starters",
+                    "name": "Appetizers",
                     "items": [
                         {
-                            "name": "Oysters Rockefeller",
-                            "description": "Baked oysters with spinach, herbs, and breadcrumbs.",
-                            "price": "$24"
+                            "name": "Lobster Bisque",
+                            "description": "Rich velvet cream with cognac and fresh lobster.",
+                            "price": "$18"
                         },
                         {
-                            "name": "Foie Gras",
-                            "description": "Seared foie gras with fig compote on brioche.",
-                            "price": "$28"
+                            "name": "Truffle Tartare",
+                            "description": "Prime beef with aged truffle and egg yolk.",
+                            "price": "$22"
                         }
                     ]
                 },
                 {
-                    "name": "Mains",
+                    "name": "Entrées",
                     "items": [
                         {
-                            "name": "Rack of Lamb",
-                            "description": "Herb-crusted lamb with mint jus and pea purée.",
-                            "price": "$45"
+                            "name": "Miso Glazed Sea Bass",
+                            "description": "Wild-caught sea bass with ginger-infused rice.",
+                            "price": "$42"
                         },
                         {
-                            "name": "Duck L'Orange",
-                            "description": "Crispy duck breast with classic orange reduction.",
-                            "price": "$38"
+                            "name": "Filet Mignon",
+                            "description": "8oz grass-fed beef with red wine reduction.",
+                            "price": "$48"
                         }
                     ]
                 }
             ]
         },
         "contact": {
-            "title": "Get in Touch",
-            "subtitle": "We are here to provide you with the best service.",
-            "location": "789 Elite Blvd, Sky Tower, New York",
+            "title": "Reserve Your Experience",
+            "subtitle": "Join us at Devizur for an unforgettable evening.",
+            "location": "456 Artisan Way, Gourmet Plaza, NYC",
             "hours": {
-                "week": "11am - 10pm",
-                "weekend": "10am - 11pm"
+                "week": "5pm - 11pm",
+                "weekend": "4pm - Midnight"
             }
         },
         "footer": {
-            "footerText": "© 2026 Luxe Dining Group. All rights reserved."
+            "footerText": "Copyright © 2026 All rights reserved by Devizur"
         }
     },
     "navItems": [

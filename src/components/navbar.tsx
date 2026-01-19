@@ -37,8 +37,8 @@ export function Navbar() {
     if (pathname === "/brands" || isNotFound) return null;
 
     return (
-        <>
-            <nav className="w-full h-24 px-8 md:px-16 flex items-center justify-between z-50 absolute top-0 ">
+        <div className="w-full   flex justify-center">
+            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 ">
                 {/* Logo */}
                 <div className="">
                     <Image
@@ -90,6 +90,6 @@ export function Navbar() {
                     </div>
                 </div>
             </nav>
-        </>
+        </div>
     );
 }

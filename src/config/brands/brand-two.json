@@ -13,93 +13,97 @@
         "fontUrl": "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap",
         "radius": "0.3rem"
     },
-    "content": {
+  "content": {
+        "navContent":{
+            "bookings": "My Bookings",
+            "logoPath":""
+        },
         "home": {
             "heroTag": "All-in-one Booking + Ordering",
-            "heroTitle": "Urban Bite: Fast. Fresh. Tasty.",
-            "heroSubtitle": "Street food evolved. Get the best bites in the heart of the city.",
+            "heroTitle": "Book Activities & Order Foods",
+            "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
             "features": [
                 {
-                    "title": "Street Flavors",
-                    "description": "Authentic city tastes with a modern culinary twist.",
+                    "title": "Gourmet Experience",
+                    "description": "Expertly crafted dishes using premium ingredients.",
                     "colorType": "accent"
                 },
                 {
-                    "title": "Fast & Fresh",
-                    "description": "Speedy service without compromising on quality.",
+                    "title": "Prime Location",
+                    "description": "Located in the heart of the city's culinary district.",
                     "colorType": "primary"
                 },
                 {
-                    "title": "Urban Aesthetic",
-                    "description": "Dine in a space designed for the modern city dweller.",
+                    "title": "Exclusive Wine Cellar",
+                    "description": "A curated collection of the world's finest vintages.",
                     "colorType": "secondary"
                 }
             ]
         },
         "services": {
-            "title": "Urban Comfort Services",
+            "title": "Exclusive Culinary Services",
             "items": [
                 {
-                    "title": "Quick Grab",
-                    "description": "Perfect for the busy urban professional on the move."
+                    "title": "Private Dining",
+                    "description": "Host your intimate events in our luxury private suites."
                 },
                 {
-                    "title": "Late Night",
-                    "description": "We stay open late to satisfy your midnight cravings."
+                    "title": "Wedding Catering",
+                    "description": "Premium catering services for your special day."
                 },
                 {
-                    "title": "Event Boxes",
-                    "description": "Catering boxes designed for casual office gatherings."
+                    "title": "Chef's Table",
+                    "description": "A personalized multi-course journey with our head chef."
                 }
             ]
         },
         "menu": {
-            "title": "Street Eats Menu",
-            "subtitle": "Bold, fast, and satisfying favorites.",
+            "title": "The Masterwork Menu",
+            "subtitle": "Seasonal excellence refined for the sophisticated palate.",
             "categories": [
                 {
-                    "name": "Quick Bites",
+                    "name": "Appetizers",
                     "items": [
                         {
-                            "name": "Loaded Street Fries",
-                            "description": "Hand-cut fries with brisket, cheese, and jalapeños.",
-                            "price": "$12"
+                            "name": "Lobster Bisque",
+                            "description": "Rich velvet cream with cognac and fresh lobster.",
+                            "price": "$18"
                         },
                         {
-                            "name": "Bao Buns",
-                            "description": "Pork belly or spicy tofu with pickled slaw.",
-                            "price": "$14"
+                            "name": "Truffle Tartare",
+                            "description": "Prime beef with aged truffle and egg yolk.",
+                            "price": "$22"
                         }
                     ]
                 },
                 {
-                    "name": "Hearty Bowls",
+                    "name": "Entrées",
                     "items": [
                         {
-                            "name": "Spicy Poke Bowl",
-                            "description": "Tuna or salmon with avocado and sriracha mayo.",
-                            "price": "$18"
+                            "name": "Miso Glazed Sea Bass",
+                            "description": "Wild-caught sea bass with ginger-infused rice.",
+                            "price": "$42"
                         },
                         {
-                            "name": "Urban Ramen",
-                            "description": "12-hour broth with slow-cooked pork and egg.",
-                            "price": "$16"
+                            "name": "Filet Mignon",
+                            "description": "8oz grass-fed beef with red wine reduction.",
+                            "price": "$48"
                         }
                     ]
                 }
             ]
         },
         "contact": {
-            "title": "Stop By Urban Bite",
-            "subtitle": "No reservations needed, just bring your appetite.",
-            "location": "12 Subway Path, Central Station, New York",
+            "title": "Reserve Your Experience",
+            "subtitle": "Join us at Devizur for an unforgettable evening.",
+            "location": "456 Artisan Way, Gourmet Plaza, NYC",
             "hours": {
-                "week": "8am - Midnight",
-                "weekend": "10am - 2am"
+                "week": "5pm - 11pm",
+                "weekend": "4pm - Midnight"
             }
         },
         "footer": {
-            "footerText": "© 2026 Urban Bite Street Food."
+            "footerText": "Copyright © 2026 All rights reserved by Devizur"
         }
     },
     "navItems": [

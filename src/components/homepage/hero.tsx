@@ -7,21 +7,21 @@ export function Hero() {
 
     return (
         <>
-            <section className="   relative pt-16 pb-40 px-6 overflow-hidden">
+            <section className="   relative pt-32 pb-40 px-6 overflow-hidden">
                 {/* Decorative Glow */}
                 <div className="absolute top-15 left-40 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-blue-400/20 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-                <div className=" flex flex-col items-center justify-center space-y-5 mt-5 z-10 relative">
+                <div className="  mt-15  flex flex-col items-center justify-center space-y-5  z-10 relative">
 
                     {/* Badge */}
-                    <div className="  mt-15 px-3 py-1  bg-primary-1 rounded-full">
+                    <div className=" flex px-3 py-1  bg-primary-1 rounded-full">
                         <span className="text-black text-[11px] font-bold tracking-tight">
                             {home.heroTag}
                         </span>
                     </div>
 
                     {/* Main Heading */}
-                    <h1 className="text-4xl font-semibold tracking-tighter leading-none text-primary  ">
+                    <h1 className="text-5xl font-semibold tracking-tighter leading-none text-primary  ">
                         {home.heroTitle}
                     </h1>
 
@@ -31,7 +31,7 @@ export function Hero() {
                     </p>
 
                     {/* Search Bar - Icon on the right as per screenshot */}
-                    <div className="relative w-full max-w-126.75 group mt-2">
+                    <div className="relative w-full max-w-126.75 group mt-10">
                         <input
                             type="text"
                             placeholder="Search activities, games, tags..."

@@ -5,7 +5,6 @@ import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button"
 import {
     Card,
-  
     CardContent,
     
 } from "@/components/ui/card"
@@ -46,7 +45,6 @@ const activities: Activity[] = [
         rating: 4.8,
         image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
         duration: "90 mins",
-
         timeSlots: ["07:00 PM", "08:30 PM", "10:00 PM"]
     },
     {
@@ -60,6 +58,41 @@ const activities: Activity[] = [
         duration: "60 mins",
         discount: "$ 5 off",
         timeSlots: ["10:00 AM", "12:00 PM", "02:00 PM"]
+    },
+    {
+        id: 4,
+        title: "Arcade Championship",
+        category: "Games",
+        price: "$25.00",
+        unit: "per hour",
+        rating: 4.7,
+        image: "https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&q=80&w=800",
+        duration: "60 mins",
+        discount: "$ 8 off",
+        timeSlots: ["11:00 AM", "01:00 PM", "03:00 PM"]
+    },
+    {
+        id: 5,
+        title: "Karaoke Night",
+        category: "Entertainment",
+        price: "$20.00",
+        unit: "per person",
+        rating: 4.6,
+        image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=800",
+        duration: "120 mins",
+        timeSlots: ["06:00 PM", "08:00 PM", "10:00 PM"]
+    },
+    {
+        id: 6,
+        title: "Mini Golf Adventure",
+        category: "Sports",
+        price: "$18.00",
+        unit: "per person",
+        rating: 4.4,
+        image: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?auto=format&fit=crop&q=80&w=800",
+        duration: "45 mins",
+        discount: "$ 3 off",
+        timeSlots: ["09:00 AM", "11:00 AM", "01:00 PM"]
     }
 ];
 

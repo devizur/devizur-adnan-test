@@ -34,6 +34,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: config.name,
     description: config.content.home.heroSubtitle,
+    icons: {
+      icon: config.logo || "/favicon.ico",
+    },
   };
 }
 

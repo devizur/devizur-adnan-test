@@ -1,7 +1,11 @@
+"use client";
+
 import React from "react";
 import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Activity } from "@/lib/api/types";
+import { useCart } from "@/contexts/CartContext";
 
 export interface ProductItem {
     id: number;
@@ -16,11 +20,16 @@ export interface ProductItem {
 }
 
 interface ActivitiesCardProps {
-    item: ProductItem;
+    item: Activity;
     showTimeSlots?: boolean;
 }
 
 const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = false }) => {
+    const { addActivity } = useCart();
+
+    const handleBookNow = () => {
+        addActivity(item, 1);
+    };
     return (
         <Card className="p-2 hover:border-primary-1/30 bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
             <div className="relative h-48 rounded-[10px] overflow-hidden">
@@ -83,7 +92,10 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     </div>
                 )}
 
-                <Button className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary">
+                <Button 
+                    onClick={handleBookNow}
+                    className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+                >
                     Book Now
                 </Button>
             </CardContent>

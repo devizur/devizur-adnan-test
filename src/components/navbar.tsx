@@ -6,13 +6,18 @@ import { ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
+import CartDrawer from "@/components/ui/CartDrawer";
 
 export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
     const [activeLink, setActiveLink] = useState("Home");
     const [isNotFound, setIsNotFound] = useState(false);
+    const [isCartOpen, setIsCartOpen] = useState(false);
     const { navContent } = config.content;
+    const { getTotalItems } = useCart();
+    const totalItems = getTotalItems();
 
     // Check if we're on a 404 page
     useEffect(() => {
@@ -80,16 +85,22 @@ export function Navbar() {
                     <button className="hidden md:block px-6 py-2 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-full hover:bg-primary-1 hover:text-black transition-all duration-300">
                         {navContent.bookings}
                     </button>
-                    <div className="relative cursor-pointer group">
+                    <button
+                        onClick={() => setIsCartOpen(true)}
+                        className="relative cursor-pointer group"
+                    >
                         <div className="w-10 h-10 border-2 border-primary-1 rounded-xl flex items-center justify-center">
                             <ShoppingBag className="w-5 h-5 text-primary-1" strokeWidth={2.5} />
                         </div>
-                        <span className="absolute -top-1.5 -right-1.5 bg-primary-1 text-black text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-[#05080d]">
-                            2
-                        </span>
-                    </div>
+                        {totalItems > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-primary-1 text-black text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#05080d]">
+                                {totalItems}
+                            </span>
+                        )}
+                    </button>
                 </div>
             </nav>
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </div>
     );
 }

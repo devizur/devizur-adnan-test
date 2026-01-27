@@ -29,6 +29,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { BrandGuard } from "@/components/brand-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { CartProvider } from "@/contexts/CartContext";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
@@ -75,13 +76,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${inter.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
         <QueryProvider>
-          <BrandGuard currentBrand={brandKey} />
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <ColorComponent />
+          <CartProvider>
+            <BrandGuard currentBrand={brandKey} />
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <ColorComponent />
+          </CartProvider>
         </QueryProvider>
       </body>
     </html>

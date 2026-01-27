@@ -1,45 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Food } from "@/lib/api/types";
 import { Minus, Plus } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface FoodCardProps {
     item: Food;
     showTimeSlots?: boolean;
-    initialQuantity?: number;
-    onQuantityChange?: (id: number, quantity: number) => void;
 }
 
 const FoodCard: React.FC<FoodCardProps> = ({ 
     item, 
-    showTimeSlots = false,
-    initialQuantity = 0,
-    onQuantityChange
+    showTimeSlots = false
 }) => {
-    const [quantity, setQuantity] = useState(initialQuantity);
+    const { getFoodQuantity, addFood, updateFoodQuantity } = useCart();
+    const quantity = getFoodQuantity(item.id);
 
     const handleAddToCart = () => {
-        const newQuantity = 1;
-        setQuantity(newQuantity);
-        onQuantityChange?.(item.id, newQuantity);
+        addFood(item, 1);
     };
 
     const handleDecrease = () => {
         if (quantity > 0) {
-            const newQuantity = quantity - 1;
-            setQuantity(newQuantity);
-            onQuantityChange?.(item.id, newQuantity);
+            updateFoodQuantity(item.id, quantity - 1);
         }
     };
 
     const handleIncrease = () => {
-        const newQuantity = quantity + 1;
-        setQuantity(newQuantity);
-        onQuantityChange?.(item.id, newQuantity);
+        updateFoodQuantity(item.id, quantity + 1);
     };
 
     return (

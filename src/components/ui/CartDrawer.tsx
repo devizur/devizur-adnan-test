@@ -31,7 +31,6 @@ const CartContent: React.FC = () => {
         activityItems,
         updateFoodQuantity,
         removeFood,
-        updateActivityQuantity,
         removeActivity,
         clearCart,
     } = useCart();
@@ -42,7 +41,7 @@ const CartContent: React.FC = () => {
     );
 
     const activitySubtotal = activityItems.reduce(
-        (sum, item) => sum + parsePrice(item.activity.price) * item.quantity,
+        (sum, item) => sum + parsePrice(item.activity.price),
         0
     );
 
@@ -85,11 +84,11 @@ const CartContent: React.FC = () => {
                             <p className="text-gray-400 text-sm">No food items yet.</p>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             {foodItems.map((item) => (
                                 <div
                                     key={item.food.id}
-                                    className="flex items-start gap-3 pb-4 border-b border-accent/10 last:border-0 last:pb-0"
+                                    className="flex border border-accent/40 rounded-xl  items-start gap-3 p-2 "
                                 >
                                     <img
                                         src={item.food.image}
@@ -100,12 +99,10 @@ const CartContent: React.FC = () => {
                                         <h4 className="text-sm font-bold text-primary truncate">
                                             {item.food.title}
                                         </h4>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {item.food.category}
-                                        </p>
+
                                         <div className="flex items-center justify-between mt-2">
-                                            <div className="text-primary-1 font-bold">
-                                                {item.food.price}
+                                            <div className="text-accent text-sm">
+                                                {item.food.price} X  {item.quantity}
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button
@@ -175,7 +172,7 @@ const CartContent: React.FC = () => {
                             {activityItems.map((item) => (
                                 <div
                                     key={item.activity.id}
-                                    className="flex items-start gap-3 pb-4 border-b border-accent/10 last:border-0 last:pb-0"
+                                    className="flex items-start gap-3 border border-accent/40 rounded-xl p-2 "
                                 >
                                     <img
                                         src={item.activity.image}
@@ -183,52 +180,47 @@ const CartContent: React.FC = () => {
                                         className="w-16 h-16 rounded-lg object-cover"
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-sm font-bold text-primary truncate">
-                                            {item.activity.title}
-                                        </h4>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {item.activity.category}
-                                        </p>
-                                        <div className="flex items-center justify-between mt-2">
-                                            <div className="text-primary-1 font-bold">
-                                                {item.activity.price}
+
+                                        <div className="flex justify-between items-start">
+                                            <div className="">
+                                                <h4 className="text-sm font-bold text-primary truncate">
+                                                    {item.activity.title}
+                                                </h4>
+
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {item.activity.category}
+                                                </p>
+                                                <div className="flex items-center justify-between ">
+                                                    <div className=" text-primary text-sm ">
+                                                        {item.activity.price}
+                                                    </div>
+
+
+
+                                                </div>
+
+
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() =>
-                                                        updateActivityQuantity(
-                                                            item.activity.id,
-                                                            item.quantity - 1
-                                                        )
-                                                    }
-                                                    className="w-7 h-7 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all"
-                                                >
-                                                    <Minus className="w-3 h-3" />
-                                                </button>
-                                                <span className="text-sm font-medium text-primary w-8 text-center">
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    onClick={() =>
-                                                        updateActivityQuantity(
-                                                            item.activity.id,
-                                                            item.quantity + 1
-                                                        )
-                                                    }
-                                                    className="w-7 h-7 rounded bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all"
-                                                >
-                                                    <Plus className="w-3 h-3" />
-                                                </button>
+
+
+                                            <div className="flex items-start justify-end gap-2">
+
                                                 <button
                                                     onClick={() =>
                                                         removeActivity(item.activity.id)
                                                     }
-                                                    className="ml-2 text-gray-400 hover:text-red-400 transition-colors"
+                                                    className="ml-2 cursor-pointer text-red-300 transition-colors"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Badge variant="outline" className="bg-red-500/10 p-1 font-bold text-red-500/70   border-red-500  rounded-[10px]">  Remove</Badge>
+
                                                 </button>
                                             </div>
+
                                         </div>
+
+
+
+
                                     </div>
                                 </div>
                             ))}

@@ -99,7 +99,7 @@ const FoodCard: React.FC<FoodCardProps> = ({
                     <div className="flex items-center gap-2 w-full">
                         <button
                             onClick={handleDecrease}
-                            className="flex-shrink-0 w-14 h-10 rounded-[10px]  border-2 border-primary-1 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all cursor-pointer"
+                            className="flex-shrink-0 w-14 h-9 rounded-[10px]  border-2 border-primary-1 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all cursor-pointer"
                         >
                             <Minus className="w-4 h-4 text-primary  " />
                         </button>
@@ -108,7 +108,7 @@ const FoodCard: React.FC<FoodCardProps> = ({
                         </div>
                         <button
                             onClick={handleIncrease}
-                            className="flex-shrink-0 w-14 h-10  rounded-[10px]  bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all cursor-pointer font-bold"
+                            className="flex-shrink-0 w-14 h-9  rounded-[10px]  bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all cursor-pointer font-bold"
                         >
                             <Plus className="w-4 h-4" />
                         </button>

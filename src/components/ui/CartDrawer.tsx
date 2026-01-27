@@ -1,7 +1,8 @@
 "use client";
-
+import { IoMdClose } from "react-icons/io";
+import { Badge } from "@/components/ui/badge"
 import React from "react";
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -65,9 +66,9 @@ const CartContent: React.FC = () => {
                     <h2 className="text-2xl font-bold text-primary">Checkout</h2>
 
                     <DrawerClose asChild>
-                        <Button variant="outline">
-                            <X className="w-6 h-6" />
-                        </Button>
+                        <div  >
+                            <IoMdClose className="text-2xl cursor-pointer font-bold text-primary" />
+                        </div>
                     </DrawerClose>
 
                 </div>
@@ -77,18 +78,17 @@ const CartContent: React.FC = () => {
             </div>
 
             {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 max-h-[calc(100vh-300px)]">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6  ">
                 {/* Food Items Section */}
                 <Card className="p-4 bg-secondary border border-accent/10">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between ">
                         <h3 className="text-lg font-bold text-primary">Food Items</h3>
-                        <span className="px-3 py-1 bg-primary-1/20 text-primary-1 text-xs font-bold rounded-full">
-                            {foodItems.length} {foodItems.length === 1 ? "type" : "types"}
-                        </span>
+                        <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1 ">  {foodItems.length} {foodItems.length === 1 ? "type" : "types"}</Badge>
+
                     </div>
 
                     {foodItems.length === 0 ? (
-                        <div className="text-center py-8">
+                        <div className=" ">
                             <p className="text-gray-400 text-sm">No food items yet.</p>
                         </div>
                     ) : (
@@ -154,10 +154,10 @@ const CartContent: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-accent/10">
+                    <div className="">
                         <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-400">Food Subtotal</span>
-                            <span className="text-lg font-bold text-primary-1">
+                            <span className="text-lg   text-primary">
                                 {formatPrice(foodSubtotal)}
                             </span>
                         </div>
@@ -166,16 +166,15 @@ const CartContent: React.FC = () => {
 
                 {/* Activities Booking Section */}
                 <Card className="p-4 bg-secondary border border-accent/10">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between  ">
                         <h3 className="text-lg font-bold text-primary">Activities Booking</h3>
-                        <span className="px-3 py-1 bg-primary-1/20 text-primary-1 text-xs font-bold rounded-full">
-                            {activityItems.length}{" "}
-                            {activityItems.length === 1 ? "booking" : "bookings"}
-                        </span>
+
+                        <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1 ">      {activityItems.length}{" "}
+                            {activityItems.length === 1 ? "booking" : "bookings"}</Badge>
                     </div>
 
                     {activityItems.length === 0 ? (
-                        <div className="text-center py-8">
+                        <div className="">
                             <p className="text-gray-400 text-sm">No booking yet.</p>
                         </div>
                     ) : (
@@ -243,10 +242,10 @@ const CartContent: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-accent/10">
+                    <div className="">
                         <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-400">Booking Subtotal</span>
-                            <span className="text-lg font-bold text-primary-1">
+                            <span className="text-lg   text-primary">
                                 {formatPrice(activitySubtotal)}
                             </span>
                         </div>
@@ -255,63 +254,66 @@ const CartContent: React.FC = () => {
 
                 {/* Summary Section */}
                 <Card className="p-4 bg-secondary border border-accent/10">
-                    <h3 className="text-lg font-bold text-primary mb-4">Summary</h3>
+                    <h3 className="text-lg font-bold text-primary ">Summary</h3>
                     <div className="space-y-3">
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Subtotal</span>
+                            <span className="text-primary">Subtotal</span>
                             <span className="text-primary font-medium">
                                 {formatPrice(subtotal)}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Service Fee (5%)</span>
+                            <span className="text-primary">Service Fee (5%)</span>
                             <span className="text-primary font-medium">
                                 {formatPrice(serviceFee)}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-primary-1">Discount</span>
-                            <span className="text-primary-1 font-medium">
+                            <span className="text-primary ">
                                 {formatPrice(discount)}
                             </span>
                         </div>
                         <div className="pt-3 border-t border-accent/10">
                             <div className="flex justify-between">
-                                <span className="text-lg font-bold text-primary">
+                                <span className="text-lg font-semibold text-primary">
                                     Total Amount
                                 </span>
-                                <span className="text-xl font-bold text-primary-1">
+                                <span className="text-xl font-samibold text-primary">
                                     {formatPrice(total)}
                                 </span>
                             </div>
                         </div>
                     </div>
-                </Card>
-            </div>
 
-            {/* Footer - Action Buttons */}
-            <div className="p-6 border-t border-accent/20 space-y-3 bg-secondary-2">
-                <Button
-                    className="w-full py-3 bg-primary-1 hover:bg-primary-1/90 text-black font-bold rounded-lg"
-                    onClick={() => {
-                        // Handle payment
-                        console.log("Add Payment clicked");
-                    }}
-                >
-                    Add Payment
-                </Button>
-                <Button
-                    variant="outline"
-                    className="w-full py-3 border-2 border-primary-1 text-primary-1 hover:bg-primary-1/10 font-bold rounded-lg"
-                    onClick={clearCart}
-                >
-                    Clear Cart
-                </Button>
-                <p className="text-xs text-gray-400 text-center pt-2">
+                    <div className=" space-y-3 bg-secondary-2">
+                        <Button
+                            className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+                            onClick={() => {
+                                // Handle payment
+                                console.log("Add Payment clicked");
+                            }}
+                        >
+                            Add Payment
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1/10 hover:bg-primary-2  text-primary-1 border border-primary-1"
+                            onClick={clearCart}
+                        >
+                            Clear Cart
+                        </Button>
+
+                    </div>
+                </Card>
+                <p className="text-xs text-gray-400   pt-1">
                     Tip: Food orders, activity bookings, and optional table reservations are all
                     submitted together in one flow.
                 </p>
             </div>
+
+
+
         </>
     );
 };
@@ -347,8 +349,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     if (!open) onClose();
                 }}
             >
-             
-                <DrawerContent className="max-h-[90vh] md:h-full md:max-h-none flex flex-col">
+
+                <DrawerContent className="max-h-[90vh] lg:min-w-[75vh] bg-secondary-2 border-secondary-2 md:h-full  md:max-h-none flex flex-col">
                     <CartContent />
                 </DrawerContent>
             </Drawer>

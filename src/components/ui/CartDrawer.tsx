@@ -281,6 +281,7 @@ const CartContent: React.FC = () => {
 
                     <div className=" space-y-3 bg-secondary-2">
                         <BookingDialog
+                            initialActivityId={activityItems[0]?.activity.id}
                             onConfirm={() => {
                                 // Future: integrate real payment flow here
                                 console.log("Payment confirmed");

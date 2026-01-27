@@ -55,7 +55,7 @@ export default function RootLayout({
   const activeFontFamily = config.theme.fontFamily ? `'${config.theme.fontFamily}', sans-serif` : "var(--font-geist-sans)";
 
   return (
-    <html lang="en" style={{
+    <html lang="en" suppressHydrationWarning style={{
       // @ts-ignore
       "--primary": config.theme["primary"],
       "--primary-1": config.theme["primary-1"],
@@ -73,6 +73,7 @@ export default function RootLayout({
         )}
       </head>
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${inter.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
         <QueryProvider>

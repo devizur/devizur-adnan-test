@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
     Drawer,
+    DrawerClose,
     DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
     DrawerDescription,
     DrawerFooter,
-    DrawerClose,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
 } from "@/components/ui/drawer";
 
 interface CartDrawerProps {
@@ -21,9 +22,7 @@ interface CartDrawerProps {
 }
 
 // Shared cart content component
-const CartContent: React.FC<{
-    onClose?: () => void;
-}> = ({ onClose }) => {
+const CartContent: React.FC = () => {
     const {
         foodItems,
         activityItems,
@@ -64,14 +63,13 @@ const CartContent: React.FC<{
             <div className="p-6 border-b border-accent/20">
                 <div className="flex items-center justify-between mb-2">
                     <h2 className="text-2xl font-bold text-primary">Checkout</h2>
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-primary transition-colors"
-                        >
+
+                    <DrawerClose asChild>
+                        <Button variant="outline">
                             <X className="w-6 h-6" />
-                        </button>
-                    )}
+                        </Button>
+                    </DrawerClose>
+
                 </div>
                 <p className="text-sm text-gray-400">
                     Items, bookings, and table reservations—all in one place.
@@ -319,34 +317,41 @@ const CartContent: React.FC<{
 };
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
+    const [isDesktop, setIsDesktop] = React.useState(false);
+
+    React.useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const mediaQuery = window.matchMedia("(min-width: 768px)");
+
+        // Set initial value
+        setIsDesktop(mediaQuery.matches);
+
+        const handleChange = (event: MediaQueryListEvent) => {
+            setIsDesktop(event.matches);
+        };
+
+        mediaQuery.addEventListener("change", handleChange);
+
+        return () => {
+            mediaQuery.removeEventListener("change", handleChange);
+        };
+    }, []);
+
     return (
         <>
-            {/* Mobile Drawer - Bottom */}
-            <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-                <DrawerContent className="max-h-[90vh] md:hidden flex flex-col">
+            <Drawer
+                direction={isDesktop ? "right" : "bottom"}
+                open={isOpen}
+                onOpenChange={(open) => {
+                    if (!open) onClose();
+                }}
+            >
+             
+                <DrawerContent className="max-h-[90vh] md:h-full md:max-h-none flex flex-col">
                     <CartContent />
                 </DrawerContent>
             </Drawer>
-
-            {/* Desktop Side Drawer */}
-            {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="hidden md:block fixed inset-0 bg-black/50 z-40 transition-opacity"
-                        onClick={onClose}
-                    />
-
-                    {/* Side Drawer */}
-                    <div
-                        className={`hidden md:flex fixed right-0 top-0 h-full w-full max-w-md bg-secondary-2 z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex-col ${
-                            isOpen ? "translate-x-0" : "translate-x-full"
-                        }`}
-                    >
-                        <CartContent onClose={onClose} />
-                    </div>
-                </>
-            )}
         </>
     );
 };

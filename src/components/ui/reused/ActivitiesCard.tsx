@@ -7,18 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 
-export interface ProductItem {
-    id: number;
-    title: string;
-    price: string;
-    unit: string;
-    rating: number;
-    image: string;
-    duration: string;
-    discount?: string;
-    timeSlots?: string[];
-}
-
 interface ActivitiesCardProps {
     item: Activity;
     showTimeSlots?: boolean;

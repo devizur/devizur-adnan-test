@@ -1,6 +1,6 @@
 "use client";
 import { IoMdClose } from "react-icons/io";
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -16,6 +16,7 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
+import { formatPrice, parsePrice } from "@/lib/utils";
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -34,11 +35,6 @@ const CartContent: React.FC = () => {
         clearCart,
     } = useCart();
 
-    // Calculate prices
-    const parsePrice = (priceStr: string): number => {
-        return parseFloat(priceStr.replace(/[^0-9.]/g, "")) || 0;
-    };
-
     const foodSubtotal = foodItems.reduce(
         (sum, item) => sum + parsePrice(item.food.price) * item.quantity,
         0
@@ -53,10 +49,6 @@ const CartContent: React.FC = () => {
     const serviceFee = subtotal * 0.05; // 5% service fee
     const discount = 0; // Can be calculated based on discounts
     const total = subtotal + serviceFee - discount;
-
-    const formatPrice = (amount: number): string => {
-        return `$${amount.toFixed(2)}`;
-    };
 
     return (
         <>

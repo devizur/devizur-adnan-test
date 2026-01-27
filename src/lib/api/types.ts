@@ -1,4 +1,4 @@
-import { ProductItem } from "@/components/ui/reused/ProductCard";
+import { ProductItem } from "@/components/ui/reused/ActivitiesCard";
 
 export interface Activity extends ProductItem {
     id: number;

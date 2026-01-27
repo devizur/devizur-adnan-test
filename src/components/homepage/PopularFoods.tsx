@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import ProductCard from "@/components/ui/reused/ProductCard";
 import { useFoods } from "@/lib/api/hooks";
 import Link from 'next/link';
+import FoodCard from '../ui/reused/FoodCard';
 
 // Re-export Food type for backward compatibility
 export type { Food } from "@/lib/api/types";
@@ -57,7 +57,7 @@ const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {itemsToShow.map((food) => (
-                    <ProductCard key={food.id} item={food} />
+                    <FoodCard key={food.id} item={food} />
                 ))}
             </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import ProductCard from "@/components/ui/reused/ProductCard";
+import ActivitiesCard from "@/components/ui/reused/ActivitiesCard";
 import { useActivities } from "@/lib/api/hooks";
 import Link from 'next/link';
 
@@ -57,7 +57,7 @@ const PopularActivities: React.FC<PopularActivitiesProps> = ({ limit, searchTerm
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {itemsToShow.map((activity) => (
-                    <ProductCard key={activity.id} item={activity} showTimeSlots />
+                    <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>
 

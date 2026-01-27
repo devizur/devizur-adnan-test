@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import ProductCard from "@/components/ui/reused/ProductCard";
 import { useFoods } from "@/lib/api/hooks";
+import FoodCard from "../ui/reused/FoodCard";
 
 interface FoodsPageSectionProps {
     searchTerm?: string;
@@ -43,7 +43,7 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filtered.map((food) => (
-                    <ProductCard key={food.id} item={food} />
+                    <FoodCard key={food.id} item={food} />
                 ))}
             </div>
         </section>

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ProductCard from "@/components/ui/reused/ProductCard";
+import ActivitiesCard from "@/components/ui/reused/ActivitiesCard";
 import { useActivities } from "@/lib/api/hooks";
 
 interface ActivitiesPageSectionProps {
@@ -43,7 +43,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filtered.map((activity) => (
-                    <ProductCard key={activity.id} item={activity} showTimeSlots />
+                    <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>
         </section>

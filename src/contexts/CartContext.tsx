@@ -11,7 +11,8 @@ export interface CartFoodItem {
 
 export interface CartActivityItem {
     activity: Activity;
-    quantity: number;
+    gameNo: number;
+    ///////////////////////////
 }
 
 interface CartContextType {
@@ -20,12 +21,10 @@ interface CartContextType {
     addFood: (food: Food, quantity?: number) => void;
     removeFood: (foodId: number) => void;
     updateFoodQuantity: (foodId: number, quantity: number) => void;
-    addActivity: (activity: Activity, quantity?: number) => void;
+    addActivity: (activity: Activity) => void;
     removeActivity: (activityId: number) => void;
-    updateActivityQuantity: (activityId: number, quantity: number) => void;
     clearCart: () => void;
     getFoodQuantity: (foodId: number) => number;
-    getActivityQuantity: (activityId: number) => number;
     getTotalItems: () => number;
 }
 
@@ -47,7 +46,15 @@ const loadCartFromStorage = () => {
         const activityItemsStr = localStorage.getItem(CART_STORAGE_KEYS.ACTIVITY_ITEMS);
 
         const foodItems = foodItemsStr ? JSON.parse(foodItemsStr) : [];
-        const activityItems = activityItemsStr ? JSON.parse(activityItemsStr) : [];
+        const rawActivityItems = activityItemsStr ? JSON.parse(activityItemsStr) : [];
+
+        // Ensure backward compatibility and default games value
+        const activityItems: CartActivityItem[] = rawActivityItems.map(
+            (item: any) => ({
+                ...item,
+                games: item.games ?? 1,
+            })
+        );
 
         return { foodItems, activityItems };
     } catch (error) {
@@ -119,35 +126,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
         );
     };
 
-    const addActivity = (activity: Activity, quantity: number = 1) => {
+    const addActivity = (activity: Activity) => {
         setActivityItems((prev) => {
-            const existing = prev.find((item) => item.activity.id === activity.id);
-            if (existing) {
-                return prev.map((item) =>
-                    item.activity.id === activity.id
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                );
+            const exists = prev.some((item) => item.activity.id === activity.id);
+            if (exists) {
+                return prev;
             }
-            return [...prev, { activity, quantity }];
+            return [...prev, { activity, gameNo: 1}];
         });
     };
+    
+
+
 
     const removeActivity = (activityId: number) => {
         setActivityItems((prev) =>
             prev.filter((item) => item.activity.id !== activityId)
-        );
-    };
-
-    const updateActivityQuantity = (activityId: number, quantity: number) => {
-        if (quantity <= 0) {
-            removeActivity(activityId);
-            return;
-        }
-        setActivityItems((prev) =>
-            prev.map((item) =>
-                item.activity.id === activityId ? { ...item, quantity } : item
-            )
         );
     };
 
@@ -166,17 +160,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return item?.quantity || 0;
     };
 
-    const getActivityQuantity = (activityId: number) => {
-        const item = activityItems.find((item) => item.activity.id === activityId);
-        return item?.quantity || 0;
-    };
-
     const getTotalItems = () => {
         const foodCount = foodItems.reduce((sum, item) => sum + item.quantity, 0);
-        const activityCount = activityItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-        );
+        const activityCount = activityItems.length;
         return foodCount + activityCount;
     };
 
@@ -190,10 +176,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 updateFoodQuantity,
                 addActivity,
                 removeActivity,
-                updateActivityQuantity,
                 clearCart,
                 getFoodQuantity,
-                getActivityQuantity,
                 getTotalItems,
             }}
         >

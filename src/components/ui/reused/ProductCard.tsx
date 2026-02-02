@@ -11,7 +11,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }) => {
     return (
-    <Card className="p-2 hover:border-primary-1/30 bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
+    <Card className="p-2  bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
       <div className="relative h-48 rounded-[10px] overflow-hidden">
         <img
           src={item.image}

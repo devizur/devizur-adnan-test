@@ -41,4 +41,29 @@ export interface SignInResponse {
   token: string;
 }
 
+export interface SignUpRequest {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface SignUpResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  token: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  success: boolean;
+}
+
 export type OAuthProvider = "google" | "facebook";

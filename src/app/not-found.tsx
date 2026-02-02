@@ -27,11 +27,11 @@ export default function NotFound() {
       <div className="z-10 max-w-2xl text-center space-y-8">
         {/* 404 Number */}
         <div className="relative">
-          <h1 className="text-[120px] md:text-[180px] font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FFEC00] via-[#d4d428] to-[#9e9e16] leading-none">
+          <h1 className="text-[120px] md:text-[180px] font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-primary-1 via-[#d4d428] to-[#9e9e16] leading-none">
             404
           </h1>
           <div className="absolute inset-0 blur-3xl opacity-30">
-            <h1 className="text-[120px] md:text-[180px] font-bold tracking-tight text-[#FFEC00] leading-none">
+            <h1 className="text-[120px] md:text-[180px] font-bold tracking-tight text-primary-1 leading-none">
               404
             </h1>
           </div>
@@ -50,14 +50,14 @@ export default function NotFound() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/">
-            <Button className="w-full sm:w-auto h-12 px-8 rounded-lg bg-[#FFEC00] text-black font-bold hover:bg-[#E6D500] hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300">
+            <Button className="w-full sm:w-auto h-12 px-8 rounded-lg bg-primary-1 text-black font-bold hover:bg-[#E6D500] hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300">
               Back to Home
             </Button>
           </Link>
           <Link href="/contact">
             <Button
               variant="outline"
-              className="w-full sm:w-auto h-12 px-8 rounded-lg border-zinc-700 bg-transparent text-zinc-200 hover:bg-[#1a1a1a] hover:text-white hover:border-[#FFEC00] transition-all duration-300"
+              className="w-full sm:w-auto h-12 px-8 rounded-lg border-zinc-700 bg-transparent text-zinc-200 hover:bg-[#1a1a1a] hover:text-white hover:border-primary-1 transition-all duration-300"
             >
               Contact Support
             </Button>
@@ -68,15 +68,15 @@ export default function NotFound() {
         <div className="pt-8 text-sm text-zinc-500">
           <p>
             Or explore{" "}
-            <Link href="/packages" className="text-zinc-300 hover:text-[#FFEC00] transition-colors underline underline-offset-4">
+            <Link href="/packages" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
               Packages
             </Link>
             ,{" "}
-            <Link href="/activities" className="text-zinc-300 hover:text-[#FFEC00] transition-colors underline underline-offset-4">
+            <Link href="/activities" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
               Activities
             </Link>
             , or{" "}
-            <Link href="/foods" className="text-zinc-300 hover:text-[#FFEC00] transition-colors underline underline-offset-4">
+            <Link href="/foods" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
               Foods
             </Link>
           </p>

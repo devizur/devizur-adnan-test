@@ -2,7 +2,7 @@
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { activitiesApi, foodsApi, packagesApi, authApi } from "./services";
-import { Activity, Food, Package, SignInRequest, SignInResponse } from "./types";
+import { Activity, Food, Package, SignInRequest, SignInResponse, SignUpRequest, SignUpResponse, ForgotPasswordRequest, ForgotPasswordResponse } from "./types";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -93,5 +93,17 @@ export function useSignIn(): UseMutationResult<SignInResponse, Error, SignInRequ
 export function useOAuthSignIn(): UseMutationResult<SignInResponse, Error, "google" | "facebook"> {
     return useMutation({
         mutationFn: (provider: "google" | "facebook") => authApi.signInWithOAuth(provider),
+    });
+}
+
+export function useSignUp(): UseMutationResult<SignUpResponse, Error, SignUpRequest> {
+    return useMutation({
+        mutationFn: (data: SignUpRequest) => authApi.signUp(data),
+    });
+}
+
+export function useForgotPassword(): UseMutationResult<ForgotPasswordResponse, Error, ForgotPasswordRequest> {
+    return useMutation({
+        mutationFn: (data: ForgotPasswordRequest) => authApi.forgotPassword(data),
     });
 }

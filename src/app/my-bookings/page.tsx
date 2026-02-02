@@ -70,7 +70,7 @@ export default function MyBookingsPage() {
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                     <div className="space-y-4">
-                        <Badge className="bg-[#FFEC00] text-black hover:bg-[#E6D500] font-semibold px-4 py-1.5 rounded-full text-xs">
+                        <Badge className="bg-primary-1 text-black hover:bg-[#E6D500] font-semibold px-4 py-1.5 rounded-full text-xs">
                             Manage your reservations
                         </Badge>
                         <div>
@@ -94,7 +94,7 @@ export default function MyBookingsPage() {
                                 <span className="text-zinc-400 text-sm font-medium">
                                     {stat.label}
                                 </span>
-                                <span className={`text-3xl font-bold text-[#FFEC00]`}>
+                                <span className={`text-3xl font-bold text-primary-1`}>
                                     {stat.value}
                                 </span>
                             </div>
@@ -159,15 +159,15 @@ export default function MyBookingsPage() {
                                         </div>
                                         <div className="flex flex-wrap items-center gap-4 text-zinc-400 text-sm">
                                             <div className="flex items-center gap-1.5">
-                                                <Calendar className="size-4 text-[#FFEC00]" />
+                                                <Calendar className="size-4 text-primary-1" />
                                                 <span>{booking.date}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
-                                                <Clock className="size-4 text-[#FFEC00]" />
+                                                <Clock className="size-4 text-primary-1" />
                                                 <span>{booking.time}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
-                                                <User className="size-4 text-[#FFEC00]" />
+                                                <User className="size-4 text-primary-1" />
                                                 <span>{booking.people} People</span>
                                             </div>
                                             <div className="w-1 h-1 rounded-full bg-zinc-600 hidden sm:block" />
@@ -185,7 +185,7 @@ export default function MyBookingsPage() {
                                                 Check In
                                             </Button>
                                         )}
-                                        <Button className="bg-[#FFEC00] hover:bg-[#E6D500] text-black font-semibold h-9 px-4">
+                                        <Button className="bg-primary-1 hover:bg-[#E6D500] text-black font-semibold h-9 px-4">
                                             View
                                         </Button>
                                         <Button variant="outline" className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 h-9 px-4" disabled={booking.status !== "Upcoming"}>
@@ -212,7 +212,7 @@ export default function MyBookingsPage() {
                                             Check In
                                         </Button>
                                     )}
-                                    <Button className="bg-[#FFEC00] hover:bg-[#E6D500] text-black font-semibold w-full">
+                                    <Button className="bg-primary-1 hover:bg-[#E6D500] text-black font-semibold w-full">
                                         View
                                     </Button>
                                     <Button variant="outline" className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 w-full" disabled={booking.status !== "Upcoming"}>

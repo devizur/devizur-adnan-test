@@ -1,4 +1,4 @@
-import { Activity, Food, Package, SignInRequest, SignInResponse } from "./types";
+import { Activity, Food, Package, SignInRequest, SignInResponse, SignUpRequest, SignUpResponse, ForgotPasswordRequest, ForgotPasswordResponse } from "./types";
 
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -150,5 +150,80 @@ export const authApi = {
             },
             token: `mock-${provider}-token-` + Date.now(),
         };
+    },
+    
+    async signUp(data: SignUpRequest): Promise<SignUpResponse> {
+        if (API_BASE_URL) {
+            // REST API implementation
+            const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: "Sign up failed" }));
+                throw new Error(error.message || "Sign up failed");
+            }
+            
+            return response.json();
+        }
+        
+        // Mock implementation for development
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Validate passwords match
+        if (data.password !== data.confirmPassword) {
+            throw new Error("Passwords do not match");
+        }
+        
+        // Simple validation
+        if (data.name && data.email && data.password) {
+            return {
+                user: {
+                    id: "new-user-" + Date.now(),
+                    email: data.email,
+                    name: data.name,
+                },
+                token: "mock-signup-token-" + Date.now(),
+            };
+        }
+        
+        throw new Error("Please fill in all fields");
+    },
+    
+    async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+        if (API_BASE_URL) {
+            // REST API implementation
+            const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: "Failed to send reset email" }));
+                throw new Error(error.message || "Failed to send reset email");
+            }
+            
+            return response.json();
+        }
+        
+        // Mock implementation for development
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        // Simple validation
+        if (data.email) {
+            return {
+                success: true,
+                message: "Password reset link has been sent to your email address.",
+            };
+        }
+        
+        throw new Error("Please provide a valid email address");
     },
 };

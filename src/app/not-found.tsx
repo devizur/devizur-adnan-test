@@ -50,7 +50,7 @@ export default function NotFound() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/">
-            <Button className="w-full sm:w-auto h-12 px-8 rounded-lg bg-primary-1 text-black font-bold hover:bg-[#E6D500] hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300">
+            <Button variant="primary" className="w-full sm:w-auto h-12 px-8 rounded-lg">
               Back to Home
             </Button>
           </Link>

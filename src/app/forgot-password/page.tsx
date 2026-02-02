@@ -61,7 +61,8 @@ export default function ForgotPasswordPage() {
                             <Button
                                 type="submit"
                                 disabled={forgotPasswordMutation.isPending}
-                                className="w-full h-12 rounded-lg bg-primary-1 text-black font-bold hover:bg-primary-1-hover hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant="primary"
+                                className="w-full h-12 rounded-lg"
                             >
                                 {forgotPasswordMutation.isPending ? "Sending..." : "Send Reset Link"}
                             </Button>
@@ -129,7 +130,7 @@ export default function ForgotPasswordPage() {
 
                         <div className="space-y-4">
                             <Link href="/sign-in">
-                                <Button className="w-full h-12 rounded-lg bg-primary-1 text-black font-bold hover:bg-primary-1-hover hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300">
+                                <Button variant="primary" className="w-full h-12 rounded-lg">
                                     Back to Sign In
                                 </Button>
                             </Link>

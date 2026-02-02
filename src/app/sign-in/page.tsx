@@ -120,7 +120,8 @@ export default function SignInPage() {
                     <Button
                         type="submit"
                         disabled={signInMutation.isPending}
-                        className="w-full h-12 rounded-lg bg-primary-1 text-black font-bold hover:bg-primary-1-hover hover:shadow-[0_0_20px_rgba(255,236,0,0.3)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="primary"
+                        className="w-full h-12 rounded-lg"
                     >
                         {signInMutation.isPending ? "Signing In..." : "Sign In."}
                     </Button>

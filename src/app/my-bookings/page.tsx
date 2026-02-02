@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search, Calendar, Clock, User, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { ProtectedRoute } from "@/components/providers/protected-route";
 
 // Mock Data
 const bookings = [
@@ -64,13 +65,14 @@ const stats = [
 
 export default function MyBookingsPage() {
     return (
-        <div className="min-h-screen bg-[#121212] pt-8 pb-20 font-sans text-white">
+        <ProtectedRoute>
+            <div className="min-h-screen bg-[#121212] pt-8 pb-20 font-sans text-white mt-32">
             <div className="container mx-auto px-4 lg:px-8 space-y-8">
 
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                     <div className="space-y-4">
-                        <Badge className="bg-primary-1 text-black hover:bg-[#E6D500] font-semibold px-4 py-1.5 rounded-full text-xs">
+                        <Badge className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold px-4 py-1.5 rounded-full text-xs">
                             Manage your reservations
                         </Badge>
                         <div>
@@ -185,7 +187,7 @@ export default function MyBookingsPage() {
                                                 Check In
                                             </Button>
                                         )}
-                                        <Button className="bg-primary-1 hover:bg-[#E6D500] text-black font-semibold h-9 px-4">
+                                        <Button className="bg-primary-1 hover:bg-primary-1-hover text-black font-semibold h-9 px-4">
                                             View
                                         </Button>
                                         <Button variant="outline" className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 h-9 px-4" disabled={booking.status !== "Upcoming"}>
@@ -212,7 +214,7 @@ export default function MyBookingsPage() {
                                             Check In
                                         </Button>
                                     )}
-                                    <Button className="bg-primary-1 hover:bg-[#E6D500] text-black font-semibold w-full">
+                                    <Button className="bg-primary-1 hover:bg-primary-1-hover text-black font-semibold w-full">
                                         View
                                     </Button>
                                     <Button variant="outline" className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 w-full" disabled={booking.status !== "Upcoming"}>
@@ -228,6 +230,7 @@ export default function MyBookingsPage() {
                 </div>
             </div>
         </div>
+        </ProtectedRoute>
     );
 }
 

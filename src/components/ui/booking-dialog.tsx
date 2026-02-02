@@ -49,7 +49,7 @@ export function BookingDialog({
   initialActivityId,
 }: BookingDialogProps) {
   const { data: activities = [], isLoading } = useActivities();
-  const { activityItems } = useCart();
+  const { activityItems, addActivity } = useCart();
 
   const [selectedActivityId, setSelectedActivityId] = React.useState<
     number | null
@@ -63,14 +63,38 @@ export function BookingDialog({
   const [selectedTime, setSelectedTime] = React.useState<string | null>(
     "6:00 am",
   );
+  const [showGameOptions, setShowGameOptions] = React.useState(false);
+
+  const handleActivityClick = (activityId: number) => {
+    if (selectedActivityId === activityId) {
+      // Toggle game options if clicking the same activity
+      setShowGameOptions(!showGameOptions);
+    } else {
+      // Select new activity and show game options
+      setSelectedActivityId(activityId);
+      setShowGameOptions(true);
+    }
+  };
+
+  const handleGameSelection = (option: GameOption) => {
+    setSelectedGameOption(option);
+    
+    // Add to cart when game option is selected
+    if (selectedActivityId) {
+      const activity = activities.find(a => a.id === selectedActivityId);
+      if (activity) {
+        const gameNo = parseInt(option.split(' ')[0]); // Extract number from "1 Game", "2 Games", etc.
+        addActivity(activity, gameNo);
+      }
+    }
+  };
 
   const handleConfirm = () => {
     onConfirm?.();
   };
 
   React.useEffect(() => {
-    // If an initial activity is provided (e.g. from cart-activity-items in localStorage),
-    // prefer that. Otherwise, fall back to the first available activity.
+    
     if (!selectedActivityId && activities.length > 0) {
       const fallbackId = initialActivityId ?? activities[0].id;
       const existsInList = activities.some(
@@ -122,34 +146,76 @@ export function BookingDialog({
                     : "border-accent/20 bg-secondary hover:bg-secondary/70";
 
                 return (
-                  <button
+                  <div
                     key={activity.id}
-                    type="button"
-                    onClick={() => setSelectedActivityId(activity.id)}
                     className={[
-                      "w-full flex items-center gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors",
+                      "w-full rounded-xl border px-3 py-2 transition-colors",
                       stateClasses,
                     ].join(" ")}
                   >
-                    <img
-                      src={activity.image}
-                      alt={activity.title}
-                      className="w-14 h-14 rounded-lg object-cover"
-                    />
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-primary truncate">
-                          {activity.title}
+                    <div
+                      className="flex items-center gap-3 cursor-pointer"
+                      onClick={() => handleActivityClick(activity.id)}
+                    >
+                      <img
+                        src={activity.image}
+                        alt={activity.title}
+                        className="w-14 h-14 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-primary truncate">
+                            {activity.title}
+                          </p>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                          {activity.duration || activity.category}
+                        </p>
+                        <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                          {activity.price} {activity.unit}
                         </p>
                       </div>
-                      <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
-                        {activity.duration || activity.category}
-                      </p>
-                      <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
-                        {activity.price} {activity.unit}
-                      </p>
+                      {isSelected && (
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          className={`text-primary-1 transition-transform ${showGameOptions ? 'rotate-180' : ''}`}
+                        >
+                          <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                      )}
                     </div>
-                  </button>
+                    
+                    {isSelected && showGameOptions && (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {GAME_OPTIONS.map((option) => {
+                          const isGameSelected = selectedGameOption === option;
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => handleGameSelection(option)}
+                              className={[
+                                "px-2 py-1.5 rounded-lg text-xs font-bold border cursor-pointer transition-colors",
+                                isGameSelected
+                                  ? "bg-primary-1 text-black border-primary-1"
+                                  : "bg-secondary-2 text-gray-300 border-accent/30 hover:bg-primary-1/10",
+                              ].join(" ")}
+                            >
+                              {option}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -307,6 +373,10 @@ export function BookingDialog({
             </div>
           </section>
         </main>
+
+
+
+
       </AlertDialogContent>
     </AlertDialog>
   );

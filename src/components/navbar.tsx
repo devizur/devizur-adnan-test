@@ -1,7 +1,7 @@
 "use client";
 
 import { getBrandConfig } from "@/lib/brand-config";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import CartDrawer from "@/components/ui/CartDrawer";
 export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
+    const router = useRouter();
     const [activeLink, setActiveLink] = useState("Home");
     const [isNotFound, setIsNotFound] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
@@ -38,6 +39,15 @@ export function Navbar() {
             setActiveLink(current.label);
         }
     }, [pathname, config.navItems]);
+
+    const handleMyBookingsClick = () => {
+        const authToken = localStorage.getItem("authToken");
+        if (authToken) {
+            router.push("/my-bookings");
+        } else {
+            router.push("/sign-in");
+        }
+    };
 
     if (pathname === "/brands" || isNotFound) return null;
 
@@ -82,7 +92,10 @@ export function Navbar() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-6">
-                    <button className="hidden md:block px-6 py-2 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-full hover:bg-primary-1 hover:text-black transition-all duration-300">
+                    <button 
+                        onClick={handleMyBookingsClick}
+                        className="hidden md:block px-6 py-2 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-full hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer"
+                    >
                         {navContent.bookings}
                     </button>
                     <button

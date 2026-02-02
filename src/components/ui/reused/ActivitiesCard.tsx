@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
+import { ActivityDetailsDialog } from "@/components/ui/activity-details-dialog";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -14,9 +15,13 @@ interface ActivitiesCardProps {
 
 const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = false }) => {
     const { addActivity } = useCart();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleBookNow = () => {
+        // Add to cart when clicking "Book Now"
         addActivity(item);
+        // Optionally also open details dialog
+        setIsDialogOpen(true);
     };
     return (
         <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
@@ -87,6 +92,12 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     Book Now
                 </Button>
             </CardContent>
+
+            <ActivityDetailsDialog
+                activity={item}
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+            />
         </Card>
     );
 };

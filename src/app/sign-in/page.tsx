@@ -46,7 +46,7 @@ export default function SignInPage() {
             localStorage.setItem("user", JSON.stringify(result.user));
             
             // Redirect to home page or dashboard
-            router.push("/");
+            router.push("/my-bookings");
         } catch (error) {
             console.error(`${provider} sign in failed:`, error);
         }
@@ -131,7 +131,7 @@ export default function SignInPage() {
                     <div className="text-zinc-400">
                         don&apos;t have an account?{" "}
                         <Link
-                            href="/signup"
+                            href="/sign-up"
                             className="font-medium text-white hover:underline decoration-zinc-500 underline-offset-4"
                         >
                             Create a account

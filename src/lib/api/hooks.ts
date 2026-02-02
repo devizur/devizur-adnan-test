@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { activitiesApi, foodsApi, packagesApi } from "./services";
-import { Activity, Food, Package } from "./types";
+import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
+import { activitiesApi, foodsApi, packagesApi, authApi } from "./services";
+import { Activity, Food, Package, SignInRequest, SignInResponse } from "./types";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -80,5 +80,18 @@ export function usePackage(id: number): UseQueryResult<Package | null, Error> {
         queryFn: () => packagesApi.getById(id),
         enabled: !!id,
         staleTime: 5 * 60 * 1000,
+    });
+}
+
+// Auth hooks
+export function useSignIn(): UseMutationResult<SignInResponse, Error, SignInRequest> {
+    return useMutation({
+        mutationFn: (credentials: SignInRequest) => authApi.signIn(credentials),
+    });
+}
+
+export function useOAuthSignIn(): UseMutationResult<SignInResponse, Error, "google" | "facebook"> {
+    return useMutation({
+        mutationFn: (provider: "google" | "facebook") => authApi.signInWithOAuth(provider),
     });
 }

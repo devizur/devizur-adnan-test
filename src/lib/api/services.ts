@@ -1,4 +1,4 @@
-import { Activity, Food, Package } from "./types";
+import { Activity, Food, Package, SignInRequest, SignInResponse } from "./types";
 
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -87,5 +87,68 @@ export const packagesApi = {
     async getById(id: number): Promise<Package | null> {
         const packages = await packagesApi.getAll();
         return packages.find((pkg) => pkg.id === id) || null;
+    },
+};
+
+// Auth API
+export const authApi = {
+    async signIn(credentials: SignInRequest): Promise<SignInResponse> {
+        if (API_BASE_URL) {
+            // REST API implementation
+            const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(credentials),
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: "Sign in failed" }));
+                throw new Error(error.message || "Sign in failed");
+            }
+            
+            return response.json();
+        }
+        
+        // Mock implementation for development
+        // Simulating API delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Simple mock validation
+        if (credentials.email && credentials.password) {
+            return {
+                user: {
+                    id: "1",
+                    email: credentials.email,
+                    name: "John Doe",
+                },
+                token: "mock-jwt-token-" + Date.now(),
+            };
+        }
+        
+        throw new Error("Invalid credentials");
+    },
+    
+    async signInWithOAuth(provider: "google" | "facebook"): Promise<SignInResponse> {
+        if (API_BASE_URL) {
+            // REST API implementation
+            // This would typically redirect to OAuth provider or open a popup
+            window.location.href = `${API_BASE_URL}/api/auth/${provider}`;
+            // The actual response would come from a callback URL
+            throw new Error("OAuth redirect initiated");
+        }
+        
+        // Mock implementation for development
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        return {
+            user: {
+                id: "oauth-" + provider + "-" + Date.now(),
+                email: `user@${provider}.com`,
+                name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+            },
+            token: `mock-${provider}-token-` + Date.now(),
+        };
     },
 };

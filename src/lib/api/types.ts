@@ -25,3 +25,20 @@ export interface Food extends BaseProduct {
 export interface Package extends BaseProduct {
   category: string;
 }
+
+// Auth types
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignInResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  token: string;
+}
+
+export type OAuthProvider = "google" | "facebook";

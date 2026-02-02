@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { ActivityDetailsDialog } from "@/components/ui/activity-details-dialog";
+import { toast } from "sonner";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -14,13 +15,21 @@ interface ActivitiesCardProps {
 }
 
 const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = false }) => {
-    const { addActivity } = useCart();
+    const { addActivity, activityItems } = useCart();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleBookNow = () => {
-        // Add to cart when clicking "Book Now"
-        addActivity(item);
-        // Optionally also open details dialog
+        const alreadyInCart = activityItems.some((i) => i.activity.id === item.id);
+        if (alreadyInCart) {
+            toast.info("Already in cart", {
+                description: item.title,
+            });
+        } else {
+            addActivity(item);
+            toast.success("Activity added to cart", {
+                description: item.title,
+            });
+        }
         setIsDialogOpen(true);
     };
     return (

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Food } from "@/lib/api/types";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface FoodCardProps {
     item: Food;
@@ -21,7 +22,16 @@ const FoodCard: React.FC<FoodCardProps> = ({
     const quantity = getFoodQuantity(item.id);
 
     const handleAddToCart = () => {
-        addFood(item, 1);
+        if (quantity > 0) {
+            toast.info("Already in cart", {
+                description: item.title,
+            });
+        } else {
+            addFood(item, 1);
+            toast.success("Food added to cart", {
+                description: item.title,
+            });
+        }
     };
 
     const handleDecrease = () => {
@@ -114,7 +124,7 @@ const FoodCard: React.FC<FoodCardProps> = ({
                         </button>
                     </div>
                 ) : (
-                    <Button 
+                    <Button
                         onClick={handleAddToCart}
                         className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
                     >

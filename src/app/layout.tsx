@@ -30,6 +30,7 @@ import { Footer } from "@/components/footer";
 import { BrandGuard } from "@/components/brand-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CartProvider } from "@/contexts/CartContext";
+import { Toaster } from "@/components/ui/toaster";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
@@ -86,6 +87,7 @@ export default function RootLayout({
             </main>
             <Footer />
             <ColorComponent />
+            <Toaster />
           </CartProvider>
         </QueryProvider>
       </body>

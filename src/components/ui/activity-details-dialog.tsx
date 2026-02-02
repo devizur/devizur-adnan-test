@@ -6,6 +6,7 @@ import { X, Clock, Users, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 
 interface ActivityDetailsDialogProps {
   activity: Activity | null;
@@ -26,7 +27,7 @@ export function ActivityDetailsDialog({
 }: ActivityDetailsDialogProps) {
   const [selectedGames, setSelectedGames] = React.useState(2);
   const [mounted, setMounted] = React.useState(false);
-  const { addActivity } = useCart();
+  const { addActivity, activityItems } = useCart();
 
   React.useEffect(() => {
     setMounted(true);
@@ -35,7 +36,13 @@ export function ActivityDetailsDialog({
   if (!mounted || !isOpen || !activity) return null;
 
   const handleAddToCart = () => {
-    addActivity(activity, selectedGames);
+    const alreadyInCart = activityItems.some((i) => i.activity.id === activity.id);
+    if (alreadyInCart) {
+      toast.info("Already in cart", { description: activity.title });
+    } else {
+      addActivity(activity, selectedGames);
+      toast.success("Activity added to cart", { description: activity.title });
+    }
     onClose();
   };
 

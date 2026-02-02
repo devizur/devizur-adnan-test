@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   item: Package;
@@ -11,10 +12,20 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }) => {
-    const { addPackage } = useCart();
+    const { addPackage, packageItems } = useCart();
 
     const handleBookNow = () => {
-        addPackage(item);
+        const alreadyInCart = packageItems.some((i) => i.pkg.id === item.id);
+        if (alreadyInCart) {
+            toast.info("Already in cart", {
+                description: item.title,
+            });
+        } else {
+            addPackage(item);
+            toast.success("Package added to cart", {
+                description: item.title,
+            });
+        }
     };
 
     return (

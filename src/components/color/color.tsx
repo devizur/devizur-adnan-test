@@ -5,6 +5,7 @@ import { Check, Copy } from 'lucide-react';
 
 const COLORS = [
     { id: 'p1', name: 'Primary 1', variable: '--primary-1', class: 'bg-primary-1', copyText: 'primary-1', description: 'Main Brand Accent' },
+    { id: 'p1h', name: 'Primary 1 Hover', variable: '--primary-1-hover', class: 'bg-primary-1-hover', copyText: 'primary-1-hover', description: 'Primary Hover State' },
     { id: 'p2', name: 'Primary 2', variable: '--primary-2', class: 'bg-primary-2', copyText: 'primary-2', description: 'Subtle Brand Shade' },
     { id: 's1', name: 'Secondary 1', variable: '--secondary', class: 'bg-secondary', copyText: 'secondary', description: 'System Secondary' },
     { id: 's2', name: 'Secondary 2', variable: '--secondary-2', class: 'bg-secondary-2', copyText: 'secondary-2', description: 'Card Backgrounds' },

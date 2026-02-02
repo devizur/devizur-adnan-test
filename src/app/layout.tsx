@@ -59,6 +59,7 @@ export default function RootLayout({
       // @ts-ignore
       "--primary": config.theme["primary"],
       "--primary-1": config.theme["primary-1"],
+      "--primary-1-hover": config.theme["primary-1-hover"],
       "--primary-2": config.theme["primary-2"],
       "--secondary": config.theme["secondary-1"],
       "--secondary-2": config.theme["secondary-2"],

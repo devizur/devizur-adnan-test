@@ -3,6 +3,7 @@
     "logo": "/logos/urban-bite.svg",
     "theme": {
         "primary-1": "oklch(0.5 0.15 140)",
+        "primary-1-hover": "oklch(0.45 0.15 140)",
         "primary-2": "oklch(0.4 0.15 140)",
         "secondary-1": "oklch(0.95 0.02 140)",
         "secondary-2": "oklch(0.85 0.05 140)",

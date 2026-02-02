@@ -38,6 +38,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-primary-1: var(--primary-1);
+  --color-primary-1-hover: var(--primary-1-hover);
   --color-primary-2: var(--primary-2);
   --color-secondary-2: var(--secondary-2);
   --radius-sm: calc(var(--radius) - 4px);
@@ -83,6 +84,7 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --primary-1: oklch(0.205 0 0);
+  --primary-1-hover: oklch(0.18 0 0);
   --primary-2: oklch(0.3 0 0);
   --secondary-2: oklch(0.9 0 0);
 }

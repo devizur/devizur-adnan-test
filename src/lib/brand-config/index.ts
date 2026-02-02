@@ -9,6 +9,7 @@ export interface BrandConfig {
   logo: string;
   theme: {
     "primary-1": string;
+    "primary-1-hover": string;
     "primary-2": string;
     "secondary-1": string;
     "secondary-2": string;

@@ -187,9 +187,9 @@ const CartContent: React.FC = () => {
 
                                         <div className="flex justify-between items-start">
                                             <div className="">
-                                                <h4 className="text-sm font-bold text-primary truncate">
+                                                <h2 className="text-sm font-bold text-primary truncate">
                                                     {item.activity.title}
-                                                </h4>
+                                                </h2>
 
                                                 <p className="text-xs text-gray-400 mt-1">
                                                     {item.activity.category}
@@ -423,7 +423,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                 }}
             >
 
-                <DrawerContent className="max-h-[90vh] lg:min-w-[75vh] bg-secondary-2 border-secondary-2 md:h-full  md:max-h-none flex flex-col">
+                <DrawerContent className="max-h-[90vh] lg:min-w-150 bg-secondary-2 border-secondary-2 md:h-full  md:max-h-none flex flex-col">
                     <CartContent />
                 </DrawerContent>
             </Drawer>

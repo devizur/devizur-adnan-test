@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
-import { ActivityDetailsDialog } from "@/components/ui/activity-details-dialog";
 import { toast } from "sonner";
 
 interface ActivitiesCardProps {
@@ -16,7 +15,6 @@ interface ActivitiesCardProps {
 
 const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = false }) => {
     const { addActivity, activityItems } = useCart();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleBookNow = () => {
         const alreadyInCart = activityItems.some((i) => i.activity.id === item.id);
@@ -30,7 +28,6 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                 description: item.title,
             });
         }
-        setIsDialogOpen(true);
     };
     return (
         <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
@@ -101,12 +98,6 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     Book Now
                 </Button>
             </CardContent>
-
-            <ActivityDetailsDialog
-                activity={item}
-                isOpen={isDialogOpen}
-                onClose={() => setIsDialogOpen(false)}
-            />
         </Card>
     );
 };

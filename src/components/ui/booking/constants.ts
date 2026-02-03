@@ -28,10 +28,3 @@ export const SHIFT = [
   { id: 2, label: "Afternoon" },
   { id: 3, label: "Evening" },
 ] as const;
-
-export const STEPS = [
-  { id: 1, label: "Products" },
-  { id: 2, label: "Date & Time" },
-  { id: 3, label: "Quantity" },
-  { id: 4, label: "Your Details" },
-] as const;

@@ -35,13 +35,9 @@ function formatDialogDate(date: Date) {
 interface BookingDialogProps {
   children: React.ReactNode;
   onConfirm?: () => void;
-  initialActivityId?: number;
 }
 
-export function BookingDialog({
-  children,
-  onConfirm,
-}: BookingDialogProps) {
+export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
   const {
     step,
     setStep,

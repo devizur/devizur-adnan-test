@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useBookingCart } from "@/contexts/BookingCartContext";
+import { useCart } from "@/contexts/CartContext";
 import { useActivities } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 import { OPTIONS, SLOTS, SHIFT } from "@/components/ui/booking/constants";
@@ -41,47 +42,69 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
   const {
     step,
     setStep,
-    selectedProducts,
-    totalSelectedQty,
-    slot,
-    setSlot,
-    activeTab,
-    setActiveTab,
-    bookingDetails,
+    activities: selectedActivities,
+    people,
+    pricing,
+    date,
+    timeOfDay,
+    selectedStartTime,
+    setDate,
+    setTimeOfDay,
+    setStartTime,
     setBookingDetails,
-    toggleProduct,
-    setProductOption,
-    updateProductQty,
+    addActivity,
+    removeActivity,
+    isActivitySelected,
+    getActivityGameOption,
+    setActivityGameOption,
+    incrementAdults,
+    decrementAdults,
+    incrementChildren,
+    decrementChildren,
+    perPersonBreakdown,
+    totalPeople,
     resetBookingCart,
+    syncActivitiesFromCart,
   } = useBookingCart();
+  const { activityItems: cartActivityItems } = useCart();
   const [isOpen, setIsOpen] = React.useState(false);
   const { data: activities = [], isLoading } = useActivities();
   const products = activities.slice(0, 10);
 
+  const prevOpenRef = React.useRef(false);
   React.useEffect(() => {
-    if (isOpen && !bookingDetails.date) {
-      setBookingDetails((prev) => ({
-        ...prev,
-        date: new Date().toISOString().slice(0, 10),
-      }));
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (justOpened) {
+      syncActivitiesFromCart(
+        cartActivityItems.map((item) => ({ activity: item.activity, gameNo: item.gameNo ?? 1 }))
+      );
     }
-  }, [isOpen, bookingDetails.date, setBookingDetails]);
+  }, [isOpen, cartActivityItems, syncActivitiesFromCart]);
+
+  React.useEffect(() => {
+    if (isOpen && !date) {
+      setDate(new Date().toISOString().slice(0, 10));
+    }
+  }, [isOpen, date, setDate]);
 
   const displayDate = React.useMemo(() => {
-    if (bookingDetails.date) {
-      const d = new Date(bookingDetails.date + "T12:00:00");
+    if (date) {
+      const d = new Date(date + "T12:00:00");
       if (!isNaN(d.getTime())) return d;
     }
     return new Date();
-  }, [bookingDetails.date]);
+  }, [date]);
 
   const setDisplayDate = (delta: number) => {
     const d = new Date(displayDate);
     d.setDate(d.getDate() + delta);
-    setBookingDetails((prev) => ({
-      ...prev,
-      date: d.toISOString().slice(0, 10),
-    }));
+    setDate(d.toISOString().slice(0, 10));
+  };
+
+  const handleToggleActivity = (pd: (typeof products)[0]) => {
+    if (isActivitySelected(pd.id)) removeActivity(pd.id);
+    else addActivity(pd, 1);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -102,19 +125,21 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
       <AlertDialogContent
         className="min-w-[90%] max-w-6xl max-h-[95vh] flex flex-col bg-[#1a1a1a] p-0 gap-0 text-white border-gray-800"
       >
-        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800 relative shrink-0">
-          <div className="flex items-center justify-between">
-            <AlertDialogTitle className="text-xl font-bold text-white">
+        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800 relative shrink-0 flex justify-between">
+          <div className="flex items-center justify-between  w-full">
+            <div className="text-xl font-bold text-white">
               Create Booking
-            </AlertDialogTitle>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            </div>
+            <div className="">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="p-1.5 rounded-full text-primary bg-red-500 hover:bg-red-800 cursor-pointer w-full  transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </AlertDialogHeader>
 
@@ -131,13 +156,13 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                 <p className="text-sm text-gray-400 py-4">Loading activities...</p>
               )}
               {products.map((pd) => {
-                const isActive = selectedProducts.some((item) => item.id === pd.id);
-                const product = selectedProducts.find((item) => item.id === pd.id);
+                const isActive = isActivitySelected(pd.id);
+                const gameOption = getActivityGameOption(pd.id);
                 return (
                   <div key={pd.id} className="relative">
                     <button
                       type="button"
-                      onClick={() => toggleProduct(pd)}
+                      onClick={() => handleToggleActivity(pd)}
                       className={cn(
                         "w-full text-left rounded-xl border transition-all overflow-hidden",
                         isActive
@@ -173,7 +198,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                         </p>
                       </div>
                     </button>
-                    {isActive && product && (
+                    {isActive && gameOption !== undefined && (
                       <div className="flex gap-2 mt-2 px-1">
                         {OPTIONS.map((opt) => (
                           <button
@@ -181,11 +206,11 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setProductOption(pd.id, opt.value);
+                              setActivityGameOption(pd.id, opt.value as 1 | 2 | 3);
                             }}
                             className={cn(
                               "flex-1 py-2 rounded-lg text-sm font-medium border transition-colors",
-                              product?.selectedOption === opt.value
+                              gameOption === opt.value
                                 ? "bg-primary-1 text-black border-primary-1"
                                 : "bg-[#222] text-gray-400 border-gray-700 hover:border-gray-600"
                             )}
@@ -238,10 +263,10 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => setTimeOfDay(tab.id as 1 | 2 | 3)}
                     className={cn(
                       "flex-1 py-2 rounded-lg text-sm font-medium transition-colors",
-                      activeTab === tab.id
+                      timeOfDay === tab.id
                         ? "bg-primary-1 text-black"
                         : "bg-[#222] text-gray-400 border border-gray-700 hover:border-gray-600"
                     )}
@@ -256,44 +281,77 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
               {step === 1 && (
                 <>
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-gray-300">Participants</h4>
-                    {selectedProducts[0]?.types?.map((type) => (
-                      <div
-                        key={type.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-[#222] border border-gray-800"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-white">{type.label}</p>
-                          <p className="text-xs text-gray-400">
-                            ${type.price.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={type.qty === 0}
-                            onClick={() =>
-                              updateProductQty(selectedProducts[0].id, type.id, "decrement")
-                            }
-                            className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
-                          >
-                            −
-                          </button>
-                          <span className="text-lg font-semibold text-white min-w-8 text-center">
-                            {type.qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateProductQty(selectedProducts[0].id, type.id, "increment")
-                            }
-                            className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 flex items-center justify-center"
-                          >
-                            +
-                          </button>
-                        </div>
+                    <h4 className="text-sm font-medium text-gray-300">Participants (for all games)</h4>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#222] border border-gray-800">
+                      <div>
+                        <p className="text-sm font-medium text-white">Adult</p>
+                        <p className="text-xs text-gray-400">${pricing.adultPrice.toFixed(2)}</p>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={people.adults === 0}
+                          onClick={decrementAdults}
+                          className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
+                        >
+                          −
+                        </button>
+                        <span className="text-lg font-semibold text-white min-w-8 text-center">
+                          {people.adults}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={incrementAdults}
+                          className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#222] border border-gray-800">
+                      <div>
+                        <p className="text-sm font-medium text-white">Child</p>
+                        <p className="text-xs text-gray-400">${pricing.childPrice.toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={people.children === 0}
+                          onClick={decrementChildren}
+                          className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
+                        >
+                          −
+                        </button>
+                        <span className="text-lg font-semibold text-white min-w-8 text-center">
+                          {people.children}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={incrementChildren}
+                          className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    {totalPeople > 0 && (
+                      <div className="p-3 rounded-xl bg-[#252525] border border-gray-800 space-y-1">
+                        <p className="text-xs text-gray-400">Per person</p>
+                        {perPersonBreakdown.adultsCount > 0 && (
+                          <p className="text-sm text-white">
+                            {perPersonBreakdown.adultsCount} Adult × ${perPersonBreakdown.adultPrice.toFixed(2)} = ${perPersonBreakdown.adultsSubtotal.toFixed(2)}
+                          </p>
+                        )}
+                        {perPersonBreakdown.childrenCount > 0 && (
+                          <p className="text-sm text-white">
+                            {perPersonBreakdown.childrenCount} Child × ${perPersonBreakdown.childPrice.toFixed(2)} = ${perPersonBreakdown.childrenSubtotal.toFixed(2)}
+                          </p>
+                        )}
+                        <p className="text-base font-semibold text-primary-1 pt-1 border-t border-gray-700 mt-2">
+                          Total: ${perPersonBreakdown.total.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -305,10 +363,10 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                         <button
                           key={s.t}
                           type="button"
-                          onClick={() => setSlot(s.t)}
+                          onClick={() => setStartTime(s.t)}
                           className={cn(
                             "relative py-2.5 px-2 rounded-lg border text-xs transition-colors flex flex-col items-center",
-                            slot === s.t
+                            selectedStartTime === s.t
                               ? "bg-primary-1 text-black border-primary-1"
                               : "bg-[#222] text-gray-300 border-gray-700 hover:border-gray-600"
                           )}
@@ -356,16 +414,16 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                 <Button
                   type="submit"
                   form="bookingForm"
-                  disabled={totalSelectedQty < 1}
+                  disabled={totalPeople < 1}
                   className="bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
                 >
                   Booking Request
-                  {totalSelectedQty > 0 ? ` with ${totalSelectedQty} Person${totalSelectedQty > 1 ? "s" : ""}` : ""}
+                  {totalPeople > 0 ? ` with ${totalPeople} Person${totalPeople > 1 ? "s" : ""}` : ""}
                 </Button>
               ) : (
                 <Button
                   type="button"
-                  disabled={selectedProducts.length === 0 || totalSelectedQty < 1}
+                  disabled={selectedActivities.length === 0 || totalPeople < 1}
                   className="bg-gray-600 text-gray-300 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
                   onClick={() => setStep(2)}
                 >

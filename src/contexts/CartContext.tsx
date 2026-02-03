@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Food, Activity, Package } from "@/lib/api/types";
 
 export interface CartFoodItem {
@@ -36,90 +36,10 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const CART_STORAGE_KEYS = {
-    FOOD_ITEMS: "cart-food-items",
-    ACTIVITY_ITEMS: "cart-activity-items",
-    PACKAGE_ITEMS: "cart-package-items",
-};
-
-// Load cart data from localStorage
-const loadCartFromStorage = () => {
-    if (typeof window === "undefined") {
-        return { foodItems: [], activityItems: [], packageItems: [] };
-    }
-
-    try {
-        const foodItemsStr = localStorage.getItem(CART_STORAGE_KEYS.FOOD_ITEMS);
-        const activityItemsStr = localStorage.getItem(CART_STORAGE_KEYS.ACTIVITY_ITEMS);
-        const packageItemsStr = localStorage.getItem(CART_STORAGE_KEYS.PACKAGE_ITEMS);
-
-        const foodItems = foodItemsStr ? JSON.parse(foodItemsStr) : [];
-        const rawActivityItems = activityItemsStr ? JSON.parse(activityItemsStr) : [];
-        const rawPackageItems = packageItemsStr ? JSON.parse(packageItemsStr) : [];
-
-        // Ensure backward compatibility and default gameNo value
-        const activityItems: CartActivityItem[] = rawActivityItems.map(
-            (item: any) => ({
-                ...item,
-                gameNo: item.gameNo ?? 1,
-            })
-        );
-
-        const packageItems: CartPackageItem[] = rawPackageItems.map(
-            (item: any) => ({
-                ...item,
-            })
-        );
-
-        return { foodItems, activityItems, packageItems };
-    } catch (error) {
-        console.error("Error loading cart from localStorage:", error);
-        return { foodItems: [], activityItems: [], packageItems: [] };
-    }
-};
-
-// Save cart data to localStorage
-const saveCartToStorage = (
-    foodItems: CartFoodItem[],
-    activityItems: CartActivityItem[],
-    packageItems: CartPackageItem[]
-) => {
-    if (typeof window === "undefined") return;
-
-    try {
-        localStorage.setItem(CART_STORAGE_KEYS.FOOD_ITEMS, JSON.stringify(foodItems));
-        localStorage.setItem(CART_STORAGE_KEYS.ACTIVITY_ITEMS, JSON.stringify(activityItems));
-        localStorage.setItem(CART_STORAGE_KEYS.PACKAGE_ITEMS, JSON.stringify(packageItems));
-    } catch (error) {
-        console.error("Error saving cart to localStorage:", error);
-    }
-};
-
 export function CartProvider({ children }: { children: ReactNode }) {
     const [foodItems, setFoodItems] = useState<CartFoodItem[]>([]);
     const [activityItems, setActivityItems] = useState<CartActivityItem[]>([]);
     const [packageItems, setPackageItems] = useState<CartPackageItem[]>([]);
-    const [isInitialized, setIsInitialized] = useState(false);
-
-    // Load cart from localStorage on mount
-    useEffect(() => {
-        const {
-            foodItems: savedFoodItems,
-            activityItems: savedActivityItems,
-            packageItems: savedPackageItems,
-        } = loadCartFromStorage();
-        setFoodItems(savedFoodItems);
-        setActivityItems(savedActivityItems);
-        setPackageItems(savedPackageItems);
-        setIsInitialized(true);
-    }, []);
-
-    // Save cart to localStorage whenever it changes
-    useEffect(() => {
-        if (isInitialized) {
-            saveCartToStorage(foodItems, activityItems, packageItems);
-        }
-    }, [foodItems, activityItems, packageItems, isInitialized]);
 
     const addFood = (food: Food, quantity: number = 1) => {
         setFoodItems((prev) => {
@@ -198,12 +118,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setFoodItems([]);
         setActivityItems([]);
         setPackageItems([]);
-        // Clear localStorage as well
-        if (typeof window !== "undefined") {
-            localStorage.removeItem(CART_STORAGE_KEYS.FOOD_ITEMS);
-            localStorage.removeItem(CART_STORAGE_KEYS.ACTIVITY_ITEMS);
-            localStorage.removeItem(CART_STORAGE_KEYS.PACKAGE_ITEMS);
-        }
     };
 
     const getFoodQuantity = (foodId: number) => {

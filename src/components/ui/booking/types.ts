@@ -1,15 +1,40 @@
 import type { Activity } from "@/lib/api/types";
 
-export type BookingProductType = {
-  id: number;
-  label: string;
-  qty: number;
-  price: number;
+/** Selected activity in booking with game option (1, 2, or 3 games) */
+export type BookingActivityItem = {
+  activity: Activity;
+  gameOption: 1 | 2 | 3;
 };
 
-export type SelectedBookingProduct = Activity & {
-  types: BookingProductType[];
-  selectedOption?: number;
+/** Global people selection for the whole booking (not per activity) */
+export type BookingPeople = {
+  adults: number;
+  children: number;
 };
 
+/** Pricing used for per-person calculation */
+export type BookingPricing = {
+  adultPrice: number;
+  childPrice: number;
+};
+
+/** Date/time selection */
+export type BookingDateTime = {
+  date: string; // YYYY-MM-DD
+  timeOfDay: 1 | 2 | 3; // Morning, Afternoon, Evening
+  selectedStartTime: string | undefined; // e.g. "11:00 am"
+};
+
+/** Form fields for booking holder (step 2) */
 export type BookingDetails = Record<string, string>;
+
+/** Per-person bill breakdown */
+export type PerPersonBreakdown = {
+  adultsCount: number;
+  childrenCount: number;
+  adultPrice: number;
+  childPrice: number;
+  adultsSubtotal: number;
+  childrenSubtotal: number;
+  total: number;
+};

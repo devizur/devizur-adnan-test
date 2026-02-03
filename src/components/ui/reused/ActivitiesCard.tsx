@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -15,19 +14,10 @@ interface ActivitiesCardProps {
 
 const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = false }) => {
     const { addActivity, activityItems } = useCart();
+    const isInCart = activityItems.some((i) => i.activity.id === item.id);
 
     const handleBookNow = () => {
-        const alreadyInCart = activityItems.some((i) => i.activity.id === item.id);
-        if (alreadyInCart) {
-            toast.info("Already in cart", {
-                description: item.title,
-            });
-        } else {
-            addActivity(item);
-            toast.success("Activity added to cart", {
-                description: item.title,
-            });
-        }
+        if (!isInCart) addActivity(item);
     };
     return (
         <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
@@ -91,11 +81,11 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     </div>
                 )}
 
-                <Button 
+                <Button
                     onClick={handleBookNow}
                     className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
                 >
-                    Book Now
+                    {isInCart ? "Book Now: Selected" : "Book Now"}
                 </Button>
             </CardContent>
         </Card>

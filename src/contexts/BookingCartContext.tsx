@@ -4,95 +4,95 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import type { Activity } from "@/lib/api/types";
-import type { SelectedBookingProduct, BookingDetails } from "@/components/ui/booking/types";
-
-const BOOKING_CART_STORAGE_KEY = "booking-cart";
+import type {
+  BookingActivityItem,
+  BookingPeople,
+  BookingPricing,
+  BookingDetails,
+  PerPersonBreakdown,
+} from "@/components/ui/booking/types";
 
 export interface BookingCartState {
-  selectedProducts: SelectedBookingProduct[];
+  /** Selected activities, each with game option (1, 2, or 3 games) */
+  activities: BookingActivityItem[];
+  /** Global people count for the whole booking */
+  people: BookingPeople;
+  /** Prices used for per-person calculation */
+  pricing: BookingPricing;
+  /** Date (YYYY-MM-DD) */
+  date: string;
+  /** Time of day: 1=Morning, 2=Afternoon, 3=Evening */
+  timeOfDay: 1 | 2 | 3;
+  /** Selected start time slot e.g. "11:00 am" */
+  selectedStartTime: string | undefined;
+  /** UI step: 1 = booking details, 2 = your details form */
   step: number;
-  slot: string | undefined;
-  activeTab: number;
+  /** Form fields for booking holder */
   bookingDetails: BookingDetails;
 }
 
+const defaultPeople: BookingPeople = { adults: 0, children: 0 };
+const defaultPricing: BookingPricing = { adultPrice: 12, childPrice: 9 };
+
 const defaultState: BookingCartState = {
-  selectedProducts: [],
+  activities: [],
+  people: defaultPeople,
+  pricing: defaultPricing,
+  date: "",
+  timeOfDay: 1,
+  selectedStartTime: undefined,
   step: 1,
-  slot: undefined,
-  activeTab: 1,
   bookingDetails: {},
 };
 
 interface BookingCartContextType extends BookingCartState {
   setStep: (step: number) => void;
-  setSlot: (slot: string | undefined) => void;
-  setActiveTab: (id: number) => void;
+  setDate: (date: string) => void;
+  setTimeOfDay: (id: 1 | 2 | 3) => void;
+  setStartTime: (time: string | undefined) => void;
   setBookingDetails: (details: BookingDetails | ((prev: BookingDetails) => BookingDetails)) => void;
-  toggleProduct: (activity: Activity) => void;
-  setProductOption: (productId: number, value: number) => void;
-  updateProductQty: (productId: number, typeId: number, action: "increment" | "decrement") => void;
-  totalSelectedQty: number;
+  addActivity: (activity: Activity, gameOption?: 1 | 2 | 3) => void;
+  removeActivity: (activityId: number) => void;
+  setActivityGameOption: (activityId: number, gameOption: 1 | 2 | 3) => void;
+  setAdults: (count: number) => void;
+  setChildren: (count: number) => void;
+  incrementAdults: () => void;
+  decrementAdults: () => void;
+  incrementChildren: () => void;
+  decrementChildren: () => void;
+  isActivitySelected: (activityId: number) => boolean;
+  getActivityGameOption: (activityId: number) => 1 | 2 | 3 | undefined;
+  totalPeople: number;
+  perPersonBreakdown: PerPersonBreakdown;
   resetBookingCart: () => void;
+  /** Sync booking activities from cart (e.g. when opening the booking modal). Each cart item becomes selected with gameOption = gameNo (clamped 1–3). */
+  syncActivitiesFromCart: (cartItems: { activity: Activity; gameNo: number }[]) => void;
 }
 
 const BookingCartContext = createContext<BookingCartContextType | undefined>(undefined);
 
-function loadFromStorage(): BookingCartState {
-  if (typeof window === "undefined") return defaultState;
-  try {
-    const raw = localStorage.getItem(BOOKING_CART_STORAGE_KEY);
-    if (!raw) return defaultState;
-    const parsed = JSON.parse(raw) as Partial<BookingCartState>;
-    return {
-      selectedProducts: parsed.selectedProducts ?? defaultState.selectedProducts,
-      step: typeof parsed.step === "number" ? parsed.step : defaultState.step,
-      slot: parsed.slot ?? defaultState.slot,
-      activeTab: typeof parsed.activeTab === "number" ? parsed.activeTab : defaultState.activeTab,
-      bookingDetails: parsed.bookingDetails ?? defaultState.bookingDetails,
-    };
-  } catch {
-    return defaultState;
-  }
-}
-
-function saveToStorage(state: BookingCartState) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(BOOKING_CART_STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error("Error saving booking cart to localStorage:", e);
-  }
-}
-
 export function BookingCartProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<BookingCartState>(defaultState);
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    setState(loadFromStorage());
-    setInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (initialized) saveToStorage(state);
-  }, [state, initialized]);
 
   const setStep = useCallback((step: number) => {
     setState((prev) => ({ ...prev, step }));
   }, []);
 
-  const setSlot = useCallback((slot: string | undefined) => {
-    setState((prev) => ({ ...prev, slot }));
+  const setDate = useCallback((date: string) => {
+    setState((prev) => ({ ...prev, date }));
   }, []);
 
-  const setActiveTab = useCallback((activeTab: number) => {
-    setState((prev) => ({ ...prev, activeTab }));
+  const setTimeOfDay = useCallback((timeOfDay: 1 | 2 | 3) => {
+    setState((prev) => ({ ...prev, timeOfDay }));
+  }, []);
+
+  const setStartTime = useCallback((selectedStartTime: string | undefined) => {
+    setState((prev) => ({ ...prev, selectedStartTime }));
   }, []);
 
   const setBookingDetails = useCallback(
@@ -105,81 +105,139 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const toggleProduct = useCallback((activity: Activity) => {
+  const addActivity = useCallback((activity: Activity, gameOption: 1 | 2 | 3 = 1) => {
     setState((prev) => {
-      const exists = prev.selectedProducts.some((item) => item.id === activity.id);
-      if (exists) {
-        return {
-          ...prev,
-          selectedProducts: prev.selectedProducts.filter((item) => item.id !== activity.id),
-        };
-      }
+      if (prev.activities.some((item) => item.activity.id === activity.id)) return prev;
       return {
         ...prev,
-        selectedProducts: [
-          ...prev.selectedProducts,
-          {
-            ...activity,
-            types: [
-              { id: 1, label: "Adult", qty: 0, price: 12 },
-              { id: 2, label: "Child", qty: 0, price: 9 },
-            ],
-          },
-        ],
+        activities: [...prev.activities, { activity, gameOption }],
       };
     });
   }, []);
 
-  const setProductOption = useCallback((productId: number, value: number) => {
+  const removeActivity = useCallback((activityId: number) => {
     setState((prev) => ({
       ...prev,
-      selectedProducts: prev.selectedProducts.map((item) =>
-        item.id === productId ? { ...item, selectedOption: value } : item
+      activities: prev.activities.filter((item) => item.activity.id !== activityId),
+    }));
+  }, []);
+
+  const setActivityGameOption = useCallback((activityId: number, gameOption: 1 | 2 | 3) => {
+    setState((prev) => ({
+      ...prev,
+      activities: prev.activities.map((item) =>
+        item.activity.id === activityId ? { ...item, gameOption } : item
       ),
     }));
   }, []);
 
-  const updateProductQty = useCallback(
-    (productId: number, typeId: number, action: "increment" | "decrement") => {
-      setState((prev) => ({
-        ...prev,
-        selectedProducts: prev.selectedProducts.map((product) => {
-          const updatedTypes = product.types.map((type) => {
-            if (type.id !== typeId) return type;
-            const newQty =
-              action === "increment" ? type.qty + 1 : Math.max(0, type.qty - 1);
-            return { ...type, qty: newQty };
-          });
-          return { ...product, types: updatedTypes };
-        }),
+  const setAdults = useCallback((count: number) => {
+    setState((prev) => ({
+      ...prev,
+      people: { ...prev.people, adults: Math.max(0, count) },
+    }));
+  }, []);
+
+  const setChildren = useCallback((count: number) => {
+    setState((prev) => ({
+      ...prev,
+      people: { ...prev.people, children: Math.max(0, count) },
+    }));
+  }, []);
+
+  const incrementAdults = useCallback(() => {
+    setState((prev) => ({ ...prev, people: { ...prev.people, adults: prev.people.adults + 1 } }));
+  }, []);
+
+  const decrementAdults = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      people: { ...prev.people, adults: Math.max(0, prev.people.adults - 1) },
+    }));
+  }, []);
+
+  const incrementChildren = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      people: { ...prev.people, children: prev.people.children + 1 },
+    }));
+  }, []);
+
+  const decrementChildren = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      people: { ...prev.people, children: Math.max(0, prev.people.children - 1) },
+    }));
+  }, []);
+
+  const isActivitySelected = useCallback(
+    (activityId: number) => state.activities.some((item) => item.activity.id === activityId),
+    [state.activities]
+  );
+
+  const getActivityGameOption = useCallback(
+    (activityId: number) => state.activities.find((item) => item.activity.id === activityId)?.gameOption,
+    [state.activities]
+  );
+
+  const totalPeople = useMemo(
+    () => state.people.adults + state.people.children,
+    [state.people.adults, state.people.children]
+  );
+
+  const perPersonBreakdown = useMemo((): PerPersonBreakdown => {
+    const { adults, children } = state.people;
+    const { adultPrice, childPrice } = state.pricing;
+    const adultsSubtotal = adults * adultPrice;
+    const childrenSubtotal = children * childPrice;
+    return {
+      adultsCount: adults,
+      childrenCount: children,
+      adultPrice,
+      childPrice,
+      adultsSubtotal,
+      childrenSubtotal,
+      total: adultsSubtotal + childrenSubtotal,
+    };
+  }, [state.people, state.pricing]);
+
+  const resetBookingCart = useCallback(() => {
+    setState(defaultState);
+  }, []);
+
+  const syncActivitiesFromCart = useCallback(
+    (cartItems: { activity: Activity; gameNo: number }[]) => {
+      const activities: BookingActivityItem[] = cartItems.map(({ activity, gameNo }) => ({
+        activity,
+        gameOption: Math.min(3, Math.max(1, gameNo || 1)) as 1 | 2 | 3,
       }));
+      setState((prev) => ({ ...prev, activities }));
     },
     []
   );
 
-  const totalSelectedQty = state.selectedProducts.reduce(
-    (sum, p) => sum + p.types.reduce((s, t) => s + t.qty, 0),
-    0
-  );
-
-  const resetBookingCart = useCallback(() => {
-    setState(defaultState);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(BOOKING_CART_STORAGE_KEY);
-    }
-  }, []);
-
   const value: BookingCartContextType = {
     ...state,
     setStep,
-    setSlot,
-    setActiveTab,
+    setDate,
+    setTimeOfDay,
+    setStartTime,
     setBookingDetails,
-    toggleProduct,
-    setProductOption,
-    updateProductQty,
-    totalSelectedQty,
+    addActivity,
+    removeActivity,
+    setActivityGameOption,
+    setAdults,
+    setChildren,
+    incrementAdults,
+    decrementAdults,
+    incrementChildren,
+    decrementChildren,
+    isActivitySelected,
+    getActivityGameOption,
+    totalPeople,
+    perPersonBreakdown,
     resetBookingCart,
+    syncActivitiesFromCart,
   };
 
   return (

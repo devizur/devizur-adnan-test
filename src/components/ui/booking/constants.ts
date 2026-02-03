@@ -1,7 +1,7 @@
 export const OPTIONS = [
-  { label: "1 Games", value: 1, price: 10 },
-  { label: "2 Games", value: 2, price: 15 },
-  { label: "3 Games", value: 3, price: 20 },
+  { label: "1 Game", value: 1, price: 12.99 },
+  { label: "2 Games", value: 2, price: 20 },
+  { label: "3 Games", value: 3, price: 26 },
 ] as const;
 
 export const SLOTS = [

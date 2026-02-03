@@ -5,7 +5,7 @@ import { useBookingCart } from "@/contexts/BookingCartContext";
 import { useActivities } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 import { OPTIONS } from "./constants";
-import type { Activity } from "@/lib/api/types";
+ 
 
 interface BookingProductListProps {
   currentStep: number;
@@ -18,7 +18,7 @@ export function BookingProductList({ currentStep }: BookingProductListProps) {
   const canEdit = currentStep === 1;
 
   return (
-    <Card className="border-border bg-card">
+    <div  className="border  broder-accent ">
       <CardHeader className="py-3 px-4 border-b border-border">
         <CardTitle className="text-sm font-semibold text-foreground">Product List</CardTitle>
       </CardHeader>
@@ -89,6 +89,6 @@ export function BookingProductList({ currentStep }: BookingProductListProps) {
           );
         })}
       </CardContent>
-    </Card>
+    </div>
   );
 }

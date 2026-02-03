@@ -121,8 +121,8 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
           {
             ...activity,
             types: [
-              { id: 1, label: "Adult", qty: 0, price: 20 },
-              { id: 2, label: "Kids", qty: 0, price: 15 },
+              { id: 1, label: "Adult", qty: 0, price: 12 },
+              { id: 2, label: "Child", qty: 0, price: 9 },
             ],
           },
         ],

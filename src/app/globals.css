@@ -123,6 +123,64 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Theme-aligned scrollbars */
+:root {
+  --scrollbar-track: oklch(0.92 0 0);
+  --scrollbar-thumb: oklch(0.75 0 0);
+  --scrollbar-thumb-hover: oklch(0.55 0 0);
+}
+
+.dark,
+[data-theme="dark"] {
+  --scrollbar-track: oklch(0.22 0 0);
+  --scrollbar-thumb: oklch(0.4 0 0);
+  --scrollbar-thumb-hover: var(--primary-1);
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Dark panels (e.g. booking dialog) – track and thumb align with dark theme + primary-1 */
+.scrollbar-dark {
+  --scrollbar-track: oklch(0.14 0 0);
+  --scrollbar-thumb: oklch(0.35 0 0);
+  --scrollbar-thumb-hover: var(--primary-1);
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

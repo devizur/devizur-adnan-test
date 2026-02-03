@@ -126,7 +126,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                 Activity List
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-dark">
               {isLoading && (
                 <p className="text-sm text-gray-400 py-4">Loading activities...</p>
               )}
@@ -141,7 +141,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                       className={cn(
                         "w-full text-left rounded-xl border transition-all overflow-hidden",
                         isActive
-                          ? "border-[#c8ff00] bg-[#252525] ring-1 ring-[#c8ff00]/30"
+                          ? "border-primary-1 bg-[#252525] ring-1 ring-primary-1/30"
                           : "border-gray-800 bg-[#222] hover:border-gray-700"
                       )}
                     >
@@ -152,7 +152,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                           className="w-full h-full object-cover"
                         />
                         {isActive && (
-                          <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#c8ff00] flex items-center justify-center">
+                          <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-primary-1 flex items-center justify-center">
                             <Check className="w-4 h-4 text-black" strokeWidth={3} />
                           </div>
                         )}
@@ -186,7 +186,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                             className={cn(
                               "flex-1 py-2 rounded-lg text-sm font-medium border transition-colors",
                               product?.selectedOption === opt.value
-                                ? "bg-[#c8ff00] text-black border-[#c8ff00]"
+                                ? "bg-primary-1 text-black border-primary-1"
                                 : "bg-[#222] text-gray-400 border-gray-700 hover:border-gray-600"
                             )}
                           >
@@ -205,9 +205,9 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
           <div className="flex-1 flex flex-col min-w-0 bg-[#1a1a1a]">
             <div className="px-5 py-4 border-b border-gray-800 flex flex-col gap-4">
               <div className="flex items-center justify-end">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#c8ff00]/15 border border-[#c8ff00]/40">
-                  <Clock className="w-4 h-4 text-[#c8ff00]" />
-                  <span className="text-sm font-medium text-[#c8ff00]">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-1/15 border border-primary-1/40">
+                  <Clock className="w-4 h-4 text-primary-1" />
+                  <span className="text-sm font-medium text-primary-1">
                     Time Remaining 29:47
                   </span>
                 </div>
@@ -242,7 +242,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                     className={cn(
                       "flex-1 py-2 rounded-lg text-sm font-medium transition-colors",
                       activeTab === tab.id
-                        ? "bg-[#c8ff00] text-black"
+                        ? "bg-primary-1 text-black"
                         : "bg-[#222] text-gray-400 border border-gray-700 hover:border-gray-600"
                     )}
                   >
@@ -252,7 +252,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6 scrollbar-dark">
               {step === 1 && (
                 <>
                   <div className="space-y-4">
@@ -309,7 +309,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                           className={cn(
                             "relative py-2.5 px-2 rounded-lg border text-xs transition-colors flex flex-col items-center",
                             slot === s.t
-                              ? "bg-[#c8ff00] text-black border-[#c8ff00]"
+                              ? "bg-primary-1 text-black border-primary-1"
                               : "bg-[#222] text-gray-300 border-gray-700 hover:border-gray-600"
                           )}
                         >
@@ -318,7 +318,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                             100 avail
                           </span>
                           {"off" in s && s.off && (
-                            <span className="absolute top-0.5 right-0.5 bg-[#c8ff00] text-black text-[9px] font-bold px-1 rounded">
+                            <span className="absolute top-0.5 right-0.5 bg-primary-1 text-black text-[9px] font-bold px-1 rounded">
                               $5 off
                             </span>
                           )}
@@ -357,7 +357,7 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
                   type="submit"
                   form="bookingForm"
                   disabled={totalSelectedQty < 1}
-                  className="bg-[#c8ff00] text-black hover:bg-[#b3e600] disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
+                  className="bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
                 >
                   Booking Request
                   {totalSelectedQty > 0 ? ` with ${totalSelectedQty} Person${totalSelectedQty > 1 ? "s" : ""}` : ""}

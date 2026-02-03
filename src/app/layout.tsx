@@ -30,6 +30,7 @@ import { Footer } from "@/components/footer";
 import { BrandGuard } from "@/components/brand-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CartProvider } from "@/contexts/CartContext";
+import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { Toaster } from "@/components/ui/toaster";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -80,6 +81,7 @@ export default function RootLayout({
       >
         <QueryProvider>
           <CartProvider>
+            <BookingCartProvider>
             <BrandGuard currentBrand={brandKey} />
             <Navbar />
             <main className="flex-1">
@@ -88,6 +90,7 @@ export default function RootLayout({
             <Footer />
             <ColorComponent />
             <Toaster />
+            </BookingCartProvider>
           </CartProvider>
         </QueryProvider>
       </body>

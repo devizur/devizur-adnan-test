@@ -11,11 +11,8 @@ import {
     Drawer,
     DrawerClose,
     DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
+  
+ 
 } from "@/components/ui/drawer";
 import { formatPrice, parsePrice } from "@/lib/utils";
 
@@ -60,7 +57,7 @@ const CartContent: React.FC = () => {
     return (
         <>
             {/* Header */}
-            <div className="p-6 border-b border-accent/20">
+            <div className="p-6 border-b border-accent/20 ">
                 <div className="flex items-center justify-between mb-2">
                     <h2 className="text-2xl font-bold text-primary">Checkout</h2>
 

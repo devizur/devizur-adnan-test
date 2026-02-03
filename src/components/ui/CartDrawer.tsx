@@ -11,8 +11,7 @@ import {
     Drawer,
     DrawerClose,
     DrawerContent,
-  
- 
+    DrawerTitle,
 } from "@/components/ui/drawer";
 import { formatPrice, parsePrice } from "@/lib/utils";
 
@@ -198,14 +197,8 @@ const CartContent: React.FC = () => {
                                                     <div className=" text-primary text-sm ">
                                                         {item.activity.price}
                                                     </div>
-
-
-
                                                 </div>
-
-
                                             </div>
-
 
                                             <div className="flex items-start justify-end gap-2">
 
@@ -424,6 +417,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             >
 
                 <DrawerContent className="max-h-[90vh] lg:min-w-150 bg-secondary-2 border-secondary-2 md:h-full  md:max-h-none flex flex-col">
+                    <DrawerTitle className="sr-only">Checkout</DrawerTitle>
                     <CartContent />
                 </DrawerContent>
             </Drawer>

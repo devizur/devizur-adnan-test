@@ -52,7 +52,7 @@ export function BookingDialog({
       <AlertDialogContent
         className="min-w-[90%] max-w-5xl max-h-[90vh] flex flex-col bg-secondary-2   p-0 gap-0 text-foreground"
       >
-        <AlertDialogHeader className="px-6 pt-6 pb-2 border-b  ">
+        <AlertDialogHeader className="px-6 pt-6 pb-2 border-b">
           <AlertDialogTitle className="text-lg font-semibold text-primary">
             Add Booking
           </AlertDialogTitle>

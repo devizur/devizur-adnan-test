@@ -125,9 +125,9 @@ export function BookingDialog({ children, onConfirm }: BookingDialogProps) {
       <AlertDialogContent
         className="min-w-[90%] max-w-6xl max-h-[95vh] flex flex-col bg-[#1a1a1a] p-0 gap-0 text-white border-gray-800"
       >
-        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800 relative shrink-0 flex justify-between">
-          <div className="flex items-center justify-between  w-full">
-            <div className="text-xl font-bold text-white">
+        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800 shrink-0">
+          <div className="flex items-center justify-between w-full">
+            <AlertDialogTitle className="text-xl font-bold text-white">
               Create Booking
             </div>
             <div className="">

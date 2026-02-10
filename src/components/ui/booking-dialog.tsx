@@ -181,7 +181,7 @@ export function BookingDialog({
     <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
-        className="min-w-[90%] max-w-4xl max-h-[90vh] flex flex-col bg-[#161616] p-0 gap-0 text-white border border-gray-800/80 rounded-2xl overflow-hidden"
+        className="min-w-[90%] max-w-4xl h-[90vh] flex flex-col bg-[#161616] p-0 gap-0 text-white border border-gray-800/80 rounded-2xl overflow-hidden"
       >
         <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800/80 shrink-0">
           <div className="flex items-center justify-between w-full">

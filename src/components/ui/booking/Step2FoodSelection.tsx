@@ -22,7 +22,7 @@ export function Step2FoodSelection() {
       <p className="text-sm text-muted-foreground">
         Optional food add-ons. Select items to include with your booking.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto scrollbar-dark">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 scrollbar-dark">
         {foods.map((food) => {
           const qty = getQuantity(food.id);
           return (

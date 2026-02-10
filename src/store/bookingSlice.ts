@@ -20,8 +20,12 @@ export interface HolderDetails {
   postCode: string;
 }
 
+export type BookingFlowMode = "activityFirst" | "foodFirst";
+
 export interface BookingState {
-  /** Current step: 1 = Availability & Selection, 2 = Food Selection, 3 = Holder Details */
+  /** When foodFirst: step 1=Food, 2=Availability, 3=Holder. Else step 1=Availability, 2=Food, 3=Holder */
+  flowMode: BookingFlowMode;
+  /** Current step (1–3); meaning depends on flowMode */
   step: number;
   /** Step 1: name for availability check */
   availabilityName: string;
@@ -55,6 +59,7 @@ const initialHolderDetails: HolderDetails = {
 };
 
 const initialState: BookingState = {
+  flowMode: "activityFirst",
   step: 1,
   availabilityName: "",
   availabilityChecked: false,
@@ -72,6 +77,9 @@ const bookingSlice = createSlice({
   name: "booking",
   initialState,
   reducers: {
+    setFlowMode: (state, action: PayloadAction<BookingFlowMode>) => {
+      state.flowMode = action.payload;
+    },
     setStep: (state, action: PayloadAction<number>) => {
       state.step = Math.max(1, Math.min(3, action.payload));
     },
@@ -167,6 +175,7 @@ const bookingSlice = createSlice({
 });
 
 export const {
+  setFlowMode,
   setStep,
   nextStep,
   prevStep,

@@ -3,10 +3,11 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useFoods } from "@/lib/api/hooks";
-import { cn } from "@/lib/utils";
 import type { RootState } from "@/store";
 import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
+import FoodCard from "@/components/ui/reused/FoodCard";
+import { Button } from "@/components/ui/button";
 
 export function Step2FoodSelection() {
   const dispatch = useDispatch();
@@ -25,51 +26,43 @@ export function Step2FoodSelection() {
         {foods.map((food) => {
           const qty = getQuantity(food.id);
           return (
-            <div
+            <FoodCard
               key={food.id}
-              className={cn(
-                "p-4 rounded-xl border transition-colors",
-                qty > 0 ? "border-primary-1 bg-primary-1/5" : "border-border bg-card"
-              )}
-            >
-              <div className="flex gap-3">
-                <img
-                  src={food.image || ""}
-                  alt=""
-                  className="w-16 h-16 rounded-lg object-cover shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{food.title}</p>
-                  <p className="text-xs text-muted-foreground">{food.price}</p>
+              item={food}
+              showTimeSlots={false}
+              action={
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-xs text-muted-foreground">
+                    {qty > 0 ? "Added" : "Optional"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg border border-border"
+                      onClick={() => {
+                        if (qty <= 1) dispatch(removeFood(food.id));
+                        else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
+                      }}
+                      disabled={qty === 0}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium">{qty}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="w-8 h-8 rounded-lg border border-border"
+                      onClick={() => dispatch(addFood({ food }))}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-muted-foreground">
-                  {qty > 0 ? "Added" : "Optional"}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (qty <= 1) dispatch(removeFood(food.id));
-                      else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
-                    }}
-                    disabled={qty === 0}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center disabled:opacity-50"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="w-8 text-center text-sm font-medium">{qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => dispatch(addFood({ food }))}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              }
+            />
           );
         })}
       </div>

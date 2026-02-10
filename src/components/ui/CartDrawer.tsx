@@ -6,7 +6,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { BookingDialog } from "@/components/ui/booking-dialog";
+import { PaymentDialog } from "@/components/ui/payment-dialog";
 import {
     Drawer,
     DrawerClose,
@@ -21,7 +21,7 @@ interface CartDrawerProps {
 }
 
 // Shared cart content component
-const CartContent: React.FC = () => {
+const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuccess }) => {
     const {
         foodItems,
         activityItems,
@@ -348,19 +348,13 @@ const CartContent: React.FC = () => {
                     </div>
 
                     <div className=" space-y-3 bg-secondary-2">
-                        <BookingDialog
-                            onConfirm={() => {
-                                // Future: integrate real payment flow here
-                                console.log("Payment confirmed");
-                            }}
-                        >
+                        <PaymentDialog onPaymentSuccess={onPaymentSuccess}>
                             <Button
                                 className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
                             >
                                 Add Payment
                             </Button>
-
-                        </BookingDialog>
+                        </PaymentDialog>
                         <Button
                             variant="outline"
                             className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1/10 hover:bg-primary-2  text-primary-1 border border-primary-1"
@@ -417,7 +411,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
                 <DrawerContent className="max-h-[90vh] lg:min-w-150 bg-secondary-2 border-secondary-2 md:h-full  md:max-h-none flex flex-col">
                     <DrawerTitle className="sr-only">Checkout</DrawerTitle>
-                    <CartContent />
+                    <CartContent onPaymentSuccess={onClose} />
                 </DrawerContent>
             </Drawer>
         </>

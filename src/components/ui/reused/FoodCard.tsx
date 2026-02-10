@@ -11,9 +11,11 @@ import { BookingDialog } from "@/components/ui/booking-dialog";
 interface FoodCardProps {
     item: Food;
     showTimeSlots?: boolean;
+    /** When provided, renders instead of the default Book Now button (e.g. quantity controls in booking flow) */
+    action?: React.ReactNode;
 }
 
-const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action }) => {
     const { getFoodQuantity } = useCart();
     const quantity = getFoodQuantity(item.id);
     const isInCart = quantity > 0;
@@ -79,13 +81,17 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false }) => {
                     </div>
                 )}
 
-                <BookingDialog initialFood={item}>
-                    <Button
-                        className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
-                    >
-                        {isInCart ? "Book Now: Selected" : "Book Now"}
-                    </Button>
-                </BookingDialog>
+                {action !== undefined ? (
+                    action
+                ) : (
+                    <BookingDialog initialFood={item}>
+                        <Button
+                            className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+                        >
+                            {isInCart ? "Book Now: Selected" : "Book Now"}
+                        </Button>
+                    </BookingDialog>
+                )}
             </CardContent>
         </Card>
     );

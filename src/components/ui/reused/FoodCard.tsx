@@ -5,44 +5,18 @@ import { FaStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Food } from "@/lib/api/types";
-import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
+import { BookingDialog } from "@/components/ui/booking-dialog";
 
 interface FoodCardProps {
     item: Food;
     showTimeSlots?: boolean;
 }
 
-const FoodCard: React.FC<FoodCardProps> = ({ 
-    item, 
-    showTimeSlots = false
-}) => {
-    const { getFoodQuantity, addFood, updateFoodQuantity } = useCart();
+const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false }) => {
+    const { getFoodQuantity } = useCart();
     const quantity = getFoodQuantity(item.id);
-
-    const handleAddToCart = () => {
-        if (quantity > 0) {
-            toast.info("Already in cart", {
-                description: item.title,
-            });
-        } else {
-            addFood(item, 1);
-            toast.success("Food added to cart", {
-                description: item.title,
-            });
-        }
-    };
-
-    const handleDecrease = () => {
-        if (quantity > 0) {
-            updateFoodQuantity(item.id, quantity - 1);
-        }
-    };
-
-    const handleIncrease = () => {
-        updateFoodQuantity(item.id, quantity + 1);
-    };
+    const isInCart = quantity > 0;
 
     return (
         <Card className="p-2  bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
@@ -105,32 +79,13 @@ const FoodCard: React.FC<FoodCardProps> = ({
                     </div>
                 )}
 
-                {quantity > 0 ? (
-                    <div className="flex items-center gap-2 w-full">
-                        <button
-                            onClick={handleDecrease}
-                            className="flex-shrink-0 w-14 h-9 rounded-[10px]  border-2 border-primary-1 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all cursor-pointer"
-                        >
-                            <Minus className="w-4 h-4 text-primary  " />
-                        </button>
-                        <div className="flex-1 text-center text-primary text-sm font-medium">
-                            {quantity} in cart
-                        </div>
-                        <button
-                            onClick={handleIncrease}
-                            className="flex-shrink-0 w-14 h-9  rounded-[10px]  bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all cursor-pointer font-bold"
-                        >
-                            <Plus className="w-4 h-4" />
-                        </button>
-                    </div>
-                ) : (
+                <BookingDialog initialFood={item}>
                     <Button
-                        onClick={handleAddToCart}
                         className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
                     >
-                        Add to Cart
+                        {isInCart ? "Book Now: Selected" : "Book Now"}
                     </Button>
-                )}
+                </BookingDialog>
             </CardContent>
         </Card>
     );

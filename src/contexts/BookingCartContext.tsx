@@ -16,14 +16,17 @@ import type {
   BookingDetails,
   PerPersonBreakdown,
 } from "@/components/ui/booking/types";
+import { OPTIONS } from "@/components/ui/booking/constants";
+
+const DEFAULT_ADULT_PRICE = 12;
+const DEFAULT_CHILD_PRICE = 9;
+const CHILD_PRICE_RATIO = 9 / 12; // child as fraction of adult when no activities
 
 export interface BookingCartState {
   /** Selected activities, each with game option (1, 2, or 3 games) */
   activities: BookingActivityItem[];
   /** Global people count for the whole booking */
   people: BookingPeople;
-  /** Prices used for per-person calculation */
-  pricing: BookingPricing;
   /** Date (YYYY-MM-DD) */
   date: string;
   /** Time of day: 1=Morning, 2=Afternoon, 3=Evening */
@@ -37,12 +40,10 @@ export interface BookingCartState {
 }
 
 const defaultPeople: BookingPeople = { adults: 0, children: 0 };
-const defaultPricing: BookingPricing = { adultPrice: 12, childPrice: 9 };
 
 const defaultState: BookingCartState = {
   activities: [],
   people: defaultPeople,
-  pricing: defaultPricing,
   date: "",
   timeOfDay: 1,
   selectedStartTime: undefined,
@@ -51,6 +52,8 @@ const defaultState: BookingCartState = {
 };
 
 interface BookingCartContextType extends BookingCartState {
+  /** Derived from selected activities + game options; used for per-person breakdown */
+  pricing: BookingPricing;
   setStep: (step: number) => void;
   setDate: (date: string) => void;
   setTimeOfDay: (id: 1 | 2 | 3) => void;
@@ -185,21 +188,34 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     [state.people.adults, state.people.children]
   );
 
+  /** Dynamic pricing from selected activities + game options (OPTIONS). When no activities, use defaults. */
+  const pricing = useMemo((): BookingPricing => {
+    if (state.activities.length === 0) {
+      return { adultPrice: DEFAULT_ADULT_PRICE, childPrice: DEFAULT_CHILD_PRICE };
+    }
+    const total = state.activities.reduce((sum, item) => {
+      const opt = OPTIONS.find((o) => o.value === item.gameOption);
+      return sum + (opt?.price ?? DEFAULT_ADULT_PRICE);
+    }, 0);
+    const adultPrice = total / state.activities.length;
+    const childPrice = Math.round(adultPrice * CHILD_PRICE_RATIO * 100) / 100;
+    return { adultPrice, childPrice };
+  }, [state.activities]);
+
   const perPersonBreakdown = useMemo((): PerPersonBreakdown => {
     const { adults, children } = state.people;
-    const { adultPrice, childPrice } = state.pricing;
-    const adultsSubtotal = adults * adultPrice;
-    const childrenSubtotal = children * childPrice;
+    const adultsSubtotal = adults * pricing.adultPrice;
+    const childrenSubtotal = children * pricing.childPrice;
     return {
       adultsCount: adults,
       childrenCount: children,
-      adultPrice,
-      childPrice,
+      adultPrice: pricing.adultPrice,
+      childPrice: pricing.childPrice,
       adultsSubtotal,
       childrenSubtotal,
       total: adultsSubtotal + childrenSubtotal,
     };
-  }, [state.people, state.pricing]);
+  }, [state.people, pricing]);
 
   const resetBookingCart = useCallback(() => {
     setState(defaultState);
@@ -218,6 +234,7 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
 
   const value: BookingCartContextType = {
     ...state,
+    pricing,
     setStep,
     setDate,
     setTimeOfDay,

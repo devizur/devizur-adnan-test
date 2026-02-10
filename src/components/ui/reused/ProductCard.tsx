@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
+import { BookingDialog } from "@/components/ui/booking-dialog";
 
 interface ProductCardProps {
   item: Package;
@@ -12,21 +12,8 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }) => {
-    const { addPackage, packageItems } = useCart();
-
-    const handleBookNow = () => {
-        const alreadyInCart = packageItems.some((i) => i.pkg.id === item.id);
-        if (alreadyInCart) {
-            toast.info("Already in cart", {
-                description: item.title,
-            });
-        } else {
-            addPackage(item);
-            toast.success("Package added to cart", {
-                description: item.title,
-            });
-        }
-    };
+    const { packageItems } = useCart();
+    const isInCart = packageItems.some((i) => i.pkg.id === item.id);
 
     return (
     <Card className="p-2  bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
@@ -90,12 +77,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }
           </div>
         )}
 
-        <Button
-          onClick={handleBookNow}
-          className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
-        >
-          Book Now
-        </Button>
+        <BookingDialog initialPackage={item}>
+          <Button
+            className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+          >
+            {isInCart ? "Book Now: Selected" : "Book Now"}
+          </Button>
+        </BookingDialog>
       </CardContent>
     </Card>
   );

@@ -29,6 +29,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { BrandGuard } from "@/components/brand-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ReduxProvider } from "@/components/providers/redux-provider";
 import { CartProvider } from "@/contexts/CartContext";
 import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -80,6 +81,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${inter.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
         <QueryProvider>
+          <ReduxProvider>
           <CartProvider>
             <BookingCartProvider>
             <BrandGuard currentBrand={brandKey} />
@@ -92,6 +94,7 @@ export default function RootLayout({
             <Toaster />
             </BookingCartProvider>
           </CartProvider>
+          </ReduxProvider>
         </QueryProvider>
       </body>
     </html>

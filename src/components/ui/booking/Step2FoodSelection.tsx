@@ -35,12 +35,13 @@ export function Step2FoodSelection() {
                   <span className="text-xs text-muted-foreground">
                     {qty > 0 ? "Added" : "Optional"}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2" role="group" aria-label={`Quantity for ${food.title}`}>
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="w-8 h-8 rounded-lg border border-border"
+                      aria-label={`Decrease quantity of ${food.title}`}
+                      className="min-h-11 min-w-11 rounded-xl border border-border focus-visible:ring-primary-1/50 cursor-pointer"
                       onClick={() => {
                         if (qty <= 1) dispatch(removeFood(food.id));
                         else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
@@ -49,12 +50,13 @@ export function Step2FoodSelection() {
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="w-8 text-center text-sm font-medium">{qty}</span>
+                    <span className="min-w-8 text-center text-sm font-medium tabular-nums" aria-live="polite">{qty}</span>
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="w-8 h-8 rounded-lg border border-border"
+                      aria-label={`Increase quantity of ${food.title}`}
+                      className="min-h-11 min-w-11 rounded-xl border border-border focus-visible:ring-primary-1/50 cursor-pointer"
                       onClick={() => dispatch(addFood({ food }))}
                     >
                       <Plus className="w-4 h-4" />

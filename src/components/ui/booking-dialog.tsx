@@ -130,37 +130,49 @@ export function BookingDialog({
     <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
-        className="min-w-[90%] max-w-4xl max-h-[90vh] flex flex-col bg-[#1a1a1a] p-0 gap-0 text-white border-gray-800"
+        className="min-w-[90%] max-w-4xl max-h-[90vh] flex flex-col bg-[#161616] p-0 gap-0 text-white border border-gray-800/80 rounded-2xl overflow-hidden"
       >
-        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800 shrink-0">
+        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800/80 shrink-0">
           <div className="flex items-center justify-between w-full">
-            <AlertDialogTitle className="text-xl font-bold text-white">
-              Create Booking
+            <AlertDialogTitle className="text-lg font-semibold text-white">
+              Create booking
             </AlertDialogTitle>
             <button
               type="button"
               onClick={handleClose}
-              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-              aria-label="Close"
+              className="min-h-11 min-w-11 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex items-center gap-2 mt-4">
+          <div className="flex items-center gap-1 mt-4">
             {STEPS.map((s, i) => (
-              <div key={`${isFoodFirst ? "f" : "a"}-${s.id}`} className="flex items-center gap-2">
-                <span
+              <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
+                <div
                   className={cn(
-                    "text-xs font-medium",
-                    step === s.id ? "text-primary-1" : step > s.id ? "text-gray-400" : "text-gray-500"
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    step === s.id && "bg-primary-1/15 text-primary-1",
+                    step > s.id && "text-gray-400",
+                    step < s.id && "text-gray-500"
                   )}
                 >
-                  {s.id}. {s.label}
-                </span>
+                  <span
+                    className={cn(
+                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                      step === s.id && "bg-primary-1 text-black",
+                      step > s.id && "bg-gray-700 text-gray-300",
+                      step < s.id && "bg-gray-800 text-gray-500"
+                    )}
+                  >
+                    {step > s.id ? "✓" : s.id}
+                  </span>
+                  <span className="hidden sm:inline">{s.label}</span>
+                </div>
                 {i < STEPS.length - 1 && (
-                  <span className="text-gray-600">/</span>
+                  <span className="text-gray-700 px-0.5">›</span>
                 )}
-              </div>
+              </React.Fragment>
             ))}
           </div>
         </AlertDialogHeader>
@@ -186,11 +198,11 @@ export function BookingDialog({
           )}
         </div>
 
-        <AlertDialogFooter className="px-6 py-4 border-t border-gray-800 flex-row justify-between gap-3 flex-wrap bg-[#1a1a1a] shrink-0">
+        <AlertDialogFooter className="px-6 py-4 border-t border-gray-800/80 flex-row justify-between gap-3 flex-wrap bg-[#161616] shrink-0">
           <div className="flex items-center gap-2">
             <AlertDialogCancel
               onClick={handleClose}
-              className="m-0 border-gray-700 text-white bg-transparent hover:bg-gray-800"
+              className="m-0 min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
             >
               Cancel
             </AlertDialogCancel>
@@ -199,7 +211,7 @@ export function BookingDialog({
                 type="button"
                 variant="outline"
                 onClick={handleBack}
-                className="border-gray-700 text-white bg-transparent hover:bg-gray-800"
+                className="min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
               >
                 Back
               </Button>
@@ -211,7 +223,7 @@ export function BookingDialog({
                 type="button"
                 disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                 onClick={handleNext}
-                className="bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-semibold"
+                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
               >
                 Next
               </Button>
@@ -222,7 +234,8 @@ export function BookingDialog({
                   type="button"
                   variant="outline"
                   onClick={handleSkip}
-                  className="border-gray-700 text-white bg-transparent hover:bg-gray-800"
+                  aria-label="Skip food selection"
+                  className="min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
                 >
                   Skip
                 </Button>
@@ -230,7 +243,7 @@ export function BookingDialog({
                   type="button"
                   disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                   onClick={handleNext}
-                  className="bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-semibold"
+                  className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
                 >
                   Next
                 </Button>
@@ -240,9 +253,9 @@ export function BookingDialog({
               <Button
                 type="submit"
                 form="bookingForm"
-                className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold"
+                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
               >
-                Add Booking
+                Add to booking
               </Button>
             )}
           </div>

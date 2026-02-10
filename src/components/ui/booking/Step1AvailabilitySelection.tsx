@@ -99,6 +99,17 @@ export function Step1AvailabilitySelection() {
     calendarCells.push(null);
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const minCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const maxCalendarMonth = new Date(today.getFullYear(), today.getMonth() + 11, 1);
+  const calendarMonthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
+  const canGoPrevMonth =
+    calendarMonthKey(currentCalendarMonth) > calendarMonthKey(minCalendarMonth);
+  const canGoNextMonth =
+    calendarMonthKey(currentCalendarMonth) < calendarMonthKey(maxCalendarMonth);
+
   const setDisplayDate = (delta: number) => {
     const d = new Date(displayDate);
     d.setDate(d.getDate() + delta);
@@ -345,7 +356,13 @@ export function Step1AvailabilitySelection() {
                   <button
                     type="button"
                     onClick={() => goToCalendarMonth(-1)}
-                    className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                    disabled={!canGoPrevMonth}
+                    className={cn(
+                      "p-1 rounded-lg transition-colors",
+                      canGoPrevMonth
+                        ? "text-gray-400 hover:text-white hover:bg-[#252525] cursor-pointer"
+                        : "text-gray-600 cursor-not-allowed opacity-40"
+                    )}
                     aria-label="Previous month"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -354,7 +371,13 @@ export function Step1AvailabilitySelection() {
                   <button
                     type="button"
                     onClick={() => goToCalendarMonth(1)}
-                    className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                    disabled={!canGoNextMonth}
+                    className={cn(
+                      "p-1 rounded-lg transition-colors",
+                      canGoNextMonth
+                        ? "text-gray-400 hover:text-white hover:bg-[#252525] cursor-pointer"
+                        : "text-gray-600 cursor-not-allowed opacity-40"
+                    )}
                     aria-label="Next month"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -374,20 +397,44 @@ export function Step1AvailabilitySelection() {
                         return <div key={idx} className="h-8" />;
                       }
 
+                      const cellDate = new Date(cell);
+                      cellDate.setHours(0, 0, 0, 0);
+
+                      const selectedDate =
+                        date && new Date(date + "T12:00:00");
+                      if (selectedDate) {
+                        selectedDate.setHours(0, 0, 0, 0);
+                      }
+
                       const isSelected =
-                        date &&
-                        new Date(date + "T12:00:00").toDateString() === cell.toDateString();
+                        !!selectedDate &&
+                        selectedDate.getTime() === cellDate.getTime();
+                      const isToday = cellDate.getTime() === today.getTime();
+                      const isPast = cellDate.getTime() < today.getTime();
 
                       return (
                         <button
                           key={cell.toISOString()}
                           type="button"
-                          onClick={() => selectFromCalendar(cell)}
+                          onClick={() => !isPast && selectFromCalendar(cell)}
+                          disabled={isPast}
+                          aria-current={isToday ? "date" : undefined}
+                          aria-selected={isSelected}
+                          aria-label={cell.toLocaleDateString(undefined, {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                          })}
                           className={cn(
-                            "h-8 w-8 flex items-center justify-center rounded-full text-xs cursor-pointer transition-colors",
+                            "h-8 w-8 flex items-center justify-center rounded-full text-xs transition-colors",
+                            isPast && !isSelected
+                              ? "text-gray-600 opacity-40 cursor-default"
+                              : "cursor-pointer",
                             isSelected
                               ? "bg-primary-1 text-black"
-                              : "text-gray-200 hover:bg-[#333]"
+                              : isToday
+                                ? "border border-primary-1/60 text-white"
+                                : "text-gray-200 hover:bg-[#333]"
                           )}
                         >
                           {cell.getDate()}

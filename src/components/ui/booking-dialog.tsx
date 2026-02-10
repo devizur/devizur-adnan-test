@@ -261,7 +261,7 @@ export function BookingDialog({
           <div className="flex items-center gap-2">
             <AlertDialogCancel
               onClick={handleClose}
-              className="m-0 min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
+              className="m-0 min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
             >
               Cancel
             </AlertDialogCancel>
@@ -270,7 +270,7 @@ export function BookingDialog({
                 type="button"
                 variant="outline"
                 onClick={handleBack}
-                className="min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
+                className="min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
               >
                 Back
               </Button>
@@ -282,7 +282,7 @@ export function BookingDialog({
                 type="button"
                 disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                 onClick={handleNext}
-                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
+                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
               >
                 Next
               </Button>
@@ -294,7 +294,7 @@ export function BookingDialog({
                   variant="outline"
                   onClick={handleSkip}
                   aria-label="Skip food selection"
-                  className="min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
+                  className="min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                 >
                   Skip
                 </Button>
@@ -302,7 +302,7 @@ export function BookingDialog({
                   type="button"
                   disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                   onClick={handleNext}
-                  className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
+                  className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
                 >
                   Next
                 </Button>
@@ -312,7 +312,7 @@ export function BookingDialog({
               <Button
                 type="submit"
                 form="bookingForm"
-                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50"
+                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
               >
                 Add to booking
               </Button>

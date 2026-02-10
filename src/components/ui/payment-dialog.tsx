@@ -285,7 +285,7 @@ export function PaymentDialog({
         <AlertDialogFooter className="px-6 py-4 border-t border-gray-800/80 flex-row justify-end gap-3 bg-[#161616] shrink-0">
           <AlertDialogCancel
             onClick={() => setIsOpen(false)}
-            className="m-0 min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-[#1e1e1e] rounded-xl cursor-pointer focus-visible:ring-primary-1/50"
+            className="m-0 min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-[#262626] hover:border-gray-500 rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
           >
             Cancel
           </AlertDialogCancel>
@@ -294,7 +294,7 @@ export function PaymentDialog({
             onClick={handleTakePayment}
             disabled={cannotTakePayment}
             aria-label={`Pay ${formatPrice(totalPaymentAmount)}`}
-            className="min-h-11 bg-primary-1 text-black hover:bg-primary-1-hover font-medium rounded-xl px-5 cursor-pointer focus-visible:ring-primary-1/50 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
+            className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
           >
             Pay {formatPrice(totalPaymentAmount)}
           </Button>

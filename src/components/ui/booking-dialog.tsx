@@ -121,8 +121,13 @@ export function BookingDialog({
     dispatch(prevStep());
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) dispatch(resetBooking());
+    setIsOpen(open);
+  };
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
         className="min-w-[90%] max-w-4xl max-h-[90vh] flex flex-col bg-[#1a1a1a] p-0 gap-0 text-white border-gray-800"

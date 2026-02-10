@@ -193,6 +193,8 @@ export function Step1AvailabilitySelection() {
 
       {/* Right panel - Availability */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#1a1a1a]">
+      
+    
         <div className="px-5 py-4 border-b border-gray-800 flex flex-col gap-4">
           <div className="flex items-center justify-end">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-1/15 border border-primary-1/40">
@@ -200,6 +202,54 @@ export function Step1AvailabilitySelection() {
               <span className="text-sm font-medium text-primary-1">Time Remaining 29:47</span>
             </div>
           </div>
+          <div className="flex items-center gap-6">
+            <span className="text-xs text-gray-500 uppercase tracking-wide">Participants</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-400 w-10">Adult</span>
+                <button
+                  type="button"
+                  disabled={persons.adults === 0}
+                  onClick={() => dispatch(decrementAdults())}
+                  className="w-7 h-7 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center text-sm"
+                >
+                  −
+                </button>
+                <span className="text-sm text-white min-w-5 text-center tabular-nums">
+                  {persons.adults}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => dispatch(incrementAdults())}
+                  className="w-7 h-7 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 flex items-center justify-center text-sm"
+                >
+                  +
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-400 w-10">Child</span>
+                <button
+                  type="button"
+                  disabled={persons.children === 0}
+                  onClick={() => dispatch(decrementChildren())}
+                  className="w-7 h-7 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center text-sm"
+                >
+                  −
+                </button>
+                <span className="text-sm text-white min-w-5 text-center tabular-nums">
+                  {persons.children}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => dispatch(incrementChildren())}
+                  className="w-7 h-7 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 flex items-center justify-center text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-center gap-2">
             <button
               type="button"
@@ -241,62 +291,7 @@ export function Step1AvailabilitySelection() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6 scrollbar-dark">
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-gray-300">Participants</h4>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#222] border border-gray-800">
-              <div>
-                <p className="text-sm font-medium text-white">Adult</p>
-                <p className="text-xs text-gray-400">$12.00</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={persons.adults === 0}
-                  onClick={() => dispatch(decrementAdults())}
-                  className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
-                >
-                  −
-                </button>
-                <span className="text-lg font-semibold text-white min-w-8 text-center">
-                  {persons.adults}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => dispatch(incrementAdults())}
-                  className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 flex items-center justify-center"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#222] border border-gray-800">
-              <div>
-                <p className="text-sm font-medium text-white">Child</p>
-                <p className="text-xs text-gray-400">$9.00</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={persons.children === 0}
-                  onClick={() => dispatch(decrementChildren())}
-                  className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center"
-                >
-                  −
-                </button>
-                <span className="text-lg font-semibold text-white min-w-8 text-center">
-                  {persons.children}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => dispatch(incrementChildren())}
-                  className="w-9 h-9 rounded-lg border border-gray-600 text-white hover:bg-gray-800 flex items-center justify-center"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-
+         
           <div>
             <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">
               SELECT START TIME · 34 sessions found

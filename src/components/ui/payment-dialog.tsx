@@ -54,6 +54,7 @@ export function PaymentDialog({
     activityItems,
     packageItems,
     clearCart,
+    getTotalItems,
   } = useCart();
 
   const [isOpen, setIsOpen] = React.useState(false);
@@ -119,9 +120,28 @@ export function PaymentDialog({
     setShowSuccess(false);
   };
 
+  const handlePaymentDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      resetPaymentForm(
+        setPayFiftyPercent,
+        setPaymentMethod,
+        setCardNumber,
+        setNameOnCard,
+        setExpiryMM,
+        setExpiryYY,
+        setCvv,
+        setPaymentAmountInput
+      );
+    }
+    setIsOpen(open);
+  };
+
+  const isCartEmpty = getTotalItems() === 0;
+  const cannotTakePayment = isCartEmpty || totalBeforeFees <= 0;
+
   return (
     <>
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog open={isOpen} onOpenChange={handlePaymentDialogOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
         className="min-w-[90%] max-w-3xl max-h-[90vh] flex flex-col bg-[#1a1a1a] p-0 gap-0 text-white border-gray-800"
@@ -154,6 +174,7 @@ export function PaymentDialog({
                   type="button"
                   role="switch"
                   aria-checked={payFiftyPercent}
+                  aria-label={payFiftyPercent ? "Pay 50% (on)" : "Pay 50% (off)"}
                   onClick={() => setPayFiftyPercent((p) => !p)}
                   className={cn(
                     "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
@@ -265,6 +286,10 @@ export function PaymentDialog({
             {/* Right: Transaction Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Transaction Details</h3>
+              {isCartEmpty ? (
+                <p className="text-sm text-gray-400">Your cart is empty. Add items in checkout to make a payment.</p>
+              ) : (
+              <>
               {payFiftyPercent && (
                 <p className="text-xs text-primary-1 font-medium">50% payment</p>
               )}
@@ -296,6 +321,8 @@ export function PaymentDialog({
                   <span>{formatPrice(netOutstanding)}</span>
                 </div>
               </div>
+              </>
+              )}
             </div>
           </div>
         </div>
@@ -310,7 +337,8 @@ export function PaymentDialog({
           <Button
             type="button"
             onClick={handleTakePayment}
-            className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold"
+            disabled={cannotTakePayment}
+            className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold disabled:opacity-50 disabled:pointer-events-none"
           >
             Take payment {formatPrice(totalPaymentAmount)}
           </Button>
@@ -336,6 +364,7 @@ export function PaymentDialog({
           <Button
             type="button"
             onClick={handleCloseSuccess}
+            autoFocus
             className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold w-full sm:w-auto min-w-[120px]"
           >
             OK

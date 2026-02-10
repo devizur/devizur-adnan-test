@@ -46,6 +46,9 @@ export function Step1AvailabilitySelection() {
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
 
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
+  const [calendarMonth, setCalendarMonth] = React.useState<Date | null>(null);
+
   const displayDate = React.useMemo(() => {
     if (date) {
       const d = new Date(date + "T12:00:00");
@@ -53,6 +56,48 @@ export function Step1AvailabilitySelection() {
     }
     return new Date();
   }, [date]);
+
+  React.useEffect(() => {
+    setCalendarMonth((prev) => prev ?? displayDate);
+  }, [displayDate]);
+
+  const currentCalendarMonth = calendarMonth ?? displayDate;
+
+  const goToCalendarMonth = (deltaMonths: number) => {
+    setCalendarMonth((prev) => {
+      const base = prev ?? displayDate;
+      const next = new Date(base);
+      next.setMonth(next.getMonth() + deltaMonths);
+      return next;
+    });
+  };
+
+  const selectFromCalendar = (d: Date) => {
+    dispatch(setDate(d.toISOString().slice(0, 10)));
+    setIsCalendarOpen(false);
+  };
+
+  const calendarYear = currentCalendarMonth.getFullYear();
+  const calendarMonthIndex = currentCalendarMonth.getMonth();
+  const calendarMonthName = currentCalendarMonth.toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const firstOfMonth = new Date(calendarYear, calendarMonthIndex, 1);
+  const startWeekday = firstOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+  const daysInMonth = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
+
+  const calendarCells: (Date | null)[] = [];
+  for (let i = 0; i < startWeekday; i++) {
+    calendarCells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarCells.push(new Date(calendarYear, calendarMonthIndex, day));
+  }
+  while (calendarCells.length % 7 !== 0) {
+    calendarCells.push(null);
+  }
 
   const setDisplayDate = (delta: number) => {
     const d = new Date(displayDate);
@@ -212,13 +257,6 @@ export function Step1AvailabilitySelection() {
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#161616]">
         <div className="px-5 py-4 border-b border-gray-800/80 flex flex-col gap-4">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-1/10 border border-primary-1/30">
-              <Clock className="w-4 h-4 text-primary-1" />
-              <span className="text-sm font-medium text-primary-1">29:47 left</span>
-            </div>
-          </div>
-
           <div className="flex flex-wrap items-center gap-4">
             <span className="text-[11px] text-gray-500 uppercase tracking-wider">Guests</span>
             <div className="flex items-center gap-5">
@@ -275,7 +313,7 @@ export function Step1AvailabilitySelection() {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-1">
+          <div className="relative flex items-center justify-center gap-1">
             <button
               type="button"
               onClick={() => setDisplayDate(-1)}
@@ -284,9 +322,15 @@ export function Step1AvailabilitySelection() {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="text-sm font-medium text-white min-w-[200px] text-center py-2 px-3 rounded-xl bg-[#1e1e1e] border border-gray-800/80" aria-live="polite">
+            <button
+              type="button"
+              onClick={() => setIsCalendarOpen((open) => !open)}
+              className="text-sm font-medium text-white min-w-[200px] text-center py-2 px-3 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
+              aria-label="Open date picker"
+              aria-expanded={isCalendarOpen}
+            >
               {formatDialogDate(displayDate)}
-            </span>
+            </button>
             <button
               type="button"
               onClick={() => setDisplayDate(1)}
@@ -295,6 +339,65 @@ export function Step1AvailabilitySelection() {
             >
               <ChevronRight className="w-5 h-5" />
             </button>
+            {isCalendarOpen && (
+              <div className="absolute top-full mt-2 z-30 w-full max-w-xs rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-xl">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => goToCalendarMonth(-1)}
+                    className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                    aria-label="Previous month"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-medium text-white">{calendarMonthName}</span>
+                  <button
+                    type="button"
+                    onClick={() => goToCalendarMonth(1)}
+                    className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                    aria-label="Next month"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="px-4 pt-2 pb-3 text-xs text-gray-400">
+                  <div className="grid grid-cols-7 gap-1 mb-1">
+                    {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
+                      <div key={d} className="h-7 flex items-center justify-center tracking-[0.08em]">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarCells.map((cell, idx) => {
+                      if (!cell) {
+                        return <div key={idx} className="h-8" />;
+                      }
+
+                      const isSelected =
+                        date &&
+                        new Date(date + "T12:00:00").toDateString() === cell.toDateString();
+
+                      return (
+                        <button
+                          key={cell.toISOString()}
+                          type="button"
+                          onClick={() => selectFromCalendar(cell)}
+                          className={cn(
+                            "h-8 w-8 flex items-center justify-center rounded-full text-xs cursor-pointer transition-colors",
+                            isSelected
+                              ? "bg-primary-1 text-black"
+                              : "text-gray-200 hover:bg-[#333]"
+                          )}
+                        >
+                          {cell.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">

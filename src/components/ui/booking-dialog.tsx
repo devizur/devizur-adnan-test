@@ -22,6 +22,7 @@ import type { RootState } from "@/store";
 import type { Activity, Package, Food } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
 
+const REMAINING_TIME = 60 * 5; // 5 minutes
 const STEPS_ACTIVITY_FIRST = [
   { id: 1, label: "Availability & Selection" },
   { id: 2, label: "Food Selection" },
@@ -61,7 +62,8 @@ export function BookingDialog({
   const STEPS = isFoodFirst ? STEPS_FOOD_FIRST : STEPS_ACTIVITY_FIRST;
 
   const [isOpen, setIsOpen] = React.useState(false);
-  const [remainingSeconds, setRemainingSeconds] = React.useState(600);
+
+  const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const minutes = Math.floor(remainingSeconds / 60);
@@ -94,7 +96,7 @@ export function BookingDialog({
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      setRemainingSeconds(600);
+      setRemainingSeconds(REMAINING_TIME);
       return;
     }
 

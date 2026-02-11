@@ -10,119 +10,25 @@ import {
   setDate,
   setTimeOfDay,
   setTimeSlot,
-  incrementAdults,
-  decrementAdults,
-  incrementChildren,
-  decrementChildren,
   addActivity,
   removeActivity,
   setActivityGameNo,
   addPackage,
   removePackage,
 } from "@/store/bookingSlice";
-import { Check, ChevronLeft, ChevronRight, Clock } from "lucide-react";
-
-function getOrdinal(n: number) {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
-function formatDialogDate(date: Date) {
-  const day = date.getDate();
-  const month = date.toLocaleString("en-US", { month: "long" });
-  const year = date.getFullYear();
-  const weekday = date.toLocaleString("en-US", { weekday: "long" });
-  return `${weekday}, ${getOrdinal(day)} ${month} ${year}`;
-}
-
-/** Format date as YYYY-MM-DD in local time (avoids UTC off-by-one when selecting calendar days). */
-function toLocalDateString(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+import { Check } from "lucide-react";
+import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
+import { BookingGuests } from "./BookingGuests";
 
 export function Step1AvailabilitySelection() {
   const dispatch = useDispatch();
-  const { date, timeOfDay, timeSlot, persons, selectedActivities, selectedPackages } =
+  const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages } =
     useSelector((state: RootState) => state.booking);
 
   const { data: activities = [] } = useActivities();
   const { data: packages = [] } = usePackages();
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
-
-  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
-  const [calendarMonth, setCalendarMonth] = React.useState<Date | null>(null);
-
-  const displayDate = React.useMemo(() => {
-    if (date) {
-      const d = new Date(date + "T12:00:00");
-      if (!isNaN(d.getTime())) return d;
-    }
-    return new Date();
-  }, [date]);
-
-  React.useEffect(() => {
-    setCalendarMonth((prev) => prev ?? displayDate);
-  }, [displayDate]);
-
-  const currentCalendarMonth = calendarMonth ?? displayDate;
-
-  const goToCalendarMonth = (deltaMonths: number) => {
-    setCalendarMonth((prev) => {
-      const base = prev ?? displayDate;
-      const next = new Date(base);
-      next.setMonth(next.getMonth() + deltaMonths);
-      return next;
-    });
-  };
-
-  const selectFromCalendar = (d: Date) => {
-    dispatch(setDate(toLocalDateString(d)));
-    setIsCalendarOpen(false);
-  };
-
-  const calendarYear = currentCalendarMonth.getFullYear();
-  const calendarMonthIndex = currentCalendarMonth.getMonth();
-  const calendarMonthName = currentCalendarMonth.toLocaleString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const firstOfMonth = new Date(calendarYear, calendarMonthIndex, 1);
-  const startWeekday = firstOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
-  const daysInMonth = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
-
-  const calendarCells: (Date | null)[] = [];
-  for (let i = 0; i < startWeekday; i++) {
-    calendarCells.push(null);
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarCells.push(new Date(calendarYear, calendarMonthIndex, day));
-  }
-  while (calendarCells.length % 7 !== 0) {
-    calendarCells.push(null);
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const minCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const maxCalendarMonth = new Date(today.getFullYear(), today.getMonth() + 11, 1);
-  const calendarMonthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
-  const canGoPrevMonth =
-    calendarMonthKey(currentCalendarMonth) > calendarMonthKey(minCalendarMonth);
-  const canGoNextMonth =
-    calendarMonthKey(currentCalendarMonth) < calendarMonthKey(maxCalendarMonth);
-
-  const setDisplayDate = (delta: number) => {
-    const d = new Date(displayDate);
-    d.setDate(d.getDate() + delta);
-    dispatch(setDate(toLocalDateString(d)));
-  };
 
   React.useEffect(() => {
     if (!date) {
@@ -276,184 +182,12 @@ export function Step1AvailabilitySelection() {
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#161616]">
         <div className="px-5 py-4 border-b border-gray-800/80 flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider">Guests</span>
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 w-12 text-left">Adults</span>
-                <div className="flex items-center rounded-xl border border-gray-700/80 bg-[#1e1e1e] overflow-hidden">
-                  <button
-                    type="button"
-                    disabled={persons.adults === 0}
-                    onClick={() => dispatch(decrementAdults())}
-                    className="min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/80 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/50"
-                    aria-label="Decrease adults"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-medium text-white min-w-8 text-center tabular-nums" aria-live="polite">
-                    {persons.adults}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => dispatch(incrementAdults())}
-                    className="min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/80 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/50"
-                    aria-label="Increase adults"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 w-12 text-left">Children</span>
-                <div className="flex items-center rounded-xl border border-gray-700/80 bg-[#1e1e1e] overflow-hidden">
-                  <button
-                    type="button"
-                    disabled={persons.children === 0}
-                    onClick={() => dispatch(decrementChildren())}
-                    className="min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/80 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/50"
-                    aria-label="Decrease children"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-medium text-white min-w-8 text-center tabular-nums" aria-live="polite">
-                    {persons.children}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => dispatch(incrementChildren())}
-                    className="min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800/80 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/50"
-                    aria-label="Increase children"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BookingGuests />
 
-          <div className="relative flex items-center justify-center gap-1">
-            <button
-              type="button"
-              onClick={() => setDisplayDate(-1)}
-              className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
-              aria-label="Previous date"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsCalendarOpen((open) => !open)}
-              className="text-sm font-medium text-white min-w-[200px] text-center py-2 px-3 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
-              aria-label="Open date picker"
-              aria-expanded={isCalendarOpen}
-            >
-              {formatDialogDate(displayDate)}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisplayDate(1)}
-              className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
-              aria-label="Next date"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            {isCalendarOpen && (
-              <div className="absolute top-full mt-2 z-30 w-full max-w-xs rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-xl">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
-                  <button
-                    type="button"
-                    onClick={() => goToCalendarMonth(-1)}
-                    disabled={!canGoPrevMonth}
-                    className={cn(
-                      "p-1 rounded-lg transition-colors",
-                      canGoPrevMonth
-                        ? "text-gray-400 hover:text-white hover:bg-[#252525] cursor-pointer"
-                        : "text-gray-600 cursor-not-allowed opacity-40"
-                    )}
-                    aria-label="Previous month"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-medium text-white">{calendarMonthName}</span>
-                  <button
-                    type="button"
-                    onClick={() => goToCalendarMonth(1)}
-                    disabled={!canGoNextMonth}
-                    className={cn(
-                      "p-1 rounded-lg transition-colors",
-                      canGoNextMonth
-                        ? "text-gray-400 hover:text-white hover:bg-[#252525] cursor-pointer"
-                        : "text-gray-600 cursor-not-allowed opacity-40"
-                    )}
-                    aria-label="Next month"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="px-4 pt-2 pb-3 text-xs text-gray-400">
-                  <div className="grid grid-cols-7 gap-1 mb-1">
-                    {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
-                      <div key={d} className="h-7 flex items-center justify-center tracking-[0.08em]">
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {calendarCells.map((cell, idx) => {
-                      if (!cell) {
-                        return <div key={idx} className="h-8" />;
-                      }
-
-                      const cellDate = new Date(cell);
-                      cellDate.setHours(0, 0, 0, 0);
-
-                      const selectedDate =
-                        date && new Date(date + "T12:00:00");
-                      if (selectedDate) {
-                        selectedDate.setHours(0, 0, 0, 0);
-                      }
-
-                      const isSelected =
-                        !!selectedDate &&
-                        selectedDate.getTime() === cellDate.getTime();
-                      const isToday = cellDate.getTime() === today.getTime();
-                      const isPast = cellDate.getTime() < today.getTime();
-
-                      return (
-                        <button
-                          key={cell.toISOString()}
-                          type="button"
-                          onClick={() => !isPast && selectFromCalendar(cell)}
-                          disabled={isPast}
-                          aria-current={isToday ? "date" : undefined}
-                          aria-selected={isSelected}
-                          aria-label={cell.toLocaleDateString(undefined, {
-                            weekday: "long",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                          className={cn(
-                            "h-8 w-8 flex items-center justify-center rounded-full text-xs transition-colors",
-                            isPast && !isSelected
-                              ? "text-gray-600 opacity-40 cursor-default"
-                              : "cursor-pointer",
-                            isSelected
-                              ? "bg-primary-1 text-black"
-                              : isToday
-                                ? "border border-primary-1/60 text-white"
-                                : "text-gray-200 hover:bg-[#333]"
-                          )}
-                        >
-                          {cell.getDate()}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <BookingCalendar
+            value={date ?? ""}
+            onChange={(d) => dispatch(setDate(d))}
+          />
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
             {SHIFT.map((tab) => (

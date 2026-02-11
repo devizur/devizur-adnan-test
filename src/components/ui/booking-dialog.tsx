@@ -197,7 +197,7 @@ export function BookingDialog({
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex items-center justify-between gap-2 mt-4 w-ful">
+          <div className="flex items-center justify-between gap-2 mt-4 w-full">
             <div className="flex items-center gap-1">
               {STEPS.map((s, i) => (
                 <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>

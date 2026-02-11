@@ -36,6 +36,14 @@ function formatDialogDate(date: Date) {
   return `${weekday}, ${getOrdinal(day)} ${month} ${year}`;
 }
 
+/** Format date as YYYY-MM-DD in local time (avoids UTC off-by-one when selecting calendar days). */
+function toLocalDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function Step1AvailabilitySelection() {
   const dispatch = useDispatch();
   const { date, timeOfDay, timeSlot, persons, selectedActivities, selectedPackages } =
@@ -73,7 +81,7 @@ export function Step1AvailabilitySelection() {
   };
 
   const selectFromCalendar = (d: Date) => {
-    dispatch(setDate(d.toISOString().slice(0, 10)));
+    dispatch(setDate(toLocalDateString(d)));
     setIsCalendarOpen(false);
   };
 
@@ -113,12 +121,12 @@ export function Step1AvailabilitySelection() {
   const setDisplayDate = (delta: number) => {
     const d = new Date(displayDate);
     d.setDate(d.getDate() + delta);
-    dispatch(setDate(d.toISOString().slice(0, 10)));
+    dispatch(setDate(toLocalDateString(d)));
   };
 
   React.useEffect(() => {
     if (!date) {
-      dispatch(setDate(new Date().toISOString().slice(0, 10)));
+      dispatch(setDate(toLocalDateString(new Date())));
     }
   }, [date, dispatch]);
 

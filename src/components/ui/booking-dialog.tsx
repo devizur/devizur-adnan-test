@@ -11,14 +11,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { Step1AvailabilitySelection } from "@/components/ui/booking/Step1AvailabilitySelection";
 import { Step2FoodSelection } from "@/components/ui/booking/Step2FoodSelection";
 import { Step3HolderDetails } from "@/components/ui/booking/Step3HolderDetails";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
-import type { RootState } from "@/store";
 import type { Activity, Package, Food } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
 
@@ -53,10 +52,10 @@ export function BookingDialog({
   initialFood,
   onConfirm,
 }: BookingDialogProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const cart = useCart();
   const { step, flowMode, timeSlot, persons, selectedActivities, selectedPackages, selectedFoods } =
-    useSelector((state: RootState) => state.booking);
+    useAppSelector((state) => state.booking);
 
   const isFoodFirst = flowMode === "foodFirst";
   const STEPS = isFoodFirst ? STEPS_FOOD_FIRST : STEPS_ACTIVITY_FIRST;

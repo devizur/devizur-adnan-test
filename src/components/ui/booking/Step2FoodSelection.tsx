@@ -1,17 +1,16 @@
 "use client";
 
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { useFoods } from "@/lib/api/hooks";
-import type { RootState } from "@/store";
 import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
 import FoodCard from "@/components/ui/reused/FoodCard";
 import { Button } from "@/components/ui/button";
 
 export function Step2FoodSelection() {
-  const dispatch = useDispatch();
-  const { selectedFoods } = useSelector((state: RootState) => state.booking);
+  const dispatch = useAppDispatch();
+  const { selectedFoods } = useAppSelector((state) => state.booking);
   const { data: foods = [] } = useFoods();
 
   const getQuantity = (foodId: number) =>

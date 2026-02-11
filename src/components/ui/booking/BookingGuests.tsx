@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
   incrementAdults,
   decrementAdults,
@@ -11,8 +10,8 @@ import {
 } from "@/store/bookingSlice";
 
 export function BookingGuests() {
-  const dispatch = useDispatch();
-  const persons = useSelector((state: RootState) => state.booking.persons);
+  const dispatch = useAppDispatch();
+  const persons = useAppSelector((state) => state.booking.persons);
 
   return (
     <div className="flex flex-wrap items-center gap-4">

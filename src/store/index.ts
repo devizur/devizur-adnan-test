@@ -1,11 +1,6 @@
-import { configureStore } from "@reduxjs/toolkit";
-import bookingReducer from "./bookingSlice";
+// Store instance and types
+export { store } from "./store";
+export type { RootState, AppDispatch } from "./store";
 
-export const store = configureStore({
-  reducer: {
-    booking: bookingReducer,
-  },
-});
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+// Typed hooks – use these instead of useDispatch/useSelector for full type safety
+export { useAppDispatch, useAppSelector } from "./hooks";

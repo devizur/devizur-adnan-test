@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { useActivities, usePackages } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 import { SLOTS, SHIFT, OPTIONS } from "./constants";
-import type { RootState } from "@/store";
 import {
   setDate,
   setTimeOfDay,
@@ -21,9 +20,9 @@ import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 
 export function Step1AvailabilitySelection() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages } =
-    useSelector((state: RootState) => state.booking);
+    useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
   const { data: packages = [] } = usePackages();

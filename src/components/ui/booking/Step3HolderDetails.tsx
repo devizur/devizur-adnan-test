@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { RootState } from "@/store";
 import { setHolderDetails } from "@/store/bookingSlice";
 
 interface Step3HolderDetailsProps {
@@ -54,8 +53,8 @@ function Field({
 }
 
 export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
-  const dispatch = useDispatch();
-  const { holderDetails } = useSelector((state: RootState) => state.booking);
+  const dispatch = useAppDispatch();
+  const { holderDetails } = useAppSelector((state) => state.booking);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

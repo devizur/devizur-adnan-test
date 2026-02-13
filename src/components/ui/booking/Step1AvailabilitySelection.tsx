@@ -82,7 +82,7 @@ export function Step1AvailabilitySelection() {
                     />
                     {selected && (
                       <div className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                        <Check className="w-4 h-4 text-black" strokeWidth={2.5} />
+                        <Check className="w-4 h-4 text-secondary" strokeWidth={2.5} />
                       </div>
                     )}
                   </div>
@@ -117,7 +117,7 @@ export function Step1AvailabilitySelection() {
                         className={cn(
                           "flex-1 min-h-10 py-2 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                           gameNo === opt.value
-                            ? "bg-primary-1 text-black"
+                            ? "bg-primary-1 text-secondary"
                             : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
                         )}
                       >
@@ -129,6 +129,7 @@ export function Step1AvailabilitySelection() {
               </div>
             );
           })}
+        
           {suggestedPackages.length > 0 && (
             <>
               <p className="text-[11px] text-gray-500 font-medium mt-5 mb-2 uppercase tracking-wider">Packages</p>
@@ -161,7 +162,7 @@ export function Step1AvailabilitySelection() {
                         />
                         {selected && (
                           <div className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                            <Check className="w-4 h-4 text-black" strokeWidth={2.5} />
+                            <Check className="w-4 h-4 text-secondary" strokeWidth={2.5} />
                           </div>
                         )}
                       </div>
@@ -200,7 +201,7 @@ export function Step1AvailabilitySelection() {
                 className={cn(
                   "flex-1 min-h-11 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                   timeOfDay === tab.id
-                    ? "bg-primary-1 text-black"
+                    ? "bg-primary-1 text-secondary"
                     : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
                 )}
               >
@@ -226,14 +227,14 @@ export function Step1AvailabilitySelection() {
                   className={cn(
                     "relative min-h-[4.5rem] py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                     timeSlot === s.t
-                      ? "bg-primary-1 text-black border-primary-1 shadow-md"
+                      ? "bg-primary-1 text-secondary border-primary-1 shadow-md"
                       : "bg-[#1e1e1e] text-gray-300 border-gray-800 hover:bg-[#252525] hover:border-gray-700"
                   )}
                 >
-                  <span className="font-semibold">{s.t}</span>
-                  <span className="text-[10px] opacity-70">100 avail</span>
+                  <span className="font-semibold text-sm">{s.t}</span>
+                  <span className="text-xs opacity-70">100 available</span>
                   {"off" in s && s.off ? (
-                    <span className="absolute top-1 right-1 bg-primary-1 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                    <span className="absolute top-1 right-1 bg-primary text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded-md">
                       $5 off
                     </span>
                   ) : null}

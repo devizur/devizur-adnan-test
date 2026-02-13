@@ -13,9 +13,10 @@ export function BookingGuests() {
   const dispatch = useAppDispatch();
   const persons = useAppSelector((state) => state.booking.persons);
 
-  return (
-    <div className="flex flex-wrap items-center gap-4">
-      <span className="text-[11px] text-gray-500 uppercase tracking-wider">Guests</span>
+  return (<div className="  ">
+    {/* <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Person:</span> */}
+    <div className="flex justify-center flex-wrap items-center gap-4 w-full">
+
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 w-12 text-left">Adults</span>
@@ -74,6 +75,6 @@ export function BookingGuests() {
           </div>
         </div>
       </div>
-    </div>
+    </div>  </div>
   );
 }

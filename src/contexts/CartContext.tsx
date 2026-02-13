@@ -1,165 +1,185 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Food, Activity, Package } from "@/lib/api/types";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from "react";
+import type { Food, Activity, Package } from "@/lib/api/types";
+import type { HolderDetails, BookingPersons } from "@/store/bookingSlice";
+
+const CART_STORAGE_KEY = "booking_cart";
+
+/** Single cart entry = one booking with holder details + products (activities, packages, foods). */
+export interface CartEntry {
+  id: string;
+  /** Booking holder contact/details – kept in relation to this entry's products */
+  holderDetails: HolderDetails;
+  persons: BookingPersons;
+  date: string;
+  timeSlot: string;
+  timeOfDay: 1 | 2 | 3;
+  activities: { activity: Activity; gameNo: number }[];
+  packages: Package[];
+  foods: { food: Food; quantity: number }[];
+  addedAt: number;
+}
 
 export interface CartFoodItem {
-    food: Food;
-    quantity: number;
+  food: Food;
+  quantity: number;
 }
 
 export interface CartActivityItem {
-    activity: Activity;
-    gameNo: number;
+  activity: Activity;
+  gameNo: number;
 }
 
 export interface CartPackageItem {
-    pkg: Package;
+  pkg: Package;
 }
 
 interface CartContextType {
-    foodItems: CartFoodItem[];
-    activityItems: CartActivityItem[];
-    packageItems: CartPackageItem[];
-    addFood: (food: Food, quantity?: number) => void;
-    removeFood: (foodId: number) => void;
-    updateFoodQuantity: (foodId: number, quantity: number) => void;
-    addActivity: (activity: Activity, gameNo?: number) => void;
-    updateActivityGameNo: (activityId: number, gameNo: number) => void;
-    removeActivity: (activityId: number) => void;
-    addPackage: (pkg: Package) => void;
-    removePackage: (pkgId: number) => void;
-    clearCart: () => void;
-    getFoodQuantity: (foodId: number) => number;
-    getTotalItems: () => number;
+  /** All cart entries (each = one booking with holder + products). Persisted to localStorage. */
+  entries: CartEntry[];
+  /** Add one complete booking to the cart (holder + activities + packages + foods). */
+  addEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
+  /** Remove one booking from the cart. */
+  removeEntry: (id: string) => void;
+  /** Clear entire cart – e.g. after payment is done. */
+  clearCart: () => void;
+  /** Total item count across all entries (for badge, etc.). */
+  getTotalItems: () => number;
+  /** Flattened lists for backward compatibility / summary; prefer using entries for UI. */
+  foodItems: CartFoodItem[];
+  activityItems: CartActivityItem[];
+  packageItems: CartPackageItem[];
+  getFoodQuantity: (foodId: number) => number;
+}
+
+function loadCartFromStorage(): CartEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed as CartEntry[];
+  } catch {
+    return [];
+  }
+}
+
+function saveCartToStorage(entries: CartEntry[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // ignore
+  }
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    const [foodItems, setFoodItems] = useState<CartFoodItem[]>([]);
-    const [activityItems, setActivityItems] = useState<CartActivityItem[]>([]);
-    const [packageItems, setPackageItems] = useState<CartPackageItem[]>([]);
+  const [entries, setEntries] = useState<CartEntry[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-    const addFood = (food: Food, quantity: number = 1) => {
-        setFoodItems((prev) => {
-            const existing = prev.find((item) => item.food.id === food.id);
-            if (existing) {
-                return prev.map((item) =>
-                    item.food.id === food.id
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                );
-            }
-            return [...prev, { food, quantity }];
-        });
+  // Hydrate from localStorage after mount (SSR-safe)
+  useEffect(() => {
+    setEntries(loadCartFromStorage());
+    setHydrated(true);
+  }, []);
+
+  // Persist to localStorage when cart changes (after hydration so we don't overwrite with [])
+  useEffect(() => {
+    if (!hydrated) return;
+    saveCartToStorage(entries);
+  }, [entries, hydrated]);
+
+  const addEntry = useCallback((entry: Omit<CartEntry, "id" | "addedAt">) => {
+    const newEntry: CartEntry = {
+      ...entry,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      addedAt: Date.now(),
     };
+    setEntries((prev) => [...prev, newEntry]);
+  }, []);
 
-    const removeFood = (foodId: number) => {
-        setFoodItems((prev) => prev.filter((item) => item.food.id !== foodId));
-    };
+  const removeEntry = useCallback((id: string) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  }, []);
 
-    const updateFoodQuantity = (foodId: number, quantity: number) => {
-        if (quantity <= 0) {
-            removeFood(foodId);
-            return;
-        }
-        setFoodItems((prev) =>
-            prev.map((item) =>
-                item.food.id === foodId ? { ...item, quantity } : item
-            )
-        );
-    };
+  const clearCart = useCallback(() => {
+    setEntries([]);
+  }, []);
 
-    const addActivity = (activity: Activity, gameNo: number = 1) => {
-        setActivityItems((prev) => {
-            const existingIndex = prev.findIndex((item) => item.activity.id === activity.id);
-            if (existingIndex !== -1) {
-                // Update existing activity with new game number
-                return prev.map((item, index) =>
-                    index === existingIndex ? { ...item, gameNo } : item
-                );
-            }
-            return [...prev, { activity, gameNo }];
-        });
-    };
+  const getTotalItems = useCallback(() => {
+    return entries.reduce((sum, e) => {
+      const foodCount = e.foods.reduce((s, i) => s + i.quantity, 0);
+      return sum + e.activities.length + e.packages.length + foodCount;
+    }, 0);
+  }, [entries]);
 
-    const updateActivityGameNo = (activityId: number, gameNo: number) => {
-        setActivityItems((prev) =>
-            prev.map((item) =>
-                item.activity.id === activityId ? { ...item, gameNo } : item
-            )
-        );
-    };
+  const { foodItems, activityItems, packageItems } = useMemo(() => {
+    const foodItems: CartFoodItem[] = [];
+    const activityItems: CartActivityItem[] = [];
+    const packageItems: CartPackageItem[] = [];
+    entries.forEach((e) => {
+      e.foods.forEach(({ food, quantity }) => {
+        const existing = foodItems.find((i) => i.food.id === food.id);
+        if (existing) existing.quantity += quantity;
+        else foodItems.push({ food, quantity });
+      });
+      e.activities.forEach(({ activity, gameNo }) => activityItems.push({ activity, gameNo }));
+      e.packages.forEach((pkg) => packageItems.push({ pkg }));
+    });
+    return { foodItems, activityItems, packageItems };
+  }, [entries]);
 
-    const removeActivity = (activityId: number) => {
-        setActivityItems((prev) =>
-            prev.filter((item) => item.activity.id !== activityId)
-        );
-    };
+  const getFoodQuantity = useCallback(
+    (foodId: number) => {
+      return foodItems.reduce((sum, item) => (item.food.id === foodId ? sum + item.quantity : sum), 0);
+    },
+    [foodItems]
+  );
 
-    const addPackage = (pkg: Package) => {
-        setPackageItems((prev) => {
-            const exists = prev.some((item) => item.pkg.id === pkg.id);
-            if (exists) {
-                return prev;
-            }
-            return [...prev, { pkg }];
-        });
-    };
+  const value: CartContextType = useMemo(
+    () => ({
+      entries,
+      addEntry,
+      removeEntry,
+      clearCart,
+      getTotalItems,
+      foodItems,
+      activityItems,
+      packageItems,
+      getFoodQuantity,
+    }),
+    [
+      entries,
+      addEntry,
+      removeEntry,
+      clearCart,
+      getTotalItems,
+      foodItems,
+      activityItems,
+      packageItems,
+      getFoodQuantity,
+    ]
+  );
 
-    const removePackage = (pkgId: number) => {
-        setPackageItems((prev) =>
-            prev.filter((item) => item.pkg.id !== pkgId)
-        );
-    };
-
-    const clearCart = () => {
-        setFoodItems([]);
-        setActivityItems([]);
-        setPackageItems([]);
-    };
-
-    const getFoodQuantity = (foodId: number) => {
-        const item = foodItems.find((item) => item.food.id === foodId);
-        return item?.quantity || 0;
-    };
-
-    const getTotalItems = () => {
-        const foodCount = foodItems.reduce((sum, item) => sum + item.quantity, 0);
-        const activityCount = activityItems.length;
-        const packageCount = packageItems.length;
-        return foodCount + activityCount + packageCount;
-    };
-
-    return (
-        <CartContext.Provider
-            value={{
-                foodItems,
-                activityItems,
-                packageItems,
-                addFood,
-                removeFood,
-                updateFoodQuantity,
-                addActivity,
-                updateActivityGameNo,
-                removeActivity,
-                addPackage,
-                removePackage,
-                clearCart,
-                getFoodQuantity,
-                getTotalItems,
-            }}
-        >
-            {children}
-        </CartContext.Provider>
-    );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {
-    const context = useContext(CartContext);
-    if (context === undefined) {
-        throw new Error("useCart must be used within a CartProvider");
-    }
-    return context;
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
 }

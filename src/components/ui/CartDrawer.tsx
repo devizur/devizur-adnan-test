@@ -2,8 +2,9 @@
 import { IoMdClose } from "react-icons/io";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import type { CartEntry } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PaymentDialog } from "@/components/ui/payment-dialog";
@@ -20,359 +21,167 @@ interface CartDrawerProps {
     onClose: () => void;
 }
 
-// Shared cart content component
+function holderLabel(entry: CartEntry): string {
+  const { firstName, lastName, email } = entry.holderDetails;
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
+  return name || email || "Booking";
+}
+
+// Shared cart content component – each entry shows holder + their products; cart persisted in localStorage; cleared on payment.
 const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuccess }) => {
-    const {
-        foodItems,
-        activityItems,
-        packageItems,
-        updateFoodQuantity,
-        removeFood,
-        removeActivity,
-        removePackage,
-        clearCart,
-    } = useCart();
+    const { entries, removeEntry, clearCart, foodItems, activityItems, packageItems } = useCart();
 
     const foodSubtotal = foodItems.reduce(
         (sum, item) => sum + parsePrice(item.food.price) * item.quantity,
         0
     );
-
     const activitySubtotal = activityItems.reduce(
         (sum, item) => sum + parsePrice(item.activity.price) * item.gameNo,
         0
     );
-
     const packageSubtotal = packageItems.reduce(
         (sum, item) => sum + parsePrice(item.pkg.price),
         0
     );
-
     const subtotal = foodSubtotal + activitySubtotal + packageSubtotal;
-    const serviceFee = subtotal * 0.05; // 5% service fee
-    const discount = 0; // Can be calculated based on discounts
+    const serviceFee = subtotal * 0.05;
+    const discount = 0;
     const total = subtotal + serviceFee - discount;
 
     return (
         <>
-            {/* Header */}
             <div className="p-6 border-b border-accent/20 ">
                 <div className="flex items-center justify-between mb-2">
                     <h2 className="text-2xl font-bold text-primary">Checkout</h2>
-
                     <DrawerClose asChild>
-                        <div  >
+                        <div>
                             <IoMdClose className="text-2xl cursor-pointer font-bold text-primary" />
                         </div>
                     </DrawerClose>
-
                 </div>
                 <p className="text-sm text-gray-400">
-                    Items, bookings, and table reservations—all in one place.
+                    Items, bookings, and table reservations—all in one place. Cart is saved locally until payment.
                 </p>
             </div>
 
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6  ">
-                {/* Food Items Section */}
-                <Card className="p-4 bg-secondary border border-accent/10">
-                    <div className="flex items-center justify-between ">
-                        <h3 className="text-lg font-bold text-primary">Food Items</h3>
-                        <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1 ">  {foodItems.length} {foodItems.length === 1 ? "type" : "types"}</Badge>
-
-                    </div>
-
-                    {foodItems.length === 0 ? (
-                        <div className=" ">
-                            <p className="text-gray-400 text-sm">No food items yet.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {foodItems.map((item) => (
-                                <div
-                                    key={item.food.id}
-                                    className="flex border border-accent/40 rounded-xl  items-start gap-3 p-2 "
-                                >
-                                    <img
-                                        src={item.food.image}
-                                        alt={item.food.title}
-                                        className="w-16 h-16 rounded-lg object-cover"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-sm font-bold text-primary truncate">
-                                            {item.food.title}
-                                        </h4>
-
-                                        <div className="flex items-center justify-between mt-2">
-                                            <div className="text-accent text-sm">
-                                                {item.food.price} X  {item.quantity}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() =>
-                                                        updateFoodQuantity(
-                                                            item.food.id,
-                                                            item.quantity - 1
-                                                        )
-                                                    }
-                                                    className="w-7 h-7 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all"
-                                                >
-                                                    <Minus className="w-3 h-3" />
-                                                </button>
-                                                <span className="text-sm font-medium text-primary w-8 text-center">
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    onClick={() =>
-                                                        updateFoodQuantity(
-                                                            item.food.id,
-                                                            item.quantity + 1
-                                                        )
-                                                    }
-                                                    className="w-7 h-7 rounded bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all"
-                                                >
-                                                    <Plus className="w-3 h-3" />
-                                                </button>
-                                                <button
-                                                    onClick={() => removeFood(item.food.id)}
-                                                    className="ml-2 text-gray-400 hover:text-red-400 transition-colors"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {entries.length === 0 ? (
+                    <Card className="p-6 bg-secondary border border-accent/10">
+                        <p className="text-gray-400 text-sm">Your cart is empty. Add a booking to continue.</p>
+                    </Card>
+                ) : (
+                    entries.map((entry) => (
+                        <Card key={entry.id} className="p-4 bg-secondary border border-accent/10">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-bold text-primary">
+                                    Booking for {holderLabel(entry)}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1">
+                                        {entry.date || "—"} · {entry.timeSlot || "—"}
+                                    </Badge>
+                                    <button
+                                        onClick={() => removeEntry(entry.id)}
+                                        className="p-1.5 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                                        aria-label="Remove this booking"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-400">Food Subtotal</span>
-                            <span className="text-lg   text-primary">
-                                {formatPrice(foodSubtotal)}
-                            </span>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Activities Booking Section */}
-                <Card className="p-4 bg-secondary border border-accent/10">
-                    <div className="flex items-center justify-between  ">
-                        <h3 className="text-lg font-bold text-primary">Activities Booking</h3>
-
-                        <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1 ">      {activityItems.length}{" "}
-                            {activityItems.length === 1 ? "booking" : "bookings"}</Badge>
-                    </div>
-
-                    {activityItems.length === 0 ? (
-                        <div className="">
-                            <p className="text-gray-400 text-sm">No booking yet.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {activityItems.map((item) => (
-                                <div
-                                    key={item.activity.id}
-                                    className="flex items-start gap-3 border border-accent/40 rounded-xl p-2 "
-                                >
-                                    <img
-                                        src={item.activity.image}
-                                        alt={item.activity.title}
-                                        className="w-16 h-16 rounded-lg object-cover"
-                                    />
-                                    <div className="flex-1 min-w-0">
-
-                                        <div className="flex justify-between items-start">
-                                            <div className="">
-                                                <h2 className="text-sm font-bold text-primary truncate">
-                                                    {item.activity.title}
-                                                </h2>
-
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {item.activity.category}
-                                                </p>
-                                                <div className="flex items-center justify-between ">
-                                                    <div className=" text-primary text-sm ">
-                                                        {item.activity.price}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start justify-end gap-2">
-
-                                                <button
-                                                    onClick={() =>
-                                                        removeActivity(item.activity.id)
-                                                    }
-                                                    className="ml-2 cursor-pointer text-red-300 transition-colors"
-                                                >
-                                                    <Badge variant="outline" className="bg-red-500/10 p-1 font-bold text-red-500/70   border-red-500  rounded-[10px]">  Remove</Badge>
-
-                                                </button>
-                                            </div>
-
-                                        </div>
-
-
-
-
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-400">Booking Subtotal</span>
-                            <span className="text-lg   text-primary">
-                                {formatPrice(activitySubtotal)}
-                            </span>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Packages Booking Section */}
-                <Card className="p-4 bg-secondary border border-accent/10">
-                    <div className="flex items-center justify-between  ">
-                        <h3 className="text-lg font-bold text-primary">Packages Booking</h3>
-
-                        <Badge
-                            variant="outline"
-                            className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1 "
-                        >
-                            {packageItems.length}{" "}
-                            {packageItems.length === 1 ? "package" : "packages"}
-                        </Badge>
-                    </div>
-
-                    {packageItems.length === 0 ? (
-                        <div className="">
-                            <p className="text-gray-400 text-sm">No packages yet.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {packageItems.map((item) => (
-                                <div
-                                    key={item.pkg.id}
-                                    className="flex items-start gap-3 border border-accent/40 rounded-xl p-2 "
-                                >
-                                    <img
-                                        src={item.pkg.image}
-                                        alt={item.pkg.title}
-                                        className="w-16 h-16 rounded-lg object-cover"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start">
-                                            <div className="">
-                                                <h4 className="text-sm font-bold text-primary truncate">
-                                                    {item.pkg.title}
-                                                </h4>
-
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {item.pkg.category}
-                                                </p>
-                                                <div className="flex items-center justify-between ">
-                                                    <div className=" text-primary text-sm ">
-                                                        {item.pkg.price}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start justify-end gap-2">
-                                                <button
-                                                    onClick={() =>
-                                                        removePackage(item.pkg.id)
-                                                    }
-                                                    className="ml-2 cursor-pointer text-red-300 transition-colors"
-                                                >
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="bg-red-500/10 p-1 font-bold text-red-500/70   border-red-500  rounded-[10px]"
-                                                    >
-                                                        Remove
-                                                    </Badge>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-400">Packages Subtotal</span>
-                            <span className="text-lg   text-primary">
-                                {formatPrice(packageSubtotal)}
-                            </span>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Summary Section */}
-                <Card className="p-4 bg-secondary border border-accent/10">
-                    <h3 className="text-lg font-bold text-primary ">Summary</h3>
-                    <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-primary">Subtotal</span>
-                            <span className="text-primary font-medium">
-                                {formatPrice(subtotal)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-primary">Service Fee (5%)</span>
-                            <span className="text-primary font-medium">
-                                {formatPrice(serviceFee)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-primary-1">Discount</span>
-                            <span className="text-primary ">
-                                {formatPrice(discount)}
-                            </span>
-                        </div>
-                        <div className="pt-3 border-t border-accent/10">
-                            <div className="flex justify-between">
-                                <span className="text-lg font-semibold text-primary">
-                                    Total Amount
-                                </span>
-                                <span className="text-xl font-samibold text-primary">
-                                    {formatPrice(total)}
-                                </span>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className=" space-y-3 bg-secondary-2">
-                        <PaymentDialog onPaymentSuccess={onPaymentSuccess}>
-                            <Button
-                                className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
-                            >
-                                Add Payment
-                            </Button>
-                        </PaymentDialog>
-                        <Button
-                            variant="outline"
-                            className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1/10 hover:bg-primary-2  text-primary-1 border border-primary-1"
-                            onClick={clearCart}
-                        >
-                            Clear Cart
-                        </Button>
+                            {entry.activities.length > 0 && (
+                                <div className="space-y-2 mb-3">
+                                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Activities</p>
+                                    {entry.activities.map(({ activity, gameNo }) => (
+                                        <div key={activity.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
+                                            <img src={activity.image} alt={activity.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-primary truncate">{activity.title}</p>
+                                                <p className="text-xs text-accent">{activity.price} × {gameNo}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {entry.packages.length > 0 && (
+                                <div className="space-y-2 mb-3">
+                                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Packages</p>
+                                    {entry.packages.map((pkg) => (
+                                        <div key={pkg.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
+                                            <img src={pkg.image} alt={pkg.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-primary truncate">{pkg.title}</p>
+                                                <p className="text-xs text-accent">{pkg.price}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {entry.foods.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Food</p>
+                                    {entry.foods.map(({ food, quantity }) => (
+                                        <div key={food.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
+                                            <img src={food.image} alt={food.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-primary truncate">{food.title}</p>
+                                                <p className="text-xs text-accent">{food.price} × {quantity}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </Card>
+                    ))
+                )}
 
-                    </div>
-                </Card>
-                <p className="text-xs text-gray-400   pt-1">
-                    Tip: Food orders, activity bookings, and optional table reservations are all
-                    submitted together in one flow.
-                </p>
+                {entries.length > 0 && (
+                    <>
+                        <Card className="p-4 bg-secondary border border-accent/10">
+                            <h3 className="text-lg font-bold text-primary mb-3">Summary</h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-primary">Subtotal</span>
+                                    <span className="text-primary font-medium">{formatPrice(subtotal)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-primary">Service Fee (5%)</span>
+                                    <span className="text-primary font-medium">{formatPrice(serviceFee)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-primary-1">Discount</span>
+                                    <span className="text-primary">{formatPrice(discount)}</span>
+                                </div>
+                                <div className="pt-3 border-t border-accent/10 flex justify-between">
+                                    <span className="text-lg font-semibold text-primary">Total Amount</span>
+                                    <span className="text-xl font-semibold text-primary">{formatPrice(total)}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 mt-4 bg-secondary-2">
+                                <PaymentDialog onPaymentSuccess={onPaymentSuccess}>
+                                    <Button
+                                        className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+                                    >
+                                        Add Payment
+                                    </Button>
+                                </PaymentDialog>
+                                <Button
+                                    variant="outline"
+                                    className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1/10 hover:bg-primary-2 text-primary-1 border border-primary-1"
+                                    onClick={clearCart}
+                                >
+                                    Clear Cart
+                                </Button>
+                            </div>
+                        </Card>
+                        <p className="text-xs text-gray-400 pt-1">
+                            Cart is stored in your browser. After payment, the cart is cleared.
+                        </p>
+                    </>
+                )}
             </div>
-
-
-
         </>
     );
 };

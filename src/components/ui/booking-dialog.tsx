@@ -54,7 +54,7 @@ export function BookingDialog({
 }: BookingDialogProps) {
   const dispatch = useAppDispatch();
   const cart = useCart();
-  const { step, flowMode, timeSlot, persons, selectedActivities, selectedPackages, selectedFoods } =
+  const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
     useAppSelector((state) => state.booking);
 
   const isFoodFirst = flowMode === "foodFirst";
@@ -137,14 +137,15 @@ export function BookingDialog({
 
   const handleAddBooking = (e?: React.FormEvent) => {
     e?.preventDefault();
-    selectedActivities.forEach(({ activity, gameNo }) => {
-      cart.addActivity(activity, gameNo);
-    });
-    selectedPackages.forEach((pkg) => {
-      cart.addPackage(pkg);
-    });
-    selectedFoods.forEach(({ food, quantity }) => {
-      cart.addFood(food, quantity);
+    cart.addEntry({
+      holderDetails,
+      persons,
+      date,
+      timeSlot,
+      timeOfDay,
+      activities: selectedActivities,
+      packages: selectedPackages,
+      foods: selectedFoods,
     });
     onConfirm?.();
     dispatch(resetBooking());

@@ -1,8 +1,7 @@
 "use client";
 import { IoMdClose } from "react-icons/io";
-import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import type { CartEntry } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ function holderLabel(entry: CartEntry): string {
 
 // Shared cart content component – each entry shows holder + their products; cart persisted in localStorage; cleared on payment.
 const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuccess }) => {
-    const { entries, removeEntry, clearCart, foodItems, activityItems, packageItems } = useCart();
+    const { entries, removeEntry, updateEntry, clearCart, foodItems, activityItems, packageItems } = useCart();
 
     const foodSubtotal = foodItems.reduce(
         (sum, item) => sum + parsePrice(item.food.price) * item.quantity,
@@ -77,9 +76,6 @@ const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuc
                                     Booking for {holderLabel(entry)}
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="bg-primary-1/15 p-1 text-primary-1 font-light border-primary-1">
-                                        {entry.date || "—"} · {entry.timeSlot || "—"}
-                                    </Badge>
                                     <button
                                         onClick={() => removeEntry(entry.id)}
                                         className="p-1.5 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
@@ -95,10 +91,56 @@ const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuc
                                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Activities</p>
                                     {entry.activities.map(({ activity, gameNo }) => (
                                         <div key={activity.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
-                                            <img src={activity.image} alt={activity.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <img src={activity.image} alt={activity.title} className="w-12 h-12 rounded-lg object-cover shrink-0" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium text-primary truncate">{activity.title}</p>
                                                 <p className="text-xs text-accent">{activity.price} × {gameNo}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => ({
+                                                        ...prev,
+                                                        activities: prev.activities.map((a) =>
+                                                            a.activity.id === activity.id
+                                                                ? { ...a, gameNo: Math.max(1, a.gameNo - 1) as 1 | 2 | 3 }
+                                                                : a
+                                                        ),
+                                                    }))}
+                                                    disabled={gameNo <= 1}
+                                                    className="w-8 h-8 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                                                    aria-label="Decrease games"
+                                                >
+                                                    <Minus className="w-3.5 h-3.5" />
+                                                </button>
+                                                <span className="text-sm font-medium text-primary w-6 text-center">{gameNo}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => ({
+                                                        ...prev,
+                                                        activities: prev.activities.map((a) =>
+                                                            a.activity.id === activity.id
+                                                                ? { ...a, gameNo: Math.min(3, a.gameNo + 1) as 1 | 2 | 3 }
+                                                                : a
+                                                        ),
+                                                    }))}
+                                                    disabled={gameNo >= 3}
+                                                    className="w-8 h-8 rounded bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                                                    aria-label="Increase games"
+                                                >
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => ({
+                                                        ...prev,
+                                                        activities: prev.activities.filter((a) => a.activity.id !== activity.id),
+                                                    }))}
+                                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                                                    aria-label="Remove activity"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -109,11 +151,22 @@ const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuc
                                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Packages</p>
                                     {entry.packages.map((pkg) => (
                                         <div key={pkg.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
-                                            <img src={pkg.image} alt={pkg.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <img src={pkg.image} alt={pkg.title} className="w-12 h-12 rounded-lg object-cover shrink-0" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium text-primary truncate">{pkg.title}</p>
                                                 <p className="text-xs text-accent">{pkg.price}</p>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => updateEntry(entry.id, (prev) => ({
+                                                    ...prev,
+                                                    packages: prev.packages.filter((p) => p.id !== pkg.id),
+                                                }))}
+                                                className="p-1.5 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10 shrink-0"
+                                                aria-label="Remove package"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -123,10 +176,52 @@ const CartContent: React.FC<{ onPaymentSuccess?: () => void }> = ({ onPaymentSuc
                                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Food</p>
                                     {entry.foods.map(({ food, quantity }) => (
                                         <div key={food.id} className="flex items-center gap-3 border border-accent/40 rounded-xl p-2">
-                                            <img src={food.image} alt={food.title} className="w-12 h-12 rounded-lg object-cover" />
+                                            <img src={food.image} alt={food.title} className="w-12 h-12 rounded-lg object-cover shrink-0" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium text-primary truncate">{food.title}</p>
                                                 <p className="text-xs text-accent">{food.price} × {quantity}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => {
+                                                        const next = prev.foods.map((f) =>
+                                                            f.food.id === food.id
+                                                                ? { ...f, quantity: Math.max(0, f.quantity - 1) }
+                                                                : f
+                                                        ).filter((f) => f.quantity > 0);
+                                                        return { ...prev, foods: next };
+                                                    })}
+                                                    className="w-8 h-8 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all"
+                                                    aria-label="Decrease quantity"
+                                                >
+                                                    <Minus className="w-3.5 h-3.5" />
+                                                </button>
+                                                <span className="text-sm font-medium text-primary w-6 text-center">{quantity}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => ({
+                                                        ...prev,
+                                                        foods: prev.foods.map((f) =>
+                                                            f.food.id === food.id ? { ...f, quantity: f.quantity + 1 } : f
+                                                        ),
+                                                    }))}
+                                                    className="w-8 h-8 rounded bg-primary-1 text-black flex items-center justify-center hover:bg-primary-1/90 transition-all"
+                                                    aria-label="Increase quantity"
+                                                >
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateEntry(entry.id, (prev) => ({
+                                                        ...prev,
+                                                        foods: prev.foods.filter((f) => f.food.id !== food.id),
+                                                    }))}
+                                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                                                    aria-label="Remove food"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}

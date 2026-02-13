@@ -50,6 +50,8 @@ interface CartContextType {
   addEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
   /** Remove one booking from the cart. */
   removeEntry: (id: string) => void;
+  /** Update one entry (e.g. change food quantity, remove an item). */
+  updateEntry: (entryId: string, updater: (prev: CartEntry) => CartEntry) => void;
   /** Clear entire cart – e.g. after payment is done. */
   clearCart: () => void;
   /** Total item count across all entries (for badge, etc.). */
@@ -114,6 +116,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
+  const updateEntry = useCallback((entryId: string, updater: (prev: CartEntry) => CartEntry) => {
+    setEntries((prev) => prev.map((e) => (e.id === entryId ? updater(e) : e)));
+  }, []);
+
   const clearCart = useCallback(() => {
     setEntries([]);
   }, []);
@@ -153,6 +159,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       entries,
       addEntry,
       removeEntry,
+      updateEntry,
       clearCart,
       getTotalItems,
       foodItems,
@@ -164,6 +171,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       entries,
       addEntry,
       removeEntry,
+      updateEntry,
       clearCart,
       getTotalItems,
       foodItems,

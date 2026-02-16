@@ -20,10 +20,6 @@ http.interceptors.request.use(
 
     const token = tokenFromStore ?? tokenFromStorage ?? null;
 
-    if (!config.headers) {
-      config.headers = {};
-    }
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.baseURL = BaseUrl ? `${BaseUrl.replace(/\/+$/, "")}/` : BaseUrl;

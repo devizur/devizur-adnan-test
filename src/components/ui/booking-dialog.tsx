@@ -75,7 +75,12 @@ export function BookingDialog({
     if (!isOpen) return;
     dispatch(resetBooking());
     if (initialActivity) {
-      dispatch(addActivity({ activity: initialActivity, gameNo: 1 }));
+      const allowedValues =
+        initialActivity.games && initialActivity.games.length > 0
+          ? initialActivity.games
+          : [1, 2, 3];
+      const defaultGameNo = (allowedValues[0] ?? 1) as 1 | 2 | 3;
+      dispatch(addActivity({ activity: initialActivity, gameNo: defaultGameNo }));
     }
     if (initialPackage) {
       dispatch(addPackage(initialPackage));

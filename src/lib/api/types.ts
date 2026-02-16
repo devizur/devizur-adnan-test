@@ -12,6 +12,8 @@ export interface BaseProduct {
   duration: string;
   discount?: string;
   timeSlots?: string[];
+  /** Optional supported game options (1, 2, 3) for activities */
+  games?: (1 | 2 | 3)[];
 }
 
 export interface Activity extends BaseProduct {

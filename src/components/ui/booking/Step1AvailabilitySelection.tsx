@@ -29,6 +29,19 @@ export function Step1AvailabilitySelection() {
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
 
+  const getAvailableOptions = (activity: { games?: (1 | 2 | 3)[] }) => {
+    const allowedValues =
+      activity.games && activity.games.length > 0
+        ? activity.games
+        : OPTIONS.map((o) => o.value as 1 | 2 | 3);
+    return OPTIONS.filter((opt) => allowedValues.includes(opt.value as 1 | 2 | 3));
+  };
+
+  const getDefaultGameNo = (activity: { games?: (1 | 2 | 3)[] }): 1 | 2 | 3 => {
+    const available = getAvailableOptions(activity);
+    return (available[0]?.value ?? 1) as 1 | 2 | 3;
+  };
+
   React.useEffect(() => {
     if (!date) {
       dispatch(setDate(toLocalDateString(new Date())));
@@ -60,7 +73,7 @@ export function Step1AvailabilitySelection() {
                   onClick={() =>
                     selected
                       ? dispatch(removeActivity(activity.id))
-                      : dispatch(addActivity({ activity, gameNo: 1 }))
+                      : dispatch(addActivity({ activity, gameNo: getDefaultGameNo(activity) }))
                   }
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
@@ -93,10 +106,10 @@ export function Step1AvailabilitySelection() {
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
                     <p className="text-[11px] text-gray-500 mt-1.5">
-                      {OPTIONS.map((opt, i) => (
+                      {getAvailableOptions(activity).map((opt, i, arr) => (
                         <span key={opt.label}>
                           {opt.label} ${opt.price.toFixed(2)}
-                          {i < OPTIONS.length - 1 ? " · " : ""}
+                          {i < arr.length - 1 ? " · " : ""}
                         </span>
                       ))}
                     </p>
@@ -104,7 +117,7 @@ export function Step1AvailabilitySelection() {
                 </button>
                 {selected && (
                   <div className="flex gap-1.5 mt-2 px-0.5">
-                    {OPTIONS.map((opt) => (
+                    {getAvailableOptions(activity).map((opt) => (
                       <button
                         key={opt.value}
                         type="button"

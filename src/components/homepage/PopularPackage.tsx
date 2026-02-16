@@ -14,19 +14,11 @@ interface PopularPackageProps {
 }
 
 const PopularPackage: React.FC<PopularPackageProps> = ({ limit, searchTerm }) => {
-    const { data: packages = [], isLoading, error } = usePackages();
-    const normalized = searchTerm?.toLowerCase().trim() || "";
-
-    const filtered = normalized
-        ? packages.filter(
-              (pkg) =>
-                  pkg.title.toLowerCase().includes(normalized) ||
-                  pkg.category.toLowerCase().includes(normalized)
-          )
-        : packages;
+    const { data: packages = [], isLoading, error } = usePackages(searchTerm);
+    const hasSearch = !!searchTerm?.trim();
 
     const itemsToShow =
-        normalized || !limit ? filtered : filtered.slice(0, limit);
+        hasSearch || !limit ? packages : packages.slice(0, limit);
 
     if (isLoading) {
         return (
@@ -50,7 +42,7 @@ const PopularPackage: React.FC<PopularPackageProps> = ({ limit, searchTerm }) =>
 
     return (
         <section className="container mx-auto px-6  pb-20">
-            {!normalized && (
+            {!hasSearch && (
                 <div className="flex items-center justify-between mb-7">
                     <h2 className="text-2xl font-bold tracking-tight text-primary">Popular Packages</h2>
                 </div>
@@ -62,7 +54,7 @@ const PopularPackage: React.FC<PopularPackageProps> = ({ limit, searchTerm }) =>
             </div>
 
 
-            {!normalized && (
+            {!hasSearch && (
                 <div className="flex py-10 justify-center">
                     <Link href="/packages">
                         <button className="hidden md:block px-16 py-3 border  bg-primary-1/10 border-primary-1 text-primary-1 text-base font-semibold rounded-sm hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer">

@@ -3,7 +3,7 @@ import { Activity, Food, Package, SignInRequest, SignInResponse, SignUpRequest, 
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-// Helper function to fetch JSON files (will be replaced with REST API calls)
+// Helper function to fetch JSON files (used when no REST API is configured)
 async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetch(url);
     if (!response.ok) {
@@ -12,26 +12,65 @@ async function fetchJson<T>(url: string): Promise<T> {
     return response.json();
 }
 
+// Helper for REST API requests when API_BASE_URL is configured
+async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
+    if (!API_BASE_URL) {
+        throw new Error("REST API base URL is not configured");
+    }
+
+    const response = await fetch(`${API_BASE_URL}${path}`);
+    if (!response.ok) {
+        throw new Error(`Failed to ${errorLabel}: ${response.statusText}`);
+    }
+    return response.json();
+}
+
 // Activities API
 export const activitiesApi = {
-    // Fetch from JSON files (current implementation)
+    /**
+     * Get all activities.
+     * - If API_BASE_URL is configured, fetch from REST API.
+     * - Otherwise, fall back to local JSON files.
+     */
     async getAll(): Promise<Activity[]> {
         if (API_BASE_URL) {
-            // Future REST API implementation
-            // const response = await fetch(`${API_BASE_URL}/api/activities`);
-            // return response.json();
-            throw new Error("REST API not yet implemented");
+            return fetchFromApi<Activity[]>("/api/activities", "fetch activities");
         }
-        
-        // Current JSON file implementation
+
+        // JSON file implementation
         const [activities1, activities2] = await Promise.all([
             fetchJson<Activity[]>("/data/Activities1.json"),
             fetchJson<Activity[]>("/data/Activities2.json"),
         ]);
-        
+
         return [...activities1, ...activities2];
     },
-    
+
+    /**
+     * Search activities.
+     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
+     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
+     */
+    async search(term: string): Promise<Activity[]> {
+        const query = term.trim();
+        if (!query) {
+            return activitiesApi.getAll();
+        }
+
+        if (API_BASE_URL) {
+            const encoded = encodeURIComponent(query);
+            return fetchFromApi<Activity[]>(`/api/activities?search=${encoded}`, "search activities");
+        }
+
+        const all = await activitiesApi.getAll();
+        const normalized = query.toLowerCase();
+        return all.filter(
+            (activity) =>
+                activity.title.toLowerCase().includes(normalized) ||
+                activity.category.toLowerCase().includes(normalized)
+        );
+    },
+
     async getById(id: number): Promise<Activity | null> {
         const activities = await activitiesApi.getAll();
         return activities.find((activity) => activity.id === id) || null;
@@ -40,24 +79,50 @@ export const activitiesApi = {
 
 // Foods API
 export const foodsApi = {
-    // Fetch from JSON files (current implementation)
+    /**
+     * Get all foods.
+     * - If API_BASE_URL is configured, fetch from REST API.
+     * - Otherwise, fall back to local JSON files.
+     */
     async getAll(): Promise<Food[]> {
         if (API_BASE_URL) {
-            // Future REST API implementation
-            // const response = await fetch(`${API_BASE_URL}/api/foods`);
-            // return response.json();
-            throw new Error("REST API not yet implemented");
+            return fetchFromApi<Food[]>("/api/foods", "fetch foods");
         }
-        
-        // Current JSON file implementation
+
+        // JSON file implementation
         const [foods1, foods2] = await Promise.all([
             fetchJson<Food[]>("/data/Foods1.json"),
             fetchJson<Food[]>("/data/Foods2.json"),
         ]);
-        
+
         return [...foods1, ...foods2];
     },
-    
+
+    /**
+     * Search foods.
+     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
+     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
+     */
+    async search(term: string): Promise<Food[]> {
+        const query = term.trim();
+        if (!query) {
+            return foodsApi.getAll();
+        }
+
+        if (API_BASE_URL) {
+            const encoded = encodeURIComponent(query);
+            return fetchFromApi<Food[]>(`/api/foods?search=${encoded}`, "search foods");
+        }
+
+        const all = await foodsApi.getAll();
+        const normalized = query.toLowerCase();
+        return all.filter(
+            (food) =>
+                food.title.toLowerCase().includes(normalized) ||
+                food.category.toLowerCase().includes(normalized)
+        );
+    },
+
     async getById(id: number): Promise<Food | null> {
         const foods = await foodsApi.getAll();
         return foods.find((food) => food.id === id) || null;
@@ -66,24 +131,50 @@ export const foodsApi = {
 
 // Packages API
 export const packagesApi = {
-    // Fetch from JSON files (current implementation)
+    /**
+     * Get all packages.
+     * - If API_BASE_URL is configured, fetch from REST API.
+     * - Otherwise, fall back to local JSON files.
+     */
     async getAll(): Promise<Package[]> {
         if (API_BASE_URL) {
-            // Future REST API implementation
-            // const response = await fetch(`${API_BASE_URL}/api/packages`);
-            // return response.json();
-            throw new Error("REST API not yet implemented");
+            return fetchFromApi<Package[]>("/api/packages", "fetch packages");
         }
-        
-        // Current JSON file implementation
+
+        // JSON file implementation
         const [packages1, packages2] = await Promise.all([
             fetchJson<Package[]>("/data/Packages1.json"),
             fetchJson<Package[]>("/data/Packages2.json"),
         ]);
-        
+
         return [...packages1, ...packages2];
     },
-    
+
+    /**
+     * Search packages.
+     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
+     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
+     */
+    async search(term: string): Promise<Package[]> {
+        const query = term.trim();
+        if (!query) {
+            return packagesApi.getAll();
+        }
+
+        if (API_BASE_URL) {
+            const encoded = encodeURIComponent(query);
+            return fetchFromApi<Package[]>(`/api/packages?search=${encoded}`, "search packages");
+        }
+
+        const all = await packagesApi.getAll();
+        const normalized = query.toLowerCase();
+        return all.filter(
+            (pkg) =>
+                pkg.title.toLowerCase().includes(normalized) ||
+                pkg.category.toLowerCase().includes(normalized)
+        );
+    },
+
     async getById(id: number): Promise<Package | null> {
         const packages = await packagesApi.getAll();
         return packages.find((pkg) => pkg.id === id) || null;

@@ -14,19 +14,11 @@ interface PopularFoodsProps {
 }
 
 const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
-    const { data: foods = [], isLoading, error } = useFoods();
-    const normalized = searchTerm?.toLowerCase().trim() || "";
-
-    const filtered = normalized
-        ? foods.filter(
-              (food) =>
-                  food.title.toLowerCase().includes(normalized) ||
-                  food.category.toLowerCase().includes(normalized)
-          )
-        : foods;
+    const { data: foods = [], isLoading, error } = useFoods(searchTerm);
+    const hasSearch = !!searchTerm?.trim();
 
     const itemsToShow =
-        normalized || !limit ? filtered : filtered.slice(0, limit);
+        hasSearch || !limit ? foods : foods.slice(0, limit);
 
     if (isLoading) {
         return (
@@ -50,7 +42,7 @@ const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
 
     return (
         <section className="container mx-auto px-6  pb-20">
-            {!normalized && (
+            {!hasSearch && (
                 <div className="flex items-center justify-between mb-7">
                     <h2 className="text-2xl font-bold tracking-tight text-primary">Popular Foods</h2>
                 </div>
@@ -62,7 +54,7 @@ const PopularFoods: React.FC<PopularFoodsProps> = ({ limit, searchTerm }) => {
             </div>
 
 
-            {!normalized && (
+            {!hasSearch && (
                 <div className="flex py-10 justify-center">
                     <Link href="/foods">
                         <button className="hidden md:block px-16 py-3 border  bg-primary-1/10 border-primary-1 text-primary-1 text-base font-semibold rounded-sm hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer">

@@ -6,8 +6,10 @@ import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useSignUp, useOAuthSignIn } from "@/lib/api/hooks";
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/store/hooks";
+import { setCredentials } from "@/store/authSlice";
 
 export default function SignUpPage() {
     const [name, setName] = useState("");
@@ -15,6 +17,7 @@ export default function SignUpPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const router = useRouter();
+    const dispatch = useAppDispatch();
     
     const signUpMutation = useSignUp();
     const oauthSignInMutation = useOAuthSignIn();
@@ -33,6 +36,9 @@ export default function SignUpPage() {
             // Store token in localStorage
             localStorage.setItem("authToken", result.token);
             localStorage.setItem("user", JSON.stringify(result.user));
+
+            // Also store in Redux
+            dispatch(setCredentials({ token: result.token, user: result.user }));
             
             // Redirect to home page or dashboard
             router.push("/");
@@ -48,6 +54,9 @@ export default function SignUpPage() {
             // Store token in localStorage
             localStorage.setItem("authToken", result.token);
             localStorage.setItem("user", JSON.stringify(result.user));
+
+            // Also store in Redux
+            dispatch(setCredentials({ token: result.token, user: result.user }));
             
             // Redirect to home page or dashboard
             router.push("/");

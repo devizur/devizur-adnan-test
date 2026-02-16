@@ -10,6 +10,7 @@ export const queryKeys = {
         all: ["activities"] as const,
         lists: () => [...queryKeys.activities.all, "list"] as const,
         list: () => [...queryKeys.activities.lists()] as const,
+        search: (term: string) => [...queryKeys.activities.list(), "search", term] as const,
         details: () => [...queryKeys.activities.all, "detail"] as const,
         detail: (id: number) => [...queryKeys.activities.details(), id] as const,
     },
@@ -17,6 +18,7 @@ export const queryKeys = {
         all: ["foods"] as const,
         lists: () => [...queryKeys.foods.all, "list"] as const,
         list: () => [...queryKeys.foods.lists()] as const,
+        search: (term: string) => [...queryKeys.foods.list(), "search", term] as const,
         details: () => [...queryKeys.foods.all, "detail"] as const,
         detail: (id: number) => [...queryKeys.foods.details(), id] as const,
     },
@@ -24,16 +26,20 @@ export const queryKeys = {
         all: ["packages"] as const,
         lists: () => [...queryKeys.packages.all, "list"] as const,
         list: () => [...queryKeys.packages.lists()] as const,
+        search: (term: string) => [...queryKeys.packages.list(), "search", term] as const,
         details: () => [...queryKeys.packages.all, "detail"] as const,
         detail: (id: number) => [...queryKeys.packages.details(), id] as const,
     },
 };
 
 // Activities hooks
-export function useActivities(): UseQueryResult<Activity[], Error> {
+export function useActivities(searchTerm?: string): UseQueryResult<Activity[], Error> {
+    const query = searchTerm?.trim() ?? "";
+    const hasSearch = query.length > 0;
+
     return useQuery({
-        queryKey: queryKeys.activities.list(),
-        queryFn: () => activitiesApi.getAll(),
+        queryKey: hasSearch ? queryKeys.activities.search(query) : queryKeys.activities.list(),
+        queryFn: () => (hasSearch ? activitiesApi.search(query) : activitiesApi.getAll()),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -48,10 +54,13 @@ export function useActivity(id: number): UseQueryResult<Activity | null, Error> 
 }
 
 // Foods hooks
-export function useFoods(): UseQueryResult<Food[], Error> {
+export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
+    const query = searchTerm?.trim() ?? "";
+    const hasSearch = query.length > 0;
+
     return useQuery({
-        queryKey: queryKeys.foods.list(),
-        queryFn: () => foodsApi.getAll(),
+        queryKey: hasSearch ? queryKeys.foods.search(query) : queryKeys.foods.list(),
+        queryFn: () => (hasSearch ? foodsApi.search(query) : foodsApi.getAll()),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -66,10 +75,13 @@ export function useFood(id: number): UseQueryResult<Food | null, Error> {
 }
 
 // Packages hooks
-export function usePackages(): UseQueryResult<Package[], Error> {
+export function usePackages(searchTerm?: string): UseQueryResult<Package[], Error> {
+    const query = searchTerm?.trim() ?? "";
+    const hasSearch = query.length > 0;
+
     return useQuery({
-        queryKey: queryKeys.packages.list(),
-        queryFn: () => packagesApi.getAll(),
+        queryKey: hasSearch ? queryKeys.packages.search(query) : queryKeys.packages.list(),
+        queryFn: () => (hasSearch ? packagesApi.search(query) : packagesApi.getAll()),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }

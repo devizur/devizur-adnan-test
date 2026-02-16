@@ -8,16 +8,7 @@ interface ActivitiesPageSectionProps {
 }
 
 const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTerm }) => {
-    const { data: activities = [], isLoading, error } = useActivities();
-    const normalized = searchTerm?.toLowerCase().trim() || "";
-
-    const filtered = normalized
-        ? activities.filter(
-              (activity) =>
-                  activity.title.toLowerCase().includes(normalized) ||
-                  activity.category.toLowerCase().includes(normalized)
-          )
-        : activities;
+    const { data: activities = [], isLoading, error } = useActivities(searchTerm);
 
     if (isLoading) {
         return (
@@ -42,7 +33,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
     return (
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filtered.map((activity) => (
+                {activities.map((activity) => (
                     <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>

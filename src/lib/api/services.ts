@@ -1,4 +1,6 @@
 import { Activity, Food, Package, SignInRequest, SignInResponse, SignUpRequest, SignUpResponse, ForgotPasswordRequest, ForgotPasswordResponse } from "./types";
+import http from "./http";
+import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -12,17 +14,23 @@ async function fetchJson<T>(url: string): Promise<T> {
     return response.json();
 }
 
-// Helper for REST API requests when API_BASE_URL is configured
+// Helper for REST API requests when API_BASE_URL is configured, using the shared Axios http client
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     if (!API_BASE_URL) {
         throw new Error("REST API base URL is not configured");
     }
 
-    const response = await fetch(`${API_BASE_URL}${path}`);
-    if (!response.ok) {
-        throw new Error(`Failed to ${errorLabel}: ${response.statusText}`);
+    try {
+        const response = await http.get<T>(path);
+        return response.data;
+    } catch (error) {
+        const err = error as AxiosError<any>;
+        const message =
+            (err.response?.data as any)?.message ||
+            err.message ||
+            `Failed to ${errorLabel}`;
+        throw new Error(message);
     }
-    return response.json();
 }
 
 // Activities API
@@ -38,12 +46,12 @@ export const activitiesApi = {
         }
 
         // JSON file implementation
-        const [activities1, activities2] = await Promise.all([
+        const [activities1] = await Promise.all([
             fetchJson<Activity[]>("/data/Activities1.json"),
-            fetchJson<Activity[]>("/data/Activities2.json"),
+     
         ]);
 
-        return [...activities1, ...activities2];
+        return [...activities1];
     },
 
     /**
@@ -90,12 +98,12 @@ export const foodsApi = {
         }
 
         // JSON file implementation
-        const [foods1, foods2] = await Promise.all([
+        const [foods1] = await Promise.all([
             fetchJson<Food[]>("/data/Foods1.json"),
-            fetchJson<Food[]>("/data/Foods2.json"),
+          
         ]);
 
-        return [...foods1, ...foods2];
+        return [...foods1];
     },
 
     /**
@@ -142,12 +150,12 @@ export const packagesApi = {
         }
 
         // JSON file implementation
-        const [packages1, packages2] = await Promise.all([
+        const [packages1] = await Promise.all([
             fetchJson<Package[]>("/data/Packages1.json"),
-            fetchJson<Package[]>("/data/Packages2.json"),
+      
         ]);
 
-        return [...packages1, ...packages2];
+        return [...packages1];
     },
 
     /**
@@ -185,21 +193,17 @@ export const packagesApi = {
 export const authApi = {
     async signIn(credentials: SignInRequest): Promise<SignInResponse> {
         if (API_BASE_URL) {
-            // REST API implementation
-            const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(credentials),
-            });
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ message: "Sign in failed" }));
-                throw new Error(error.message || "Sign in failed");
+            try {
+                const response = await http.post<SignInResponse>("/api/auth/signin", credentials);
+                return response.data;
+            } catch (error) {
+                const err = error as AxiosError<any>;
+                const message =
+                    (err.response?.data as any)?.message ||
+                    err.message ||
+                    "Sign in failed";
+                throw new Error(message);
             }
-            
-            return response.json();
         }
         
         // Mock implementation for development
@@ -245,21 +249,17 @@ export const authApi = {
     
     async signUp(data: SignUpRequest): Promise<SignUpResponse> {
         if (API_BASE_URL) {
-            // REST API implementation
-            const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            });
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ message: "Sign up failed" }));
-                throw new Error(error.message || "Sign up failed");
+            try {
+                const response = await http.post<SignUpResponse>("/api/auth/signup", data);
+                return response.data;
+            } catch (error) {
+                const err = error as AxiosError<any>;
+                const message =
+                    (err.response?.data as any)?.message ||
+                    err.message ||
+                    "Sign up failed";
+                throw new Error(message);
             }
-            
-            return response.json();
         }
         
         // Mock implementation for development
@@ -287,21 +287,17 @@ export const authApi = {
     
     async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
         if (API_BASE_URL) {
-            // REST API implementation
-            const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            });
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ message: "Failed to send reset email" }));
-                throw new Error(error.message || "Failed to send reset email");
+            try {
+                const response = await http.post<ForgotPasswordResponse>("/api/auth/forgot-password", data);
+                return response.data;
+            } catch (error) {
+                const err = error as AxiosError<any>;
+                const message =
+                    (err.response?.data as any)?.message ||
+                    err.message ||
+                    "Failed to send reset email";
+                throw new Error(message);
             }
-            
-            return response.json();
         }
         
         // Mock implementation for development

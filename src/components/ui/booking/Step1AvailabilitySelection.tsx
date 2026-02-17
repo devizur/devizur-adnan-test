@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { useActivities, usePackages } from "@/lib/api/hooks";
+import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
-import { SLOTS, SHIFT, OPTIONS } from "./constants";
+import { SHIFT, OPTIONS } from "./constants";
 import {
   setDate,
   setTimeOfDay,
@@ -21,13 +21,26 @@ import { BookingGuests } from "./BookingGuests";
 
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
-  const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages } =
+  const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
   const { data: packages = [] } = usePackages();
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
+
+  const slotsParams =
+    date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
+      ? {
+          date,
+          timeOfDay,
+          activityIds: selectedActivities.map((a) => a.activity.id),
+          packageIds: selectedPackages.map((p) => p.id),
+          adults: persons.adults,
+          children: persons.children,
+        }
+      : null;
+  const { data: slots = [], isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
 
   const getAvailableOptions = (activity: { games?: (1 | 2 | 3)[] }) => {
     const allowedValues =
@@ -227,33 +240,48 @@ export function Step1AvailabilitySelection() {
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 scrollbar-dark">
           <div>
             <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-3">
-              Start time · 34 available
+              {!slotsParams
+                ? "Start time · Select date, time of day, at least one activity or package, and guests"
+                : slotsLoading
+                  ? "Start time · Loading…"
+                  : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
+            }
             </p>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Select start time">
-              {SLOTS.map((s) => (
-                <button
-                  key={s.t}
-                  type="button"
-                  onClick={() => dispatch(setTimeSlot(s.t))}
-                  aria-pressed={timeSlot === s.t}
-                  aria-label={`Select ${s.t}, 100 available${"off" in s && s.off ? ", $5 off" : ""}`}
-                  className={cn(
-                    "relative min-h-[4.5rem] py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                    timeSlot === s.t
-                      ? "bg-primary-1 text-secondary border-primary-1 shadow-md"
-                      : "bg-[#1e1e1e] text-gray-300 border-gray-800 hover:bg-[#252525] hover:border-gray-700"
-                  )}
-                >
-                  <span className="font-semibold text-sm">{s.t}</span>
-                  <span className="text-xs opacity-70">100 available</span>
-                  {"off" in s && s.off ? (
-                    <span className="absolute top-1 right-1 bg-primary text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                      $5 off
-                    </span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
+            {slotsParams && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Select start time">
+                {slotsLoading ? (
+                  <div className="col-span-full py-8 text-center text-gray-400 text-sm">Loading available times…</div>
+                ) : (
+                  slots.map((s) => (
+                    <button
+                      key={s.startTime}
+                      type="button"
+                      disabled={s.available <= 0}
+                      onClick={() => dispatch(setTimeSlot(s.startTime))}
+                      aria-pressed={timeSlot === s.startTime}
+                      aria-label={`Select ${s.startTime}, ${s.available} available${s.discount ? `, $${s.discount} off` : ""}`}
+                      className={cn(
+                        "relative min-h-[4.5rem] py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                        s.available <= 0 && "opacity-50 cursor-not-allowed",
+                        timeSlot === s.startTime
+                          ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"
+                          : s.available > 0
+                            ? "bg-[#1e1e1e] text-gray-300 border-gray-800 hover:bg-[#252525] hover:border-gray-700 cursor-pointer"
+                            : "bg-[#1e1e1e] text-gray-500 border-gray-800"
+                      )}
+                    >
+                      <span className="font-semibold text-sm">{s.startTime}</span>
+                      <span className="text-xs opacity-70">{s.available} available</span>
+                      {s.discount != null && s.discount > 0 ? (
+                        <span className="absolute top-1 right-1 bg-primary-1 text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                          ${s.discount} off
+                        </span>
+                      ) : null}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

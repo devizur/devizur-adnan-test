@@ -4,8 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Search, Calendar, Clock, User, ChevronDown } from "lucide-react";
+import { Search, Calendar, Clock, User, ChevronDown, LogOut } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/store/hooks";
+import { clearAuth } from "@/store/authSlice";
 import { ProtectedRoute } from "@/components/providers/protected-route";
 
 // Mock Data
@@ -64,6 +67,19 @@ const stats = [
 ];
 
 export default function MyBookingsPage() {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+
+    const handleLogout = () => {
+        dispatch(clearAuth());
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("user");
+            localStorage.removeItem("refreshToken");
+        }
+        router.push("/sign-in");
+    };
+
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-[#121212] pt-8 pb-20 font-sans text-white mt-32">
@@ -86,8 +102,18 @@ export default function MyBookingsPage() {
                         </div>
                     </div>
 
-                    {/* Stats Cards */}
-                    <div className="flex gap-4 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
+                    {/* Log out + Stats */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleLogout}
+                            className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white h-11 px-4 shrink-0"
+                        >
+                            <LogOut className="size-4 mr-2" />
+                            Log out
+                        </Button>
+                        <div className="flex gap-4 overflow-x-auto pb-2 lg:pb-0">
                         {stats.map((stat, i) => (
                             <div
                                 key={i}
@@ -101,6 +127,7 @@ export default function MyBookingsPage() {
                                 </span>
                             </div>
                         ))}
+                        </div>
                     </div>
                 </div>
 

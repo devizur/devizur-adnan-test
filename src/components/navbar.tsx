@@ -4,7 +4,6 @@ import { getBrandConfig } from "@/lib/brand-config";
 import { usePathname, useRouter } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import CartDrawer from "@/components/ui/CartDrawer";
@@ -56,11 +55,13 @@ export function Navbar() {
             <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 ">
                 {/* Logo */}
                 <div className="">
-                    <Image
+                    {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
+                    <img
                         src={navContent.logoPath || config.logo}
                         alt="Logo"
                         width={98}
                         height={32}
+                        suppressHydrationWarning
                     />
                 </div>
 

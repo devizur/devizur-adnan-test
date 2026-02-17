@@ -28,10 +28,19 @@ export interface Package extends BaseProduct {
   category: string;
 }
 
-// Auth types
-export interface SignInRequest {
+// Auth types – OTP sign-in flow
+export interface RequestOtpRequest {
   email: string;
-  password: string;
+}
+
+export interface RequestOtpResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
 }
 
 export interface SignInResponse {
@@ -43,29 +52,25 @@ export interface SignInResponse {
   token: string;
 }
 
-export interface SignUpRequest {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
+// Availability / slots (for booking step: select date, persons, products → get slots with start time + available count)
+export interface Slot {
+  /** Display label e.g. "6:00 am", "6 am" */
+  startTime: string;
+  /** Number of spots available for this slot */
+  available: number;
+  /** Optional discount in dollars */
+  discount?: number;
 }
 
-export interface SignUpResponse {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-  token: string;
+export interface GetAvailabilitySlotsParams {
+  /** Date YYYY-MM-DD */
+  date: string;
+  /** 1 = Morning, 2 = Afternoon, 3 = Evening */
+  timeOfDay: 1 | 2 | 3;
+  /** Selected activity IDs */
+  activityIds: number[];
+  /** Selected package IDs */
+  packageIds: number[];
+  adults: number;
+  children: number;
 }
-
-export interface ForgotPasswordRequest {
-  email: string;
-}
-
-export interface ForgotPasswordResponse {
-  message: string;
-  success: boolean;
-}
-
-export type OAuthProvider = "google" | "facebook";

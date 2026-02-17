@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
-import { activitiesApi, foodsApi, packagesApi, authApi } from "./services";
-import { Activity, Food, Package, SignInRequest, SignInResponse, SignUpRequest, SignUpResponse, ForgotPasswordRequest, ForgotPasswordResponse } from "./types";
+import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi } from "./services";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams } from "./types";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -29,6 +29,10 @@ export const queryKeys = {
         search: (term: string) => [...queryKeys.packages.list(), "search", term] as const,
         details: () => [...queryKeys.packages.all, "detail"] as const,
         detail: (id: number) => [...queryKeys.packages.details(), id] as const,
+    },
+    availability: {
+        slots: (params: GetAvailabilitySlotsParams) =>
+            ["availability", "slots", params.date, params.timeOfDay, params.activityIds.join(","), params.packageIds.join(","), params.adults, params.children] as const,
     },
 };
 
@@ -95,27 +99,30 @@ export function usePackage(id: number): UseQueryResult<Package | null, Error> {
     });
 }
 
-// Auth hooks
-export function useSignIn(): UseMutationResult<SignInResponse, Error, SignInRequest> {
-    return useMutation({
-        mutationFn: (credentials: SignInRequest) => authApi.signIn(credentials),
+// Availability slots – enabled when date, time of day, and at least one product + persons are selected
+export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null): UseQueryResult<Slot[], Error> {
+    const hasProducts =
+        params && (params.activityIds.length > 0 || params.packageIds.length > 0);
+    const hasPersons = params && params.adults + params.children > 0;
+    const hasDate = !!params?.date;
+
+    return useQuery({
+        queryKey: params ? queryKeys.availability.slots(params) : ["availability", "slots", "disabled"],
+        queryFn: () => availabilityApi.getSlots(params!),
+        enabled: !!params && hasDate && !!hasProducts && !!hasPersons,
+        staleTime: 2 * 60 * 1000, // 2 minutes – slots can change
     });
 }
 
-export function useOAuthSignIn(): UseMutationResult<SignInResponse, Error, "google" | "facebook"> {
+// Auth hooks – OTP sign-in
+export function useRequestOtp(): UseMutationResult<RequestOtpResponse, Error, RequestOtpRequest> {
     return useMutation({
-        mutationFn: (provider: "google" | "facebook") => authApi.signInWithOAuth(provider),
+        mutationFn: (data: RequestOtpRequest) => authApi.requestOtp(data),
     });
 }
 
-export function useSignUp(): UseMutationResult<SignUpResponse, Error, SignUpRequest> {
+export function useVerifyOtp(): UseMutationResult<SignInResponse, Error, VerifyOtpRequest> {
     return useMutation({
-        mutationFn: (data: SignUpRequest) => authApi.signUp(data),
-    });
-}
-
-export function useForgotPassword(): UseMutationResult<ForgotPasswordResponse, Error, ForgotPasswordRequest> {
-    return useMutation({
-        mutationFn: (data: ForgotPasswordRequest) => authApi.forgotPassword(data),
+        mutationFn: (data: VerifyOtpRequest) => authApi.verifyOtp(data),
     });
 }

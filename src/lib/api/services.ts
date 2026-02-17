@@ -5,7 +5,7 @@ import type { AxiosError } from "axios";
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-// Helper function to fetch JSON files (used when no REST API is configured)
+
 async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetch(url);
     if (!response.ok) {
@@ -14,7 +14,7 @@ async function fetchJson<T>(url: string): Promise<T> {
     return response.json();
 }
 
-// Helper for REST API requests when API_BASE_URL is configured, using the shared Axios http client
+
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     if (!API_BASE_URL) {
         throw new Error("REST API base URL is not configured");
@@ -33,19 +33,15 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     }
 }
 
-// Activities API
+
 export const activitiesApi = {
-    /**
-     * Get all activities.
-     * - If API_BASE_URL is configured, fetch from REST API.
-     * - Otherwise, fall back to local JSON files.
-     */
+    
     async getAll(): Promise<Activity[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Activity[]>("/api/activities", "fetch activities");
         }
 
-        // JSON file implementation
+       
         const [activities1] = await Promise.all([
             fetchJson<Activity[]>("/data/Activities1.json"),
      
@@ -54,11 +50,7 @@ export const activitiesApi = {
         return [...activities1];
     },
 
-    /**
-     * Search activities.
-     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
-     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
-     */
+  
     async search(term: string): Promise<Activity[]> {
         const query = term.trim();
         if (!query) {
@@ -87,17 +79,13 @@ export const activitiesApi = {
 
 // Foods API
 export const foodsApi = {
-    /**
-     * Get all foods.
-     * - If API_BASE_URL is configured, fetch from REST API.
-     * - Otherwise, fall back to local JSON files.
-     */
+   
     async getAll(): Promise<Food[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Food[]>("/api/foods", "fetch foods");
         }
 
-        // JSON file implementation
+      
         const [foods1] = await Promise.all([
             fetchJson<Food[]>("/data/Foods1.json"),
           
@@ -106,11 +94,7 @@ export const foodsApi = {
         return [...foods1];
     },
 
-    /**
-     * Search foods.
-     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
-     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
-     */
+  
     async search(term: string): Promise<Food[]> {
         const query = term.trim();
         if (!query) {
@@ -139,17 +123,13 @@ export const foodsApi = {
 
 // Packages API
 export const packagesApi = {
-    /**
-     * Get all packages.
-     * - If API_BASE_URL is configured, fetch from REST API.
-     * - Otherwise, fall back to local JSON files.
-     */
+    
     async getAll(): Promise<Package[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Package[]>("/api/packages", "fetch packages");
         }
 
-        // JSON file implementation
+      
         const [packages1] = await Promise.all([
             fetchJson<Package[]>("/data/Packages1.json"),
       
@@ -158,11 +138,7 @@ export const packagesApi = {
         return [...packages1];
     },
 
-    /**
-     * Search packages.
-     * - When API_BASE_URL is set, this calls the REST API with a `search` query parameter.
-     * - Otherwise, it falls back to client-side filtering on top of `getAll()`.
-     */
+   
     async search(term: string): Promise<Package[]> {
         const query = term.trim();
         if (!query) {
@@ -212,11 +188,7 @@ const FALLBACK_SLOTS: Slot[] = [
 const timeOfDayMap: Record<1 | 2 | 3, string> = { 1: "morning", 2: "afternoon", 3: "evening" };
 
 export const availabilityApi = {
-    /**
-     * Get available slots (start time + available count) for the given date, time of day, selected activities/packages and persons.
-     * - If API_BASE_URL is set: GET /api/availability/slots?date=...&timeOfDay=...&activityIds=...&packageIds=...&adults=...&children=...
-     * - Otherwise: returns fallback slots (e.g. 6 am, 6:30 am, ... with 100 available each).
-     */
+   
     async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
         const { date, timeOfDay, activityIds, packageIds, adults, children } = params;
         if (API_BASE_URL) {
@@ -235,7 +207,6 @@ export const availabilityApi = {
 
 // Auth API – OTP sign-in: request OTP by email, then verify OTP to get token
 export const authApi = {
-    /** Send OTP to the given email. Backend sends the code to the user's inbox. */
     async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
         if (API_BASE_URL) {
             try {

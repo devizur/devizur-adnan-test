@@ -3,13 +3,13 @@ import { env } from "@/config";
 import { store } from "@/store/store";
 import { clearAuth, setToken } from "@/store/authSlice";
 
-const { BaseUrl } = env();
+const { bookingFlowUrl } = env();
 
-const http = axios.create({
-  baseURL: BaseUrl,
+const bookingFlowUrlHttp = axios.create({
+  baseURL: bookingFlowUrl,
 });
 
-http.interceptors.request.use(
+bookingFlowUrlHttp.interceptors.request.use(
   (config) => {
     const state = store.getState();
     const tokenFromStore = state.auth?.token ?? null;
@@ -22,9 +22,9 @@ http.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.baseURL = BaseUrl ? `${BaseUrl.replace(/\/+$/, "")}/` : BaseUrl;
+      config.baseURL = bookingFlowUrl ? `${bookingFlowUrl.replace(/\/+$/, "")}/` : bookingFlowUrl;
     } else {
-      config.baseURL = BaseUrl;
+      config.baseURL = bookingFlowUrl;
       delete (config.headers as Record<string, unknown>).Authorization;
     }
 
@@ -45,7 +45,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
   try {
     const response = await axios.post(
-      `${BaseUrl.replace(/\/+$/, "")}/auth/refresh`,
+      `${bookingFlowUrl.replace(/\/+$/, "")}/auth/refresh`,
       { refresh_token: refreshToken },
       {
         headers: {
@@ -84,7 +84,7 @@ function handleUnauthenticated() {
   store.dispatch(clearAuth());
 }
 
-http.interceptors.response.use(
+bookingFlowUrlHttp.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
@@ -120,9 +120,9 @@ http.interceptors.response.use(
     (originalRequest.headers as Record<string, string>).Authorization =
       `Bearer ${newToken}`;
 
-    return http(originalRequest);
+    return bookingFlowUrlHttp(originalRequest);
   }
 );
 
-export default http;
+export default bookingFlowUrlHttp;
 

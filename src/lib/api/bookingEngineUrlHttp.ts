@@ -3,14 +3,14 @@ import { env } from "@/config";
 import { store } from "@/store/store";
 import { clearAuth } from "@/store/authSlice";
 
-const { BaseUrl } = env();
+const { BookingEngineUrl } = env();
 
-const app = axios.create({
-  baseURL: BaseUrl,
+const bookingEngineUrlHttp = axios.create({
+  baseURL: BookingEngineUrl,
 });
 
  
-app.interceptors.request.use(
+bookingEngineUrlHttp.interceptors.request.use(
   (config) => {
     const state = store.getState();
     const tokenFromStore = state.auth?.token ?? null;
@@ -34,7 +34,7 @@ app.interceptors.request.use(
 );
 
  
-app.interceptors.response.use(
+bookingEngineUrlHttp.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
@@ -52,4 +52,4 @@ app.interceptors.response.use(
   }
 );
 
-export default app;
+export default bookingEngineUrlHttp;

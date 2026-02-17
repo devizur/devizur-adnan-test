@@ -1,8 +1,11 @@
 export function env() {
-  const BaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+  const bookingFlowUrl = process.env.NEXT_PUBLIC_bookingFlowUrl?? "";
+  const BookingEngineUrl = process.env.NEXT_PUBLIC_BookingEngineUrl ?? "";
+ 
 
   return {
-    BaseUrl,
+    bookingFlowUrl,
+    BookingEngineUrl,
   };
 }
 

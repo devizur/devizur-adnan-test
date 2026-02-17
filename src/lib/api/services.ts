@@ -1,5 +1,5 @@
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams } from "./types";
-import http from "./http";
+import bookingFlowUrlHttp from "./bookingEngineUrlHttp";
 import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
@@ -21,7 +21,7 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     }
 
     try {
-        const response = await http.get<T>(path);
+        const response = await bookingFlowUrlHttp.get<T>(path);
         return response.data;
     } catch (error) {
         const err = error as AxiosError<any>;
@@ -239,7 +239,7 @@ export const authApi = {
     async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await http.post<RequestOtpResponse>("/api/auth/request-otp", data);
+                const response = await bookingFlowUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;
@@ -261,7 +261,7 @@ export const authApi = {
     async verifyOtp(data: VerifyOtpRequest): Promise<SignInResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await http.post<SignInResponse>("/api/auth/verify-otp", data);
+                const response = await bookingFlowUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;

@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
-import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi } from "./services";
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams } from "./types";
+import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus } from "./types";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -33,6 +33,9 @@ export const queryKeys = {
     availability: {
         slots: (params: GetAvailabilitySlotsParams) =>
             ["availability", "slots", params.date, params.timeOfDay, params.activityIds.join(","), params.packageIds.join(","), params.adults, params.children] as const,
+    },
+    booking: {
+        dapperStatuses: () => ["booking", "dapperStatuses"] as const,
     },
 };
 
@@ -111,6 +114,15 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
         queryFn: () => availabilityApi.getSlots(params!),
         enabled: !!params && hasDate && !!hasProducts && !!hasPersons,
         staleTime: 2 * 60 * 1000, // 2 minutes – slots can change
+    });
+}
+
+// Booking hooks – dapper statuses (bookingFlowUrlHttp)
+export function useBookingDapperStatuses(): UseQueryResult<BookingDapperStatus[], Error> {
+    return useQuery({
+        queryKey: queryKeys.booking.dapperStatuses(),
+        queryFn: () => bookingApi.getDapperStatuses(),
+        staleTime: 5 * 60 * 1000,
     });
 }
 

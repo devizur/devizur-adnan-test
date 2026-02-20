@@ -74,3 +74,17 @@ export interface GetAvailabilitySlotsParams {
   adults: number;
   children: number;
 }
+
+// Booking dapper status (from /api/Booking/bookingDapperStatuses)
+export interface BookingDapperStatus {
+  id: number;
+  name: string;
+  createdAt: string;
+  versionNo: number;
+}
+
+export interface BookingDapperStatusesResponse {
+  success: boolean;
+  message: string;
+  data: BookingDapperStatus[];
+}

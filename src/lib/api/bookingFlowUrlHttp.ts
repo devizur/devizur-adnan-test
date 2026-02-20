@@ -4,10 +4,49 @@ import { store } from "@/store/store";
 import { clearAuth, setToken } from "@/store/authSlice";
 
 const { bookingFlowUrl } = env();
+const baseURL = bookingFlowUrl?.replace(/\/+$/, "") ?? "";
 
 const bookingFlowUrlHttp = axios.create({
-  baseURL: bookingFlowUrl,
+  baseURL: `${baseURL}/`,
 });
+
+/** Token API response from POST /oauth/token */
+export interface OAuthTokenResponse {
+  success: boolean;
+  message: string;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    tokenType: string;
+    expiresIn: number;
+  };
+}
+
+const OAUTH_TOKEN_BODY = {
+  clientId: "web_app",
+  clientSecret: "web_secret",
+} as const;
+
+/** Fetch new token via client credentials (POST /oauth/token) */
+export async function fetchBookingFlowToken(): Promise<string | null> {
+  try {
+    const response = await axios.post<OAuthTokenResponse>(
+      `${baseURL}/oauth/token`,
+      OAUTH_TOKEN_BODY,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    const { success, data } = response.data ?? {};
+    if (!success || !data?.accessToken) return null;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("authToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken ?? "");
+    }
+    store.dispatch(setToken(data.accessToken));
+    return data.accessToken;
+  } catch {
+    return null;
+  }
+}
 
 bookingFlowUrlHttp.interceptors.request.use(
   (config) => {
@@ -22,9 +61,9 @@ bookingFlowUrlHttp.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.baseURL = bookingFlowUrl ? `${bookingFlowUrl.replace(/\/+$/, "")}/` : bookingFlowUrl;
+      config.baseURL = `${baseURL}/`;
     } else {
-      config.baseURL = bookingFlowUrl;
+      config.baseURL = `${baseURL}/`;
       delete (config.headers as Record<string, unknown>).Authorization;
     }
 
@@ -41,37 +80,29 @@ async function refreshAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
 
   const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) return null;
-
-  try {
-    const response = await axios.post(
-      `${bookingFlowUrl.replace(/\/+$/, "")}/auth/refresh`,
-      { refresh_token: refreshToken },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+  if (refreshToken) {
+    try {
+      const response = await axios.post<OAuthTokenResponse>(
+        `${baseURL}/oauth/refresh`,
+        { refreshToken },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      const { success, data } = response.data ?? {};
+      const newToken = success && data?.accessToken ? data.accessToken : null;
+      if (newToken) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("authToken", newToken);
+          if (data?.refreshToken)
+            localStorage.setItem("refreshToken", data.refreshToken);
+        }
+        store.dispatch(setToken(newToken));
+        return newToken;
       }
-    );
-
-    const data = response.data ?? {};
-    const newToken: string | undefined =
-      data.access_token ?? data.token ?? data.accessToken;
-
-    if (!newToken) {
-      return null;
+    } catch {
+      // fall through to client-credentials
     }
-
-    // Persist new token
-    localStorage.setItem("authToken", newToken);
-
-    // Update Redux
-    store.dispatch(setToken(newToken));
-
-    return newToken;
-  } catch (_err) {
-    return null;
   }
+  return fetchBookingFlowToken();
 }
 
 function handleUnauthenticated() {

@@ -1,5 +1,6 @@
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse } from "./types";
 import bookingFlowUrlHttp from "./bookingEngineUrlHttp";
+import bookingFlowUrlHttpClient from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
@@ -202,6 +203,28 @@ export const availabilityApi = {
             return fetchFromApi<Slot[]>(`/api/availability/slots?${search.toString()}`, "fetch availability slots");
         }
         return [...FALLBACK_SLOTS];
+    },
+};
+
+// Booking API – uses bookingFlowUrlHttp (UAT backend)
+export const bookingApi = {
+    async getDapperStatuses(): Promise<BookingDapperStatus[]> {
+        const response = await bookingFlowUrlHttpClient.get<BookingDapperStatusesResponse>(
+            "/api/Booking/bookingDapperStatuses"
+        );
+        const { success, data } = response.data ?? {};
+        if (!success || !Array.isArray(data)) {
+            throw new Error(
+                (response.data as BookingDapperStatusesResponse)?.message ??
+                    "Failed to fetch booking dapper statuses"
+            );
+        }
+        return data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            createdAt: item.createdAt,
+            versionNo: item.versionNo,
+        }));
     },
 };
 

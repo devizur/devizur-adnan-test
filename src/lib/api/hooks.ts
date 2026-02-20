@@ -122,7 +122,7 @@ export function useBookingDapperStatuses(): UseQueryResult<BookingDapperStatus[]
     return useQuery({
         queryKey: queryKeys.booking.dapperStatuses(),
         queryFn: () => bookingApi.getDapperStatuses(),
-        staleTime: 5 * 60 * 1000,
+        staleTime: 5 * 60 * 1000, 
     });
 }
 

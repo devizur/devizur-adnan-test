@@ -9,14 +9,13 @@ interface AuthUser {
 export interface AuthState {
   token: string | null;
   user: AuthUser | null;
+  refreshToken: string | null;
 }
 
 const initialState: AuthState = {
-  token: typeof window !== "undefined" ? localStorage.getItem("authToken") : null,
-  user:
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("user") ?? "null")
-      : null,
+  token: null,
+  user: null,
+  refreshToken: null,
 };
 
 const authSlice = createSlice({
@@ -30,12 +29,19 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.user = action.payload.user;
     },
-    setToken: (state, action: PayloadAction<string | null>) => {
-      state.token = action.payload;
+    setToken: (
+      state,
+      action: PayloadAction<{ token: string | null; refreshToken?: string | null }>
+    ) => {
+      state.token = action.payload.token;
+      if (action.payload.refreshToken !== undefined) {
+        state.refreshToken = action.payload.refreshToken;
+      }
     },
     clearAuth: (state) => {
       state.token = null;
       state.user = null;
+      state.refreshToken = null;
     },
   },
 });

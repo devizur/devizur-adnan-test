@@ -30,6 +30,7 @@ import { Footer } from "@/components/footer";
 import { BrandGuard } from "@/components/brand-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ReduxProvider } from "@/components/providers/redux-provider";
+import { BookingFlowTokenProvider } from "@/components/providers/booking-flow-token-provider";
 import { CartProvider } from "@/contexts/CartContext";
 import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -82,18 +83,20 @@ export default function RootLayout({
       >
         <QueryProvider>
           <ReduxProvider>
-          <CartProvider>
-            <BookingCartProvider>
-            <BrandGuard currentBrand={brandKey} />
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <ColorComponent />
-            <Toaster />
-            </BookingCartProvider>
-          </CartProvider>
+            <BookingFlowTokenProvider>
+              <CartProvider>
+                <BookingCartProvider>
+                  <BrandGuard currentBrand={brandKey} />
+                  <Navbar />
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                  <Footer />
+                  <ColorComponent />
+                  <Toaster />
+                </BookingCartProvider>
+              </CartProvider>
+            </BookingFlowTokenProvider>
           </ReduxProvider>
         </QueryProvider>
       </body>

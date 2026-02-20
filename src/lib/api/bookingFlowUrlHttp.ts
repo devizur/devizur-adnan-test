@@ -37,11 +37,12 @@ export async function fetchBookingFlowToken(): Promise<string | null> {
     );
     const { success, data } = response.data ?? {};
     if (!success || !data?.accessToken) return null;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("authToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken ?? "");
-    }
-    store.dispatch(setToken(data.accessToken));
+    store.dispatch(
+      setToken({
+        token: data.accessToken,
+        refreshToken: data.refreshToken ?? null,
+      })
+    );
     return data.accessToken;
   } catch {
     return null;
@@ -51,13 +52,7 @@ export async function fetchBookingFlowToken(): Promise<string | null> {
 bookingFlowUrlHttp.interceptors.request.use(
   (config) => {
     const state = store.getState();
-    const tokenFromStore = state.auth?.token ?? null;
-    const tokenFromStorage =
-      typeof window !== "undefined"
-        ? localStorage.getItem("authToken")
-        : null;
-
-    const token = tokenFromStore ?? tokenFromStorage ?? null;
+    const token = state.auth?.token ?? null;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -79,7 +74,8 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
 async function refreshAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
 
-  const refreshToken = localStorage.getItem("refreshToken");
+  const state = store.getState();
+  const refreshToken = state.auth?.refreshToken ?? null;
   if (refreshToken) {
     try {
       const response = await axios.post<OAuthTokenResponse>(
@@ -90,12 +86,12 @@ async function refreshAccessToken(): Promise<string | null> {
       const { success, data } = response.data ?? {};
       const newToken = success && data?.accessToken ? data.accessToken : null;
       if (newToken) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("authToken", newToken);
-          if (data?.refreshToken)
-            localStorage.setItem("refreshToken", data.refreshToken);
-        }
-        store.dispatch(setToken(newToken));
+        store.dispatch(
+          setToken({
+            token: newToken,
+            refreshToken: data?.refreshToken ?? refreshToken,
+          })
+        );
         return newToken;
       }
     } catch {
@@ -106,13 +102,10 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 function handleUnauthenticated() {
+  store.dispatch(clearAuth());
   if (typeof window !== "undefined") {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("refreshToken");
     window.location.href = "/sign-in";
   }
-  store.dispatch(clearAuth());
 }
 
 bookingFlowUrlHttp.interceptors.response.use(

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import CartDrawer from "@/components/ui/CartDrawer";
+import { useAppSelector } from "@/store/hooks";
 
 export function Navbar() {
     const config = getBrandConfig();
@@ -39,9 +40,9 @@ export function Navbar() {
         }
     }, [pathname, config.navItems]);
 
+    const token = useAppSelector((state) => state.auth?.token ?? null);
     const handleMyBookingsClick = () => {
-        const authToken = localStorage.getItem("authToken");
-        if (authToken) {
+        if (token) {
             router.push("/my-bookings");
         } else {
             router.push("/sign-in");

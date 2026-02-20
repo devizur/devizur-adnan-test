@@ -39,8 +39,6 @@ export default function SignInPage() {
                 email: email.trim(),
                 otp: otp.trim(),
             });
-            localStorage.setItem("authToken", result.token);
-            localStorage.setItem("user", JSON.stringify(result.user));
             dispatch(setCredentials({ token: result.token, user: result.user }));
             router.push("/");
         } catch (error) {

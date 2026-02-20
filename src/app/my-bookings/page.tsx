@@ -72,11 +72,6 @@ export default function MyBookingsPage() {
 
     const handleLogout = () => {
         dispatch(clearAuth());
-        if (typeof window !== "undefined") {
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("user");
-            localStorage.removeItem("refreshToken");
-        }
         router.push("/sign-in");
     };
 

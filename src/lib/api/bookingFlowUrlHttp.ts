@@ -104,7 +104,7 @@ async function refreshAccessToken(): Promise<string | null> {
 function handleUnauthenticated() {
   store.dispatch(clearAuth());
   if (typeof window !== "undefined") {
-    window.location.href = "/sign-in";
+    alert("Token Invalid. Please refresh the page to try again.");
   }
 }
 

@@ -34,6 +34,7 @@ import { BookingFlowTokenProvider } from "@/components/providers/booking-flow-to
 import { CartProvider } from "@/contexts/CartContext";
 import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { Toaster } from "@/components/ui/toaster";
+import { WelcomeDialog } from "@/components/ui/welcome-dialog";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
@@ -93,6 +94,7 @@ export default function RootLayout({
                   </main>
                   <Footer />
                   <ColorComponent />
+                  <WelcomeDialog />
                   <Toaster />
                 </BookingCartProvider>
               </CartProvider>

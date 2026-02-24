@@ -1,6 +1,6 @@
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse } from "./types";
-import bookingFlowUrlHttp from "./bookingEngineUrlHttp";
-import bookingFlowUrlHttpClient from "./bookingFlowUrlHttp";
+import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
+import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
@@ -18,7 +18,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     try {
-        const response = await bookingFlowUrlHttp.get<T>(path);
+        const response = await bookingEngineUrlHttp.get<T>(path);
         return response.data;
     } catch (error) {
         const err = error as AxiosError<any>;
@@ -201,7 +201,7 @@ export const availabilityApi = {
 // Booking API – uses bookingFlowUrlHttp (UAT backend)
 export const bookingApi = {
     async getDapperStatuses(): Promise<BookingDapperStatus[]> {
-        const response = await bookingFlowUrlHttpClient.get<BookingDapperStatusesResponse>(
+        const response = await bookingFlowUrlHttp.get<BookingDapperStatusesResponse>(
             "/api/Booking/bookingDapperStatuses"
         );
         const { success, data } = response.data ?? {};
@@ -225,7 +225,7 @@ export const authApi = {
     async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await bookingFlowUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
+                const response = await bookingEngineUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;
@@ -247,7 +247,7 @@ export const authApi = {
     async verifyOtp(data: VerifyOtpRequest): Promise<SignInResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await bookingFlowUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
+                const response = await bookingEngineUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;

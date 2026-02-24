@@ -64,7 +64,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {activities.map((activity) => (
-                    <ActivitiesCard key={activity.productId} item={activity} showTimeSlots />
+                    <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>
             <div className="flex justify-center items-center gap-4 mt-10">

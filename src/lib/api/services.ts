@@ -1,6 +1,6 @@
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse } from "./types";
-import bookingFlowUrlHttp from "./bookingEngineUrlHttp";
-import bookingFlowUrlHttpClient from "./bookingFlowUrlHttp";
+import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
+import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
@@ -17,12 +17,8 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
-    if (!API_BASE_URL) {
-        throw new Error("REST API base URL is not configured");
-    }
-
     try {
-        const response = await bookingFlowUrlHttp.get<T>(path);
+        const response = await bookingEngineUrlHttp.get<T>(path);
         return response.data;
     } catch (error) {
         const err = error as AxiosError<any>;
@@ -36,39 +32,35 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
 
 
 export const activitiesApi = {
-    
-    async getAll(): Promise<Activity[]> {
-        if (API_BASE_URL) {
-            return fetchFromApi<Activity[]>("/api/activities", "fetch activities");
-        }
 
-       
-        const [activities1] = await Promise.all([
-            fetchJson<Activity[]>("/data/Activities1.json"),
-     
-        ]);
+    async getAll(page = 1, pageSize = 9): Promise<Activity[]> {
+        const search = new URLSearchParams();
+        search.set("shopId", "1");
+        search.set("page", String(page));
+        search.set("pageSize", String(pageSize));
 
-        return [...activities1];
+        return fetchFromApi<Activity[]>(
+            `/api/datasync/products/changes?${search.toString()}`,
+            "fetch activities"
+        );
     },
 
-  
-    async search(term: string): Promise<Activity[]> {
+
+    async search(term: string, page = 1, pageSize = 9): Promise<Activity[]> {
         const query = term.trim();
-        if (!query) {
-            return activitiesApi.getAll();
+
+        const searchParams = new URLSearchParams();
+        searchParams.set("shopId", "1");
+        searchParams.set("page", String(page));
+        searchParams.set("pageSize", String(pageSize));
+        if (query) {
+            // Assumes backend accepts `search` as a filter parameter
+            searchParams.set("search", query);
         }
 
-        if (API_BASE_URL) {
-            const encoded = encodeURIComponent(query);
-            return fetchFromApi<Activity[]>(`/api/activities?search=${encoded}`, "search activities");
-        }
-
-        const all = await activitiesApi.getAll();
-        const normalized = query.toLowerCase();
-        return all.filter(
-            (activity) =>
-                activity.title.toLowerCase().includes(normalized) ||
-                activity.category.toLowerCase().includes(normalized)
+        return fetchFromApi<Activity[]>(
+            `/api/datasync/products/changes?${searchParams.toString()}`,
+            "search activities"
         );
     },
 
@@ -80,22 +72,22 @@ export const activitiesApi = {
 
 // Foods API
 export const foodsApi = {
-   
+
     async getAll(): Promise<Food[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Food[]>("/api/foods", "fetch foods");
         }
 
-      
+
         const [foods1] = await Promise.all([
             fetchJson<Food[]>("/data/Foods1.json"),
-          
+
         ]);
 
         return [...foods1];
     },
 
-  
+
     async search(term: string): Promise<Food[]> {
         const query = term.trim();
         if (!query) {
@@ -124,22 +116,22 @@ export const foodsApi = {
 
 // Packages API
 export const packagesApi = {
-    
+
     async getAll(): Promise<Package[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Package[]>("/api/packages", "fetch packages");
         }
 
-      
+
         const [packages1] = await Promise.all([
             fetchJson<Package[]>("/data/Packages1.json"),
-      
+
         ]);
 
         return [...packages1];
     },
 
-   
+
     async search(term: string): Promise<Package[]> {
         const query = term.trim();
         if (!query) {
@@ -189,7 +181,7 @@ const FALLBACK_SLOTS: Slot[] = [
 const timeOfDayMap: Record<1 | 2 | 3, string> = { 1: "morning", 2: "afternoon", 3: "evening" };
 
 export const availabilityApi = {
-   
+
     async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
         const { date, timeOfDay, activityIds, packageIds, adults, children } = params;
         if (API_BASE_URL) {
@@ -209,14 +201,14 @@ export const availabilityApi = {
 // Booking API – uses bookingFlowUrlHttp (UAT backend)
 export const bookingApi = {
     async getDapperStatuses(): Promise<BookingDapperStatus[]> {
-        const response = await bookingFlowUrlHttpClient.get<BookingDapperStatusesResponse>(
+        const response = await bookingFlowUrlHttp.get<BookingDapperStatusesResponse>(
             "/api/Booking/bookingDapperStatuses"
         );
         const { success, data } = response.data ?? {};
         if (!success || !Array.isArray(data)) {
             throw new Error(
                 (response.data as BookingDapperStatusesResponse)?.message ??
-                    "Failed to fetch booking dapper statuses"
+                "Failed to fetch booking dapper statuses"
             );
         }
         return data.map((item) => ({
@@ -233,7 +225,7 @@ export const authApi = {
     async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await bookingFlowUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
+                const response = await bookingEngineUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;
@@ -255,7 +247,7 @@ export const authApi = {
     async verifyOtp(data: VerifyOtpRequest): Promise<SignInResponse> {
         if (API_BASE_URL) {
             try {
-                const response = await bookingFlowUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
+                const response = await bookingEngineUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
                 return response.data;
             } catch (error) {
                 const err = error as AxiosError<any>;

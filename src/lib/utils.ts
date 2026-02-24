@@ -20,3 +20,5 @@ export function parsePrice(value: string): number {
 export function formatPrice(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
+
+export const DemoImageUrl = "https://picsum.photos/400/200"

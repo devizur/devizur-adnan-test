@@ -5,7 +5,9 @@
 export interface BaseProduct {
   id: number;
   title: string;
+  productName: string;
   price: string;
+  fixedPrice: string;
   unit: string;
   rating: number;
   image: string;

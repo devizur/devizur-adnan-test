@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
+import { DemoImageUrl } from "@/lib/utils";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -21,41 +22,44 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
         <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
             <div className="relative h-48 rounded-[10px] overflow-hidden">
                 <img
-                    src={item.image}
-                    alt={item.title}
+                    src={item?.image || DemoImageUrl}
+                    alt={item?.productName}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                {item.discount && (
+               
                     <div className="absolute top-0 right-0 bg-primary-1 text-black px-5 py-2.5 rounded-bl-[16px] text-xs font-black">
-                        {item.discount}
+                        {item?.discount || "$5 off"}
                     </div>
-                )}
-                {item.rating && (
+                 
+                
                     <div className="absolute bottom-1.5 left-1.5 bg-primary-1 text-black px-2.5 py-1.5 rounded-l-[15px] rounded-tr-[16px] text-xs">
                         <FaStar className="inline w-3 h-3 mr-1" />
-                        {item.rating}
+                        {item?.rating || 4.6}
                     </div>
-                )}
+               
             </div>
 
             <CardContent className="px-1.5 pb-2">
                 <div className="flex justify-between items-start">
                     <h3 className="text-[14px] font-bold text-primary tracking-tight leading-tight">
-                        {item.title}
+                        {item?.productName}
                     </h3>
                     <div className="text-right shrink-0">
-                        <div className="text-primary-1 text-[18px] font-bold">
-                            {item.price}
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="text-primary-1 text-lg font-bold">
+                                ${item?.fixedPrice ?? "Unavailable"}
+                            </span>
+                           
                         </div>
                     </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-500 text-xs font-medium">
-                        Duration: {item.duration}
+                        Duration: {item?.duration || "60 mins"}
                     </span>
                     <span className="text-gray-500 text-[10px] font-medium">
-                        {item.unit}
+                        {item?.unit || "per person"}
                     </span>
                 </div>
 

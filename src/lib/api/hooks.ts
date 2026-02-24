@@ -40,13 +40,25 @@ export const queryKeys = {
 };
 
 // Activities hooks
-export function useActivities(searchTerm?: string): UseQueryResult<Activity[], Error> {
+export function useActivities(
+    searchTerm?: string,
+    page = 1,
+    pageSize = 9
+): UseQueryResult<Activity[], Error> {
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
+    const effectivePage = page ?? 1;
+    const effectivePageSize = pageSize ?? 9;
+
     return useQuery({
-        queryKey: hasSearch ? queryKeys.activities.search(query) : queryKeys.activities.list(),
-        queryFn: () => (hasSearch ? activitiesApi.search(query) : activitiesApi.getAll()),
+        queryKey: hasSearch
+            ? [...queryKeys.activities.search(query), "page", effectivePage, "pageSize", effectivePageSize]
+            : [...queryKeys.activities.list(), "page", effectivePage, "pageSize", effectivePageSize],
+        queryFn: () =>
+            hasSearch
+                ? activitiesApi.search(query, effectivePage, effectivePageSize)
+                : activitiesApi.getAll(effectivePage, effectivePageSize),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }

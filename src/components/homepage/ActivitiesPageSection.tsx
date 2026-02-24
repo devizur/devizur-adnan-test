@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import ActivitiesCard from "@/components/ui/reused/ActivitiesCard";
 import { useActivities } from "@/lib/api/hooks";
+import { Pagination } from "@/components/ui/reused/Pagination";
 
 interface ActivitiesPageSectionProps {
     searchTerm?: string;
@@ -67,30 +68,13 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
                     <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
                 ))}
             </div>
-            <div className="flex justify-center items-center gap-4 mt-10">
-                <button
-                    type="button"
-                    className="px-3 py-1 rounded border text-sm disabled:opacity-50"
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                    disabled={currentPage === 1 || isLoading}
-                >
-                    Previous
-                </button>
-                <span className="text-sm text-muted-foreground">
-                    Page {currentPage}
-                    {searchTerm?.trim()
-                        ? ` · Results for "${searchTerm.trim()}"`
-                        : null}
-                </span>
-                <button
-                    type="button"
-                    className="px-3 py-1 rounded border text-sm disabled:opacity-50"
-                    onClick={() => setCurrentPage((page) => page + 1)}
-                    disabled={!hasNextPage || isLoading}
-                >
-                    Next
-                </button>
-            </div>
+            <Pagination
+                page={currentPage}
+                hasNextPage={hasNextPage}
+                isLoading={isLoading}
+                label={searchTerm?.trim() ? `Results for "${searchTerm.trim()}"` : undefined}
+                onPageChange={setCurrentPage}
+            />
         </section>
     );
 };

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
+import { DemoImageUrl } from "@/lib/utils";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -21,7 +22,7 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
         <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
             <div className="relative h-48 rounded-[10px] overflow-hidden">
                 <img
-                    src={item?.image || "https://picsum.photos/400/200"}
+                    src={item?.image || DemoImageUrl}
                     alt={item?.productName}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -44,8 +45,11 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                         {item?.productName}
                     </h3>
                     <div className="text-right shrink-0">
-                        <div className="text-primary-1 text-[18px] font-bold">
-                            {item.fixedPrice}
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="text-primary-1 text-lg font-bold">
+                                ${item?.fixedPrice ?? "Unavailable"}
+                            </span>
+                           
                         </div>
                     </div>
                 </div>

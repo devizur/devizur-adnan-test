@@ -48,9 +48,16 @@ const PopularActivities: React.FC<PopularActivitiesProps> = ({ limit, searchTerm
                 </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {itemsToShow.map((activity) => (
-                    <ActivitiesCard key={activity.id} item={activity} showTimeSlots />
-                ))}
+                {itemsToShow.map((activity, index) => {
+                    const key = (activity as any).productId ?? activity.id ?? index;
+                    return (
+                        <ActivitiesCard
+                            key={key}
+                            item={activity}
+                            showTimeSlots
+                        />
+                    );
+                })}
             </div>
 
 

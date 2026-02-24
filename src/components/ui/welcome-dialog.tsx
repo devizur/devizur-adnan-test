@@ -7,9 +7,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Star, MapPin, Store } from "lucide-react";
+import { Star, MapPin, Store, Search } from "lucide-react";
 
 const SELECTED_SHOP_KEY = "welcome-selected-shop";
+
 
 const SHOPS = [
   {
@@ -51,6 +52,7 @@ const SHOPS = [
 
 export function WelcomeDialog() {
   const [open, setOpen] = React.useState(true);
+  const [search, setSearch] = React.useState("");
 
   React.useEffect(() => {
     setOpen(true);
@@ -63,6 +65,27 @@ export function WelcomeDialog() {
     }
   };
 
+  // ✅ filter logic
+  const filteredShops = React.useMemo(() => {
+    if (!search.trim()) return SHOPS;
+
+    const query = search.toLowerCase();
+
+    return SHOPS.filter((shop) => {
+      const titleMatch = shop.title.toLowerCase().includes(query);
+
+      const descriptionMatch = shop.description
+        .toLowerCase()
+        .includes(query);
+
+      const tagMatch = shop.tags.some((tag) =>
+        tag.label.toLowerCase().includes(query)
+      );
+
+      return titleMatch || descriptionMatch || tagMatch;
+    });
+  }, [search]);
+
   return (
     <AlertDialog
       open={open}
@@ -71,63 +94,89 @@ export function WelcomeDialog() {
         setOpen(next);
       }}
     >
-      <AlertDialogContent
-        className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:min-w-[90%] sm:max-w-4xl bg-secondary-2 backdrop-blur-xl p-0 gap-0 text-white border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col shadow-2xl"
-      >
+      <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:min-w-[90%] sm:w-4xl h-[90vh] lg:h-[95vh] bg-secondary-2 backdrop-blur-xl p-0 gap-0 text-white border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col shadow-2xl">
+        
+        {/* Header */}
         <AlertDialogHeader className="px-6 py-5 sm:px-8 sm:py-6 shrink-0 border-b border-white/5">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-primary-1/15 text-primary-1">
+          <div className="flex items-center gap-3 sm:gap-4 justify-center">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary-1/15 text-primary-1">
               <Store className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <AlertDialogTitle className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+              <AlertDialogTitle className="text-xl sm:text-2xl font-semibold">
                 Choose your shop
               </AlertDialogTitle>
               <p className="mt-1 text-sm sm:text-base text-gray-300">
-                Select a location below to browse activities and start your booking
+                Select a location below to browse activities
               </p>
             </div>
           </div>
         </AlertDialogHeader>
-        <div className="px-4 py-5 sm:px-8 sm:py-6 overflow-y-auto overflow-x-hidden min-h-0 max-h-[calc(95vh-6rem)]">
-          <p className="mb-4 text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
-            Available locations
-          </p>
+
+        {/* Body */}
+        <div className="px-4 py-5 sm:px-8 sm:py-6 overflow-y-auto">
+
+          {/* Search input */}
+          <div className="relative w-full max-w-md group mb-5  ">
+            <input
+              type="text"
+              placeholder="Search locations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-11 bg-white/5 border border-white/10 rounded-xl py-4 pl-6 pr-10 text-white placeholder-gray-500 focus:outline-none focus:border-primary-1/40"
+            />
+
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-60" />
+          </div>
+
+          {/* Shops */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {SHOPS.map((shop) => (
+
+            {filteredShops.length === 0 && (
+              <div className="col-span-full text-center text-gray-400 py-10">
+                No locations found
+              </div>
+            )}
+
+            {filteredShops.map((shop) => (
               <button
                 key={shop.id}
-                type="button"
                 onClick={() => handleShopSelect(shop)}
-                className="group text-left relative   sm:h-32 lg:h-60  w-full rounded-xl sm:rounded-2xl overflow-hidden bg-cover bg-center transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-lg hover:shadow-black/30"
+                className="group text-left relative h-44 lg:h-60  2xl:h-80 w-full rounded-xl overflow-hidden bg-cover bg-center hover:scale-[1.005] cursor-pointer transition-transform"
                 style={{ backgroundImage: `url(${shop.image})` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20" aria-hidden />
-                <div className="relative z-10 flex flex-col flex-1 min-h-0 justify-end p-3 sm:p-5">
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20" />
+
+                <div className="relative z-10 p-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
                     {shop.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-black/40 text-white backdrop-blur-sm"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-black/40"
                       >
-                        {tag.icon === "star" && <Star className="w-3 h-3 fill-current shrink-0" />}
-                        {tag.icon === "pin" && <MapPin className="w-3 h-3 shrink-0" />}
+                        {tag.icon === "star" && (
+                          <Star className="w-3 h-3 fill-current" />
+                        )}
+                        {tag.icon === "pin" && (
+                          <MapPin className="w-3 h-3" />
+                        )}
                         {tag.label}
                       </span>
                     ))}
                   </div>
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                    {shop.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-100 mt-1.5 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+
+                  <h3 className="lg:text-3xl text-2xl font-bold">{shop.title}</h3>
+
+                  <p className="text-xs lg:text-sm text-gray-400 line-clamp-2 mt-1">
                     {shop.description}
                   </p>
                 </div>
               </button>
             ))}
           </div>
+
         </div>
       </AlertDialogContent>
     </AlertDialog>
   );
-}
+} 

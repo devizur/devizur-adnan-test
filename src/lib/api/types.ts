@@ -4,8 +4,9 @@
  */
 export interface BaseProduct {
   id: number;
-  title: string;
-  price: string;
+  productName: string;
+  price: string; 
+  fixedPrice: string;
   unit: string;
   rating: number;
   image: string;

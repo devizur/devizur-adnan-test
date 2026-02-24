@@ -17,10 +17,6 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
-    if (!API_BASE_URL) {
-        throw new Error("REST API base URL is not configured");
-    }
-
     try {
         const response = await bookingFlowUrlHttp.get<T>(path);
         return response.data;
@@ -36,39 +32,35 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
 
 
 export const activitiesApi = {
-    
-    async getAll(): Promise<Activity[]> {
-        if (API_BASE_URL) {
-            return fetchFromApi<Activity[]>("/api/activities", "fetch activities");
-        }
 
-       
-        const [activities1] = await Promise.all([
-            fetchJson<Activity[]>("/data/Activities1.json"),
-     
-        ]);
+    async getAll(page = 1, pageSize = 9): Promise<Activity[]> {
+        const search = new URLSearchParams();
+        search.set("shopId", "1");
+        search.set("page", String(page));
+        search.set("pageSize", String(pageSize));
 
-        return [...activities1];
+        return fetchFromApi<Activity[]>(
+            `/api/datasync/products/changes?${search.toString()}`,
+            "fetch activities"
+        );
     },
 
-  
-    async search(term: string): Promise<Activity[]> {
+
+    async search(term: string, page = 1, pageSize = 9): Promise<Activity[]> {
         const query = term.trim();
-        if (!query) {
-            return activitiesApi.getAll();
+
+        const searchParams = new URLSearchParams();
+        searchParams.set("shopId", "1");
+        searchParams.set("page", String(page));
+        searchParams.set("pageSize", String(pageSize));
+        if (query) {
+            // Assumes backend accepts `search` as a filter parameter
+            searchParams.set("search", query);
         }
 
-        if (API_BASE_URL) {
-            const encoded = encodeURIComponent(query);
-            return fetchFromApi<Activity[]>(`/api/activities?search=${encoded}`, "search activities");
-        }
-
-        const all = await activitiesApi.getAll();
-        const normalized = query.toLowerCase();
-        return all.filter(
-            (activity) =>
-                activity.title.toLowerCase().includes(normalized) ||
-                activity.category.toLowerCase().includes(normalized)
+        return fetchFromApi<Activity[]>(
+            `/api/datasync/products/changes?${searchParams.toString()}`,
+            "search activities"
         );
     },
 
@@ -80,22 +72,22 @@ export const activitiesApi = {
 
 // Foods API
 export const foodsApi = {
-   
+
     async getAll(): Promise<Food[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Food[]>("/api/foods", "fetch foods");
         }
 
-      
+
         const [foods1] = await Promise.all([
             fetchJson<Food[]>("/data/Foods1.json"),
-          
+
         ]);
 
         return [...foods1];
     },
 
-  
+
     async search(term: string): Promise<Food[]> {
         const query = term.trim();
         if (!query) {
@@ -124,22 +116,22 @@ export const foodsApi = {
 
 // Packages API
 export const packagesApi = {
-    
+
     async getAll(): Promise<Package[]> {
         if (API_BASE_URL) {
             return fetchFromApi<Package[]>("/api/packages", "fetch packages");
         }
 
-      
+
         const [packages1] = await Promise.all([
             fetchJson<Package[]>("/data/Packages1.json"),
-      
+
         ]);
 
         return [...packages1];
     },
 
-   
+
     async search(term: string): Promise<Package[]> {
         const query = term.trim();
         if (!query) {
@@ -189,7 +181,7 @@ const FALLBACK_SLOTS: Slot[] = [
 const timeOfDayMap: Record<1 | 2 | 3, string> = { 1: "morning", 2: "afternoon", 3: "evening" };
 
 export const availabilityApi = {
-   
+
     async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
         const { date, timeOfDay, activityIds, packageIds, adults, children } = params;
         if (API_BASE_URL) {
@@ -216,7 +208,7 @@ export const bookingApi = {
         if (!success || !Array.isArray(data)) {
             throw new Error(
                 (response.data as BookingDapperStatusesResponse)?.message ??
-                    "Failed to fetch booking dapper statuses"
+                "Failed to fetch booking dapper statuses"
             );
         }
         return data.map((item) => ({

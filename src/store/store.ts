@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import bookingReducer from "./bookingSlice";
 import authReducer from "./authSlice";
+import shopReducer from "./shopSlice";
 
 /**
  * Central Redux store. Add new slices by:
@@ -12,7 +13,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     booking: bookingReducer,
-    // Add more reducers: videos: videosReducer, etc.
+    shop: shopReducer,
   },
 });
 

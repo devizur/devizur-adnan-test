@@ -33,9 +33,9 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
 
 export const activitiesApi = {
 
-    async getAll(page = 1, pageSize = 9): Promise<Activity[]> {
+    async getAll(shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
         const search = new URLSearchParams();
-        search.set("shopId", "1");
+        search.set("shopId", String(shopId));
         search.set("page", String(page));
         search.set("pageSize", String(pageSize));
 
@@ -46,11 +46,11 @@ export const activitiesApi = {
     },
 
 
-    async search(term: string, page = 1, pageSize = 9): Promise<Activity[]> {
+    async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
         const query = term.trim();
 
         const searchParams = new URLSearchParams();
-        searchParams.set("shopId", "1");
+        searchParams.set("shopId", String(shopId));
         searchParams.set("page", String(page));
         searchParams.set("pageSize", String(pageSize));
         if (query) {
@@ -64,8 +64,8 @@ export const activitiesApi = {
         );
     },
 
-    async getById(id: number): Promise<Activity | null> {
-        const activities = await activitiesApi.getAll();
+    async getById(id: number, shopId = 1): Promise<Activity | null> {
+        const activities = await activitiesApi.getAll(shopId, 1, 100);
         return activities.find((activity) => activity.id === id) || null;
     },
 };

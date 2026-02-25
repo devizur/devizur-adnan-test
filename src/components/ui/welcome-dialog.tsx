@@ -8,6 +8,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Star, MapPin, Store, Search } from "lucide-react";
+import { useAppDispatch } from "@/store/hooks";
+import { setShopId } from "@/store/shopSlice";
 
 const SELECTED_SHOP_KEY = "welcome-selected-shop";
 
@@ -56,8 +58,19 @@ const SHOPS = [
 ];
 
 export function WelcomeDialog() {
+  const dispatch = useAppDispatch();
   const [open, setOpen] = React.useState(true);
   const [search, setSearch] = React.useState("");
+
+  // Hydrate shopId from localStorage on mount
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem(SELECTED_SHOP_KEY);
+    if (stored) {
+      const id = parseInt(stored, 10);
+      if (!Number.isNaN(id)) dispatch(setShopId(id));
+    }
+  }, [dispatch]);
 
   React.useEffect(() => {
     setOpen(true);
@@ -65,8 +78,9 @@ export function WelcomeDialog() {
 
   const handleShopSelect = (shop: (typeof SHOPS)[0]) => {
     setOpen(false);
+    dispatch(setShopId(shop.shopId));
     if (typeof window !== "undefined") {
-      localStorage.setItem(SELECTED_SHOP_KEY, String(shop.id));
+      localStorage.setItem(SELECTED_SHOP_KEY, String(shop.shopId));
     }
   };
 

@@ -3,6 +3,7 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus } from "./types";
+import { useAppSelector } from "@/store/hooks";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -45,6 +46,7 @@ export function useActivities(
     page = 1,
     pageSize = 9
 ): UseQueryResult<Activity[], Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
@@ -53,20 +55,21 @@ export function useActivities(
 
     return useQuery({
         queryKey: hasSearch
-            ? [...queryKeys.activities.search(query), "page", effectivePage, "pageSize", effectivePageSize]
-            : [...queryKeys.activities.list(), "page", effectivePage, "pageSize", effectivePageSize],
+            ? [...queryKeys.activities.search(query), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize]
+            : [...queryKeys.activities.list(), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize],
         queryFn: () =>
             hasSearch
-                ? activitiesApi.search(query, effectivePage, effectivePageSize)
-                : activitiesApi.getAll(effectivePage, effectivePageSize),
+                ? activitiesApi.search(query, shopId, effectivePage, effectivePageSize)
+                : activitiesApi.getAll(shopId, effectivePage, effectivePageSize),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
 
 export function useActivity(id: number): UseQueryResult<Activity | null, Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     return useQuery({
-        queryKey: queryKeys.activities.detail(id),
-        queryFn: () => activitiesApi.getById(id),
+        queryKey: [...queryKeys.activities.detail(id), "shopId", shopId],
+        queryFn: () => activitiesApi.getById(id, shopId),
         enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });

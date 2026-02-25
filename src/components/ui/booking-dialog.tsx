@@ -54,6 +54,7 @@ export function BookingDialog({
 }: BookingDialogProps) {
   const dispatch = useAppDispatch();
   const cart = useCart();
+  const shopId = useAppSelector((state) => state.shop.shopId);
   const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
     useAppSelector((state) => state.booking);
 
@@ -73,6 +74,7 @@ export function BookingDialog({
 
   React.useEffect(() => {
     if (!isOpen) return;
+    console.log("[BookingDialog] shopId:", shopId);
     dispatch(resetBooking());
     if (initialActivity) {
       const allowedValues =
@@ -92,7 +94,7 @@ export function BookingDialog({
         dispatch(setStep(1));
       }
     }
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps -- only when dialog opens
+  }, [isOpen, shopId]); // eslint-disable-line react-hooks/exhaustive-deps -- only when dialog opens
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -192,9 +194,12 @@ export function BookingDialog({
       >
         <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800/80 shrink-0">
           <div className="flex items-center justify-between w-full">
-            <AlertDialogTitle className="text-lg font-semibold text-white">
-              Create booking
-            </AlertDialogTitle>
+            <div>
+              <AlertDialogTitle className="text-lg font-semibold text-white">
+                Create booking
+              </AlertDialogTitle>
+              <span className="text-xs text-gray-500 mt-0.5 block">Shop ID: {shopId}</span>
+            </div>
             <button
               type="button"
               onClick={handleClose}

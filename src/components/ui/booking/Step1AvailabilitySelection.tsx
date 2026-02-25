@@ -16,6 +16,7 @@ import {
   removePackage,
 } from "@/store/bookingSlice";
 import { Check } from "lucide-react";
+import { formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 
@@ -49,7 +50,23 @@ export function Step1AvailabilitySelection() {
           shopId,
         }
       : null;
-  const { data: slots = [], isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
+  const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
+  const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
+  const slots = React.useMemo(() => {
+    const ts = slotsData?.timeSlots;
+    if (!ts) return [];
+    const apiKey = SHIFT.find((t) => t.id === timeOfDay)?.apiKey ?? "Morning";
+    const raw = ts[apiKey];
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    return raw.map((t) => ({
+      startTime: formatTimeForDisplay(t),
+      available: 1,
+    }));
+  }, [slotsData?.timeSlots, timeOfDay]);
+  const visibleShifts = React.useMemo(
+    () => SHIFT.filter((tab) => periodsWithSlots.includes(tab.apiKey)),
+    [periodsWithSlots.join(",")]
+  );
 
   const getAvailableOptions = (activity: { games?: (1 | 2 | 3)[] }) => {
     const allowedValues =
@@ -69,6 +86,14 @@ export function Step1AvailabilitySelection() {
       dispatch(setDate(toLocalDateString(new Date())));
     }
   }, [date, dispatch]);
+
+  React.useEffect(() => {
+    if (periodsWithSlots.length === 0) return;
+    const validIds = SHIFT.filter((t) => periodsWithSlots.includes(t.apiKey)).map((t) => t.id);
+    if (validIds.length > 0 && !validIds.includes(timeOfDay)) {
+      dispatch(setTimeOfDay(validIds[0] as 1 | 2 | 3));
+    }
+  }, [periodsWithSlots.join(","), timeOfDay, dispatch]);
 
   const isActivitySelected = (id: number) => selectedActivities.some((i) => i.activity.id === id);
   const getActivityGameNo = (id: number) =>
@@ -225,7 +250,7 @@ export function Step1AvailabilitySelection() {
           />
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
-            {SHIFT.map((tab) => (
+            {visibleShifts.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
@@ -273,7 +298,7 @@ export function Step1AvailabilitySelection() {
                       aria-pressed={timeSlot === s.startTime}
                       aria-label={`Select ${s.startTime}, ${s.available} available${s.discount ? `, $${s.discount} off` : ""}`}
                       className={cn(
-                        "relative min-h-[4.5rem] py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                        "relative min-h-18 py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                         s.available <= 0 && "opacity-50 cursor-not-allowed",
                         timeSlot === s.startTime
                           ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"

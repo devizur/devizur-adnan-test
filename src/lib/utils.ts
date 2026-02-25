@@ -22,3 +22,12 @@ export function formatPrice(amount: number): string {
 }
 
 export const DemoImageUrl = "https://picsum.photos/400/200";
+
+/** Format "09:30" → "9:30 am", "14:00" → "2:00 pm" */
+export function formatTimeForDisplay(raw: string): string {
+  const [h, m] = raw.split(":").map(Number);
+  if (h === 0) return `12:${String(m).padStart(2, "0")} am`;
+  if (h === 12) return `12:${String(m).padStart(2, "0")} pm`;
+  if (h < 12) return `${h}:${String(m).padStart(2, "0")} am`;
+  return `${h - 12}:${String(m).padStart(2, "0")} pm`;
+}

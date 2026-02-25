@@ -51,7 +51,7 @@ export const Pagination: React.FC<PaginationProps> = ({
 
     return (
         <div className="flex items-center justify-center mt-10">
-            <div className="flex items-center gap-2 bg-secondary-2  rounded-lg px-3 py-2 shadow-sm">
+            <div className="flex items-center gap-2 bg-secondary-2 border border-white/10 rounded-lg px-3 py-2 shadow-sm">
 
                 {/* Previous */}
                 <button
@@ -69,7 +69,8 @@ export const Pagination: React.FC<PaginationProps> = ({
 
                     <input
                         type="text"
-                        min={1}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={inputValue}
                         disabled={isLoading}
                         onChange={(e) => setInputValue(e.target.value)}
@@ -80,7 +81,7 @@ export const Pagination: React.FC<PaginationProps> = ({
 
                     {label && (
                         <span className="text-sm text-muted-foreground whitespace-nowrap">
-                            of {label}
+                            {label}
                         </span>
                     )}
                 </div>
@@ -90,7 +91,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                     type="button"
                     onClick={handleNext}
                     disabled={!hasNextPage || isLoading}
-                    className="px-3 py-1.5 text-sm font-medium  rounded-md text-primary hover:bg-primary/5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm font-medium rounded-md text-primary hover:bg-primary/5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                     Next →
                 </button>

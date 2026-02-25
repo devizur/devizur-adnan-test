@@ -1,4 +1,14 @@
 /**
+ * Common API response shape for bookingFlowUrlHttp endpoints.
+ * All booking-flow APIs return { success, message?, data? }.
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
+/**
  * Shared base type for all catalog items (activities, foods, packages).
  * This keeps domain types independent from UI components.
  */
@@ -88,8 +98,19 @@ export interface BookingDapperStatus {
   versionNo: number;
 }
 
-export interface BookingDapperStatusesResponse {
-  success: boolean;
-  message: string;
-  data: BookingDapperStatus[];
+export type BookingDapperStatusesResponse = ApiResponse<BookingDapperStatus[]>;
+
+/** retrieveTimeSlots response data */
+export interface RetrieveTimeSlotsData {
+  bookingId?: string;
+  selectedDate?: string;
+  timeSlots?: Record<string, string[]>;
+}
+
+export type RetrieveTimeSlotsResponse = ApiResponse<RetrieveTimeSlotsData>;
+
+/** Result from availabilityApi.getSlots – raw timeSlots (all periods) + which periods have slots */
+export interface AvailabilitySlotsResult {
+  timeSlots: Record<string, string[]>;
+  periodsWithSlots: ("Morning" | "Afternoon" | "Night")[];
 }

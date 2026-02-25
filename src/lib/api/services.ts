@@ -1,4 +1,4 @@
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
@@ -189,37 +189,17 @@ export const packagesApi = {
     },
 };
 
-// Availability / slots API – returns start times with available count for the selected date, time of day, products and persons
-const timeOfDayToApiKey: Record<1 | 2 | 3, "Morning" | "Afternoon" | "Night"> = {
-    1: "Morning",
-    2: "Afternoon",
-    3: "Night",
-};
-
-/** Format "09:30" -> "9:30 am", "14:00" -> "2:00 pm" */
-function formatTimeForDisplay(raw: string): string {
-    const [h, m] = raw.split(":").map(Number);
-    if (h === 0) return `12:${String(m).padStart(2, "0")} am`;
-    if (h === 12) return `12:${String(m).padStart(2, "0")} pm`;
-    if (h < 12) return `${h}:${String(m).padStart(2, "0")} am`;
-    return `${h - 12}:${String(m).padStart(2, "0")} pm`;
-}
-
+// Availability / slots API – returns all time slots; filter by period client-side
 export const availabilityApi = {
 
-    async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
-        const { date, timeOfDay, selectedBookableProducts, adults, children, shopId } = params;
+    async getSlots(params: GetAvailabilitySlotsParams): Promise<AvailabilitySlotsResult> {
+        const { date, selectedBookableProducts, adults, children, shopId } = params;
+        const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [] };
         if (selectedBookableProducts.length === 0 || (adults + children) === 0) {
-            return [];
+            return empty;
         }
         try {
-            const response = await bookingFlowUrlHttp.post<{
-                success: boolean;
-                message?: string;
-                data?: {
-                    timeSlots?: Record<string, string[]>;
-                };
-            }>("/api/Booking/retrieveTimeSlots", {
+            const response = await bookingFlowUrlHttp.post<RetrieveTimeSlotsResponse>("/api/Booking/retrieveTimeSlots", {
                 bookingId: "",
                 shopId: String(shopId),
                 selectedDate: date,
@@ -229,19 +209,14 @@ export const availabilityApi = {
             });
             const { success, data } = response.data ?? {};
             if (!success || !data?.timeSlots) {
-                return [];
+                return empty;
             }
-            const apiKey = timeOfDayToApiKey[timeOfDay];
-            const rawSlots = data.timeSlots[apiKey];
-            if (!Array.isArray(rawSlots) || rawSlots.length === 0) {
-                return [];
-            }
-            return rawSlots.map((t) => ({
-                startTime: formatTimeForDisplay(t),
-                available: 1,
-            }));
+            const periodsWithSlots = (["Morning", "Afternoon", "Night"] as const).filter(
+                (k) => Array.isArray(data.timeSlots?.[k]) && data.timeSlots![k].length > 0
+            );
+            return { timeSlots: data.timeSlots ?? {}, periodsWithSlots };
         } catch {
-            return [];
+            return empty;
         }
     },
 };

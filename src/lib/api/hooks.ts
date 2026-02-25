@@ -2,7 +2,7 @@
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
 import { useAppSelector } from "@/store/hooks";
 
 // Query keys for React Query
@@ -33,7 +33,7 @@ export const queryKeys = {
     },
     availability: {
         slots: (params: GetAvailabilitySlotsParams) =>
-            ["availability", "slots", params.date, params.timeOfDay, params.shopId, params.selectedBookableProducts.map((p) => `${p.id}-${p.attributeOptionId}`).join(","), params.adults, params.children] as const,
+            ["availability", "slots", params.date, params.shopId, params.selectedBookableProducts.map((p) => `${p.id}-${p.attributeOptionId}`).join(","), params.adults, params.children] as const,
     },
     booking: {
         dapperStatuses: () => ["booking", "dapperStatuses"] as const,
@@ -118,7 +118,7 @@ export function usePackage(id: number): UseQueryResult<Package | null, Error> {
 }
 
 // Availability slots – enabled when date, time of day, and at least one product + persons are selected
-export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null): UseQueryResult<Slot[], Error> {
+export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null): UseQueryResult<AvailabilitySlotsResult, Error> {
     const hasProducts =
         params && (params.activityIds.length > 0 || params.packageIds.length > 0);
     const hasPersons = params && params.adults + params.children > 0;

@@ -33,7 +33,7 @@ export const queryKeys = {
     },
     availability: {
         slots: (params: GetAvailabilitySlotsParams) =>
-            ["availability", "slots", params.date, params.timeOfDay, params.activityIds.join(","), params.packageIds.join(","), params.adults, params.children] as const,
+            ["availability", "slots", params.date, params.timeOfDay, params.shopId, params.selectedBookableProducts.map((p) => `${p.id}-${p.attributeOptionId}`).join(","), params.adults, params.children] as const,
     },
     booking: {
         dapperStatuses: () => ["booking", "dapperStatuses"] as const,

@@ -190,42 +190,59 @@ export const packagesApi = {
 };
 
 // Availability / slots API – returns start times with available count for the selected date, time of day, products and persons
-const FALLBACK_SLOTS: Slot[] = [
-    { startTime: "6:00 am", available: 100 },
-    { startTime: "6:30 am", available: 100, discount: 5 },
-    { startTime: "7:00 am", available: 100 },
-    { startTime: "7:30 am", available: 100 },
-    { startTime: "8:00 am", available: 100 },
-    { startTime: "8:30 am", available: 100 },
-    { startTime: "9:00 am", available: 100 },
-    { startTime: "9:30 am", available: 100 },
-    { startTime: "10:00 am", available: 100 },
-    { startTime: "10:30 am", available: 100 },
-    { startTime: "11:00 am", available: 100, discount: 5 },
-    { startTime: "11:30 am", available: 100 },
-    { startTime: "12:00 pm", available: 100 },
-    { startTime: "12:30 pm", available: 100 },
-    { startTime: "1:00 pm", available: 100 },
-    { startTime: "1:30 pm", available: 100 },
-];
+const timeOfDayToApiKey: Record<1 | 2 | 3, "Morning" | "Afternoon" | "Night"> = {
+    1: "Morning",
+    2: "Afternoon",
+    3: "Night",
+};
 
-const timeOfDayMap: Record<1 | 2 | 3, string> = { 1: "morning", 2: "afternoon", 3: "evening" };
+/** Format "09:30" -> "9:30 am", "14:00" -> "2:00 pm" */
+function formatTimeForDisplay(raw: string): string {
+    const [h, m] = raw.split(":").map(Number);
+    if (h === 0) return `12:${String(m).padStart(2, "0")} am`;
+    if (h === 12) return `12:${String(m).padStart(2, "0")} pm`;
+    if (h < 12) return `${h}:${String(m).padStart(2, "0")} am`;
+    return `${h - 12}:${String(m).padStart(2, "0")} pm`;
+}
 
 export const availabilityApi = {
 
     async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
-        const { date, timeOfDay, activityIds, packageIds, adults, children } = params;
-        if (API_BASE_URL) {
-            const search = new URLSearchParams();
-            search.set("date", date);
-            search.set("timeOfDay", timeOfDayMap[timeOfDay]);
-            if (activityIds.length) search.set("activityIds", activityIds.join(","));
-            if (packageIds.length) search.set("packageIds", packageIds.join(","));
-            search.set("adults", String(adults));
-            search.set("children", String(children));
-            return fetchFromApi<Slot[]>(`/api/availability/slots?${search.toString()}`, "fetch availability slots");
+        const { date, timeOfDay, selectedBookableProducts, adults, children, shopId } = params;
+        if (selectedBookableProducts.length === 0 || (adults + children) === 0) {
+            return [];
         }
-        return [...FALLBACK_SLOTS];
+        try {
+            const response = await bookingFlowUrlHttp.post<{
+                success: boolean;
+                message?: string;
+                data?: {
+                    timeSlots?: Record<string, string[]>;
+                };
+            }>("/api/Booking/retrieveTimeSlots", {
+                bookingId: "",
+                shopId: String(shopId),
+                selectedDate: date,
+                selectedBookableProducts,
+                adultPaxNo: adults,
+                childPaxNo: children,
+            });
+            const { success, data } = response.data ?? {};
+            if (!success || !data?.timeSlots) {
+                return [];
+            }
+            const apiKey = timeOfDayToApiKey[timeOfDay];
+            const rawSlots = data.timeSlots[apiKey];
+            if (!Array.isArray(rawSlots) || rawSlots.length === 0) {
+                return [];
+            }
+            return rawSlots.map((t) => ({
+                startTime: formatTimeForDisplay(t),
+                available: 1,
+            }));
+        } catch {
+            return [];
+        }
     },
 };
 

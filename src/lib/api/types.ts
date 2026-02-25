@@ -4,7 +4,6 @@
  */
 export interface BaseProduct {
   id: number;
-  /** From API; same as id for datasync products */
   productId?: number;
   title: string;
   productName: string;
@@ -16,7 +15,6 @@ export interface BaseProduct {
   duration: string;
   discount?: string;
   timeSlots?: string[];
-  /** Optional supported game options (1, 2, 3) for activities */
   games?: (1 | 2 | 3)[];
 }
 
@@ -75,8 +73,11 @@ export interface GetAvailabilitySlotsParams {
   activityIds: number[];
   /** Selected package IDs */
   packageIds: number[];
+  /** Products with attribute (for retrieveTimeSlots API) */
+  selectedBookableProducts: { id: number; attributeOptionId: number }[];
   adults: number;
   children: number;
+  shopId: number;
 }
 
 // Booking dapper status (from /api/Booking/bookingDapperStatuses)

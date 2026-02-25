@@ -21,6 +21,7 @@ import { BookingGuests } from "./BookingGuests";
 
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
+  const shopId = useAppSelector((state) => state.shop.shopId);
   const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
@@ -36,8 +37,16 @@ export function Step1AvailabilitySelection() {
           timeOfDay,
           activityIds: selectedActivities.map((a) => a.activity.id),
           packageIds: selectedPackages.map((p) => p.id),
+          selectedBookableProducts: [
+            ...selectedActivities.map((a) => ({
+              id: (a.activity as { productId?: number }).productId ?? a.activity.id,
+              attributeOptionId: a.gameNo,
+            })),
+            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+          ],
           adults: persons.adults,
           children: persons.children,
+          shopId,
         }
       : null;
   const { data: slots = [], isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
@@ -250,7 +259,10 @@ export function Step1AvailabilitySelection() {
             {slotsParams && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Select start time">
                 {slotsLoading ? (
-                  <div className="col-span-full py-8 text-center text-gray-400 text-sm">Loading available times…</div>
+                  <div className="col-span-full py-8 flex flex-col items-center justify-center gap-3 text-gray-400 text-sm">
+                    <div className="w-8 h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+                    <span>Loading available times…</span>
+                  </div>
                 ) : (
                   slots.map((s) => (
                     <button

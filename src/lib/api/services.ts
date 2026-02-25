@@ -30,6 +30,29 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     }
 }
 
+/** Map API product shape to Activity (datasync/products/changes returns productId, productName, etc.) */
+function mapProductToActivity(raw: Record<string, unknown>): Activity {
+    const productId = Number(raw.productId) ?? 0;
+    const productName = String(raw.productName ?? "");
+    const fixedPrice = raw.fixedPrice != null ? Number(raw.fixedPrice) : null;
+    const category = String(raw.categoryName ?? raw.subCategoryName ?? "");
+    return {
+        id: productId,
+        productId,
+        title: productName,
+        productName,
+        price: fixedPrice != null ? `$${fixedPrice}` : "Unavailable",
+        fixedPrice: fixedPrice != null ? `${fixedPrice}` : "Unavailable",
+        unit: "per person",
+        rating: 4.5,
+        image: (raw.image as string) || "https://picsum.photos/400/200",
+        duration: "60 mins",
+        category,
+        discount: "$5 off",
+        timeSlots: ["9:00 am", "11:00 am", "2:00 pm"],
+        games: [1, 2, 3],
+    };
+}
 
 export const activitiesApi = {
 
@@ -39,10 +62,11 @@ export const activitiesApi = {
         search.set("page", String(page));
         search.set("pageSize", String(pageSize));
 
-        return fetchFromApi<Activity[]>(
+        const raw = await fetchFromApi<unknown[]>(
             `/api/datasync/products/changes?${search.toString()}`,
             "fetch activities"
         );
+        return Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
     },
 
 
@@ -54,19 +78,26 @@ export const activitiesApi = {
         searchParams.set("page", String(page));
         searchParams.set("pageSize", String(pageSize));
         if (query) {
-            // Assumes backend accepts `search` as a filter parameter
             searchParams.set("search", query);
         }
 
-        return fetchFromApi<Activity[]>(
+        const raw = await fetchFromApi<unknown[]>(
             `/api/datasync/products/changes?${searchParams.toString()}`,
             "search activities"
+        );
+        const all = Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
+        if (!query) return all;
+        const q = query.toLowerCase();
+        return all.filter(
+            (a) =>
+                a.productName.toLowerCase().includes(q) ||
+                a.category.toLowerCase().includes(q)
         );
     },
 
     async getById(id: number, shopId = 1): Promise<Activity | null> {
         const activities = await activitiesApi.getAll(shopId, 1, 100);
-        return activities.find((activity) => activity.id === id) || null;
+        return activities.find((a) => a.id === id || (a as any).productId === id) || null;
     },
 };
 

@@ -4,6 +4,8 @@
  */
 export interface BaseProduct {
   id: number;
+  /** From API; same as id for datasync products */
+  productId?: number;
   title: string;
   productName: string;
   price: string;

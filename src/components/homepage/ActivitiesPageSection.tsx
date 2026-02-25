@@ -65,7 +65,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {activities.map((activity, index) => {
-                    const key = (activity as any).productId ?? activity.id ?? index;
+                    const key = `${(activity as any).productId ?? activity.id}-${index}`;
                     return (
                         <ActivitiesCard
                             key={key}

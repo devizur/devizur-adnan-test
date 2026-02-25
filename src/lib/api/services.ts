@@ -6,7 +6,6 @@ import type { AxiosError } from "axios";
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-
 async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetch(url);
     if (!response.ok) {

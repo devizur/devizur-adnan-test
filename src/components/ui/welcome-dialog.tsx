@@ -84,7 +84,6 @@ export function WelcomeDialog() {
     }
   };
 
-  // ✅ filter logic
   const filteredShops = React.useMemo(() => {
     if (!search.trim()) return SHOPS;
 
@@ -161,10 +160,10 @@ export function WelcomeDialog() {
               <button
                 key={shop.id}
                 onClick={() => handleShopSelect(shop)}
-                className="group text-left relative h-44 lg:h-60  2xl:h-80 w-full rounded-xl overflow-hidden bg-cover bg-center hover:scale-[1.005] cursor-pointer transition-transform"
+                className="group text-left relative h-44 lg:h-60 2xl:h-80 w-full rounded-xl overflow-hidden bg-cover bg-center hover:scale-[1.005] cursor-pointer transition-transform"
                 style={{ backgroundImage: `url(${shop.image})` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/70 to-black/20" />
 
                 <div className="relative z-10 p-4">
                   <div className="flex flex-wrap gap-2 mb-2">

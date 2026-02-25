@@ -152,14 +152,6 @@ export function Step1AvailabilitySelection() {
                       {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
-                    <p className="text-[11px] text-gray-500 mt-1.5">
-                      {getAvailableOptions(activity).map((opt, i, arr) => (
-                        <span key={opt.label}>
-                          {opt.label} ${opt.price.toFixed(2)}
-                          {i < arr.length - 1 ? " · " : ""}
-                        </span>
-                      ))}
-                    </p>
                   </div>
                 </button>
                 {selected && (
@@ -173,15 +165,17 @@ export function Step1AvailabilitySelection() {
                           dispatch(setActivityGameNo({ activityId: activity.id, gameNo: opt.value }));
                         }}
                         aria-pressed={gameNo === opt.value}
-                        aria-label={`${opt.label} for ${activity.title}`}
+                        aria-label={`${opt.label} $${opt.price.toFixed(2)} for ${activity.title}`}
                         className={cn(
-                          "flex-1 min-h-10 py-2 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                          "flex-1 min-h-10 py-2 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                           gameNo === opt.value
                             ? "bg-primary-1 text-secondary"
                             : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
                         )}
                       >
-                        {opt.label}
+                        <span className=" ">{opt.label}</span>
+                        <span className="  opacity-80">/</span>
+                        <span className=" text-[10px] opacity-80">${opt.price.toFixed(2)}</span>
                       </button>
                     ))}
                   </div>
@@ -296,7 +290,7 @@ export function Step1AvailabilitySelection() {
                       disabled={s.available <= 0}
                       onClick={() => dispatch(setTimeSlot(s.startTime))}
                       aria-pressed={timeSlot === s.startTime}
-                      aria-label={`Select ${s.startTime}, ${s.available} available${s.discount ? `, $${s.discount} off` : ""}`}
+                     
                       className={cn(
                         "relative min-h-18 py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                         s.available <= 0 && "opacity-50 cursor-not-allowed",
@@ -309,11 +303,7 @@ export function Step1AvailabilitySelection() {
                     >
                       <span className="font-semibold text-sm">{s.startTime}</span>
                       <span className="text-xs opacity-70">{s.available} available</span>
-                      {s.discount != null && s.discount > 0 ? (
-                        <span className="absolute top-1 right-1 bg-primary-1 text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                          ${s.discount} off
-                        </span>
-                      ) : null}
+                      
                     </button>
                   ))
                 )}

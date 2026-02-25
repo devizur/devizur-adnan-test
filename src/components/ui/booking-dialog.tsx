@@ -198,7 +198,7 @@ export function BookingDialog({
               <AlertDialogTitle className="text-lg font-semibold text-white">
                 Create booking
               </AlertDialogTitle>
-              <span className="text-xs text-gray-500 mt-0.5 block">Shop ID: {shopId}</span>
+              
             </div>
             <button
               type="button"

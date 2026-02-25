@@ -15,6 +15,7 @@ const SELECTED_SHOP_KEY = "welcome-selected-shop";
 const SHOPS = [
   {
     id: 1,
+    shopId: 1,
     title: "Santorini Villa",
     description: "Luxury villa overlooking the Aegean Sea, offering breathtaking sunset views and a private infinity pool for ultimate relaxation.",
     tags: [{ type: "rating", label: "4.5", icon: "star" }, { type: "stay", label: "3 Night Stay" }],
@@ -22,6 +23,7 @@ const SHOPS = [
   },
   {
     id: 2,
+    shopId: 2,
     title: "Swiss Chalet",
     description: "Cozy wooden chalet nestled in the Swiss Alps, offering a warm fireplace, scenic mountain views, and direct access to ski slopes.",
     tags: [{ type: "badge", label: "Guest Favorite", icon: "pin" }, { type: "stay", label: "4 Night Stay" }],
@@ -29,6 +31,7 @@ const SHOPS = [
   },
   {
     id: 3,
+    shopId: 3,
     title: "Lakeside Retreat",
     description: "Peaceful retreat by the lake with a private dock, kayaks, and stunning sunrise views.",
     tags: [{ type: "rating", label: "4.8", icon: "star" }, { type: "stay", label: "2 Night Stay" }],
@@ -36,6 +39,7 @@ const SHOPS = [
   },
   {
     id: 4,
+    shopId: 4,
     title: "Urban Loft",
     description: "Modern loft in the heart of the city with rooftop access and skyline views.",
     tags: [{ type: "badge", label: "Trending", icon: "pin" }, { type: "stay", label: "1 Night Stay" }],
@@ -43,6 +47,7 @@ const SHOPS = [
   },
   {
     id: 5,
+    shopId: 5,
     title: "Garden Cottage",
     description: "Charming cottage with a private garden, perfect for a quiet getaway.",
     tags: [{ type: "rating", label: "4.9", icon: "star" }, { type: "stay", label: "5 Night Stay" }],
@@ -95,7 +100,7 @@ export function WelcomeDialog() {
       }}
     >
       <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:min-w-[90%] sm:w-4xl h-[90vh] lg:h-[95vh] bg-secondary-2 backdrop-blur-xl p-0 gap-0 text-white border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col shadow-2xl">
-        
+
         {/* Header */}
         <AlertDialogHeader className="px-6 py-5 sm:px-8 sm:py-6 shrink-0 border-b border-white/5">
           <div className="flex items-center gap-3 sm:gap-4 justify-center">

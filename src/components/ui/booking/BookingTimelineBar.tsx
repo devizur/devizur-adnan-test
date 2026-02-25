@@ -185,7 +185,7 @@ export function BookingTimelineBar({
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
   return (
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4 overflow-hidden min-w-0", className)}>
+    <div className={cn("  bg-[#1e1e1e] border border-gray-800 p-2 rounded-sm   overflow-hidden min-w-0", className)}>
       {/* Top row: Start | time markers | Finish */}
       <div className="relative flex items-start gap-2 mb-1 min-w-0">
         <span className="text-[11px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
@@ -209,7 +209,7 @@ export function BookingTimelineBar({
         </div>
         <span className="text-[11px] text-primary-1 uppercase tracking-wider shrink-0">Finish</span>
       </div>
-      {/* Activity bar */}
+      
       <div className="flex h-8 rounded-lg overflow-hidden border border-gray-700/50 min-w-0">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;

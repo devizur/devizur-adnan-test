@@ -193,59 +193,67 @@ export function BookingDialog({
         className="min-w-[90%] max-w-4xl h-[90vh] flex flex-col bg-[#161616] p-0 gap-0 text-white border border-gray-800/80 rounded-2xl overflow-hidden"
       >
         <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800/80 shrink-0">
-          <div className="flex items-center justify-between w-full">
-            <div>
-              <AlertDialogTitle className="text-lg font-semibold text-white">
+          <div className="flex items-center justify-between w-full pr-4">
+           
+           
+            <div className="mr-4">
+              <AlertDialogTitle className="text-xl font-semibold text-white whitespace-nowrap">
                 Create booking
               </AlertDialogTitle>
-              
             </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="min-h-11 min-w-11 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
-              aria-label="Close dialog"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex items-center justify-between gap-2 mt-4 w-full">
-            <div className="flex items-center gap-1">
-              {STEPS.map((s, i) => (
-                <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                      step === s.id && "bg-primary-1/15 text-primary-1",
-                      step > s.id && "text-gray-400",
-                      step < s.id && "text-gray-500"
-                    )}
-                  >
-                    <span
+
+            <div className="flex items-center justify-between gap-2   ">
+              <div className="flex items-center gap-1">
+                {STEPS.map((s, i) => (
+                  <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
+                    <div
                       className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                        step === s.id && "bg-primary-1 text-black",
-                        step > s.id && "bg-gray-700 text-gray-300",
-                        step < s.id && "bg-gray-800 text-gray-500"
+                        "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                        step === s.id && "bg-primary-1/15 text-primary-1",
+                        step > s.id && "text-gray-400",
+                        step < s.id && "text-gray-500"
                       )}
                     >
-                      {step > s.id ? "✓" : s.id}
-                    </span>
-                    <span className="hidden sm:inline">{s.label}</span>
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <span className="text-gray-700 px-0.5">›</span>
-                  )}
-                </React.Fragment>
-              ))}
+                      <span
+                        className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                          step === s.id && "bg-primary-1 text-black",
+                          step > s.id && "bg-gray-700 text-gray-300",
+                          step < s.id && "bg-gray-800 text-gray-500"
+                        )}
+                      >
+                        {step > s.id ? "✓" : s.id}
+                      </span>
+                      <span className="hidden sm:inline">{s.label}</span>
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <span className="text-gray-700 px-0.5">›</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-1/10 border border-primary-1/30">
-              <Clock className="w-4 h-4 text-primary-1" />
-              <span className="text-sm font-medium text-primary-1">
-                {formattedRemaining} left
-              </span>
+
+            <div className="flex items-center gap-2 ">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-1/10 border border-primary-1/30 whitespace-nowrap">
+                <Clock className="w-4 h-4 text-primary-1" />
+                <span className="text-sm font-medium text-primary-1">
+                  {formattedRemaining} left
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleClose}
+                className="min-h-11 min-w-11 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+                aria-label="Close dialog"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
+
           </div>
+
         </AlertDialogHeader>
 
         <div

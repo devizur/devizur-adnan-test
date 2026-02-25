@@ -36,21 +36,21 @@ export function Step1AvailabilitySelection() {
   const slotsParams =
     date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
       ? {
-          date,
-          timeOfDay,
-          activityIds: selectedActivities.map((a) => a.activity.id),
-          packageIds: selectedPackages.map((p) => p.id),
-          selectedBookableProducts: [
-            ...selectedActivities.map((a) => ({
-              id: (a.activity as { productId?: number }).productId ?? a.activity.id,
-              attributeOptionId: a.gameNo,
-            })),
-            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
-          ],
-          adults: persons.adults,
-          children: persons.children,
-          shopId,
-        }
+        date,
+        timeOfDay,
+        activityIds: selectedActivities.map((a) => a.activity.id),
+        packageIds: selectedPackages.map((p) => p.id),
+        selectedBookableProducts: [
+          ...selectedActivities.map((a) => ({
+            id: (a.activity as { productId?: number }).productId ?? a.activity.id,
+            attributeOptionId: a.gameNo,
+          })),
+          ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+        ],
+        adults: persons.adults,
+        children: persons.children,
+        shopId,
+      }
       : null;
   const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
   const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
@@ -189,7 +189,7 @@ export function Step1AvailabilitySelection() {
               </div>
             );
           })}
-        
+
           {suggestedPackages.length > 0 && (
             <>
               <p className="text-[11px] text-gray-500 font-medium mt-5 mb-2 uppercase tracking-wider">Packages</p>
@@ -242,12 +242,16 @@ export function Step1AvailabilitySelection() {
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#161616]">
         <div className="px-5 py-4 border-b border-gray-800/80 flex flex-col gap-4">
-          <BookingGuests />
+          <div className="flex justify-between">
 
-          <BookingCalendar
-            value={date ?? ""}
-            onChange={(d) => dispatch(setDate(d))}
-          />
+            <BookingGuests />
+
+            <BookingCalendar
+              value={date ?? ""}
+              onChange={(d) => dispatch(setDate(d))}
+            />
+          </div>
+
 
           <BookingTimelineBar
             bookingId={reduxBookingId || slotsData?.bookingId}
@@ -292,7 +296,7 @@ export function Step1AvailabilitySelection() {
                     : !timeSlot
                       ? "Start time · Select a time below"
                       : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
-            }
+              }
             </p>
             {slotsParams && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Select start time">
@@ -314,7 +318,7 @@ export function Step1AvailabilitySelection() {
                       disabled={s.available <= 0}
                       onClick={() => dispatch(setTimeSlot(s.startTime))}
                       aria-pressed={timeSlot === s.startTime}
-                     
+
                       className={cn(
                         "relative min-h-18 py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                         s.available <= 0 && "opacity-50 cursor-not-allowed",
@@ -327,7 +331,7 @@ export function Step1AvailabilitySelection() {
                     >
                       <span className="font-semibold text-sm">{s.startTime}</span>
                       <span className="text-xs opacity-70">{s.available} available</span>
-                      
+
                     </button>
                   ))
                 )}

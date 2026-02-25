@@ -17,7 +17,7 @@ function parseDurationMins(value: string): number {
   return Math.round(num);
 }
 
-/** Parse "HH:mm" offset to minutes (e.g. "00:43" → 43, "03:16" → 196). */
+/** Parse "HH:mm" to minutes since midnight (e.g. "09:00" → 540, "13:57" → 837). */
 function parseHhMmToMinutes(s: string): number {
   const parts = String(s || "00:00").trim().split(":");
   const h = parseInt(parts[0], 10) || 0;
@@ -117,12 +117,14 @@ export function BookingTimelineBar({
   const { startMinutes, totalMins, segments } = React.useMemo(() => {
     const start = parseDisplayTimeToMinutes(effectiveTimeSlot);
     if (steps.length > 0) {
+      const firstStart = parseHhMmToMinutes(steps[0]!.startingTime);
       const lastEnd = parseHhMmToMinutes(steps[steps.length - 1]!.endingTime);
+      const total = lastEnd - firstStart;
       const segs = steps.map((s) => ({
         name: s.itemName,
         durationMins: parseHhMmToMinutes(s.endingTime) - parseHhMmToMinutes(s.startingTime),
       }));
-      return { startMinutes: start, totalMins: lastEnd, segments: segs };
+      return { startMinutes: firstStart, totalMins: total, segments: segs };
     }
     if (slotsResponseReceived && fallbackSegments.length > 0) {
       const total = fallbackSegments.reduce((a, s) => a + s.durationMins, 0);
@@ -133,7 +135,7 @@ export function BookingTimelineBar({
 
   const timeMarkers = React.useMemo(() => {
     const markers: number[] = [];
-    const interval = 30;
+    const interval = 60;
     const end = startMinutes + totalMins;
     let t = Math.floor(startMinutes / interval) * interval;
     while (t <= end) {
@@ -183,11 +185,11 @@ export function BookingTimelineBar({
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
   return (
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4 overflow-hidden min-w-0", className)}>
       {/* Top row: Start | time markers | Finish */}
-      <div className="relative flex items-start gap-2 mb-1">
+      <div className="relative flex items-start gap-2 mb-1 min-w-0">
         <span className="text-[11px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
-        <div className="flex-1 relative min-h-[20px]">
+        <div className="flex-1 relative min-h-[20px] min-w-0 overflow-hidden">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
             const clamped = Math.max(0, Math.min(100, pct));
@@ -208,7 +210,7 @@ export function BookingTimelineBar({
         <span className="text-[11px] text-primary-1 uppercase tracking-wider shrink-0">Finish</span>
       </div>
       {/* Activity bar */}
-      <div className="flex h-8 rounded-lg overflow-hidden border border-gray-700/50">
+      <div className="flex h-8 rounded-lg overflow-hidden border border-gray-700/50 min-w-0">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
@@ -222,14 +224,14 @@ export function BookingTimelineBar({
                 isFirst && "rounded-l-md",
                 isLast && "rounded-r-md"
               )}
-              style={{ flex: `0 0 ${pct}%` }}
+              style={{ flex: `0 0 ${Math.max(0, pct)}%`, minWidth: 0 }}
               title={`${seg.name} (${seg.durationMins} mins)`}
             />
           );
         })}
       </div>
       {/* Activity labels */}
-      <div className="flex mt-1.5 overflow-hidden">
+      <div className="flex mt-1.5 overflow-hidden min-w-0">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
@@ -237,7 +239,7 @@ export function BookingTimelineBar({
             <div
               key={`${seg.name}-${idx}`}
               className={cn("text-[11px] font-medium truncate", color.text)}
-              style={{ flex: `0 0 ${pct}%`, minWidth: 0 }}
+              style={{ flex: `0 0 ${Math.max(0, pct)}%`, minWidth: 0 }}
               title={seg.name}
             >
               {seg.name}

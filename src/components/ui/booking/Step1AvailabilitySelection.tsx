@@ -9,6 +9,7 @@ import {
   setDate,
   setTimeOfDay,
   setTimeSlot,
+  setBookingId,
   addActivity,
   removeActivity,
   setActivityGameNo,
@@ -24,7 +25,7 @@ import { BookingTimelineBar } from "./BookingTimelineBar";
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
   const shopId = useAppSelector((state) => state.shop.shopId);
-  const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages, persons } =
+  const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
@@ -87,6 +88,10 @@ export function Step1AvailabilitySelection() {
       dispatch(setDate(toLocalDateString(new Date())));
     }
   }, [date, dispatch]);
+
+  React.useEffect(() => {
+    if (slotsData?.bookingId) dispatch(setBookingId(slotsData.bookingId));
+  }, [slotsData?.bookingId, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -245,9 +250,10 @@ export function Step1AvailabilitySelection() {
           />
 
           <BookingTimelineBar
-            bookingId={slotsData?.bookingId}
+            bookingId={reduxBookingId || slotsData?.bookingId}
             timeSlot={timeSlot}
             selectedDate={date ?? undefined}
+            slotsResponseReceived={!!slotsData}
             selectedActivities={selectedActivities}
             selectedPackages={selectedPackages}
           />
@@ -281,7 +287,11 @@ export function Step1AvailabilitySelection() {
                 ? "Start time · Select date, time of day, at least one activity or package, and guests"
                 : slotsLoading
                   ? "Start time · Loading…"
-                  : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
+                  : slots.length === 0
+                    ? "Start time · No slots available"
+                    : !timeSlot
+                      ? "Start time · Select a time below"
+                      : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
             }
             </p>
             {slotsParams && (
@@ -290,6 +300,11 @@ export function Step1AvailabilitySelection() {
                   <div className="col-span-full py-8 flex flex-col items-center justify-center gap-3 text-gray-400 text-sm">
                     <div className="w-8 h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
                     <span>Loading available times…</span>
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="col-span-full py-8 flex flex-col items-center justify-center gap-2 text-gray-400 text-sm text-center px-4">
+                    <span>No time slots available for this period.</span>
+                    <span className="text-xs text-gray-500">Try selecting another time of day or date.</span>
                   </div>
                 ) : (
                   slots.map((s) => (

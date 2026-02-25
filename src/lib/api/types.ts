@@ -126,4 +126,9 @@ export interface GenerateBookingItemStep {
   itemDuration: string;
 }
 
-export type GenerateBookingItemStepsResponse = ApiResponse<GenerateBookingItemStep[]>;
+/** generateBookingItemSteps can return bookingId for use in subsequent calls */
+export interface GenerateBookingItemStepsResponseData extends ApiResponse<GenerateBookingItemStep[]> {
+  bookingId?: string;
+}
+
+export type GenerateBookingItemStepsResponse = GenerateBookingItemStepsResponseData;

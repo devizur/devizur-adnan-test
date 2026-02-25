@@ -135,12 +135,13 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
     });
 }
 
-// Booking hooks – generateBookingItemSteps (timeline bar)
+// Booking hooks – generateBookingItemSteps (timeline bar). Only runs after retrieveTimeSlots has returned.
 export function useGenerateBookingItemSteps(
     bookingId: string | undefined,
     selectedSlot: string | undefined,
-    selectedDate: string | undefined
-): UseQueryResult<GenerateBookingItemStep[], Error> {
+    selectedDate: string | undefined,
+    slotsResponseReceived: boolean
+): UseQueryResult<{ steps: GenerateBookingItemStep[]; bookingId?: string }, Error> {
     return useQuery({
         queryKey: queryKeys.booking.itemSteps(
             bookingId ?? "",
@@ -153,7 +154,7 @@ export function useGenerateBookingItemSteps(
                 selectedSlot: selectedSlot ?? "",
                 selectedDate: selectedDate ?? "",
             }),
-        enabled: !!selectedDate && !!selectedSlot,
+        enabled: slotsResponseReceived && !!selectedDate && !!selectedSlot,
         staleTime: 2 * 60 * 1000,
     });
 }

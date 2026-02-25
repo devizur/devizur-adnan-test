@@ -4,6 +4,8 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { useGenerateBookingItemSteps } from "@/lib/api/hooks";
 import { displayTimeToApiSlot } from "@/lib/utils";
+import { useAppDispatch } from "@/store";
+import { setBookingId } from "@/store/bookingSlice";
 import type { Activity, Package } from "@/lib/api/types";
 
 /** Parse duration string like "60 mins" to minutes. */
@@ -58,6 +60,8 @@ const SEGMENT_COLORS = [
 export interface BookingTimelineBarProps {
   /** Booking ID from retrieveTimeSlots (optional – API called with "" if missing) */
   bookingId: string | undefined;
+  /** Must be true before generateBookingItemSteps is called (i.e. retrieveTimeSlots has returned) */
+  slotsResponseReceived?: boolean;
   /** Display time slot e.g. "9:00 am" */
   timeSlot: string;
   /** Selected date YYYY-MM-DD (from BookingCalendar) */
@@ -72,18 +76,26 @@ export function BookingTimelineBar({
   bookingId,
   timeSlot,
   selectedDate,
+  slotsResponseReceived = false,
   selectedActivities = [],
   selectedPackages = [],
   className,
 }: BookingTimelineBarProps) {
+  const dispatch = useAppDispatch();
   const effectiveTimeSlot = timeSlot || "9:00 am";
   const selectedSlotApi = displayTimeToApiSlot(effectiveTimeSlot);
 
-  const { data: steps = [], isLoading } = useGenerateBookingItemSteps(
+  const { data, isLoading } = useGenerateBookingItemSteps(
     bookingId ?? "",
     selectedSlotApi,
-    selectedDate
+    selectedDate,
+    slotsResponseReceived
   );
+  const steps = data?.steps ?? [];
+
+  React.useEffect(() => {
+    if (data?.bookingId) dispatch(setBookingId(data.bookingId));
+  }, [data?.bookingId, dispatch]);
 
   const fallbackSegments = React.useMemo(() => {
     const items: { name: string; durationMins: number }[] = [];
@@ -112,12 +124,12 @@ export function BookingTimelineBar({
       }));
       return { startMinutes: start, totalMins: lastEnd, segments: segs };
     }
-    if (fallbackSegments.length > 0) {
+    if (slotsResponseReceived && fallbackSegments.length > 0) {
       const total = fallbackSegments.reduce((a, s) => a + s.durationMins, 0);
       return { startMinutes: start, totalMins: total, segments: fallbackSegments };
     }
     return { startMinutes: start, totalMins: 60, segments: [] };
-  }, [steps, fallbackSegments, effectiveTimeSlot]);
+  }, [steps, fallbackSegments, effectiveTimeSlot, slotsResponseReceived]);
 
   const timeMarkers = React.useMemo(() => {
     const markers: number[] = [];
@@ -133,20 +145,42 @@ export function BookingTimelineBar({
   }, [startMinutes, totalMins]);
 
   const hasSegments = segments.length > 0;
-  const canShow = selectedDate && hasSegments;
+  const isFetching = slotsResponseReceived && !!selectedDate && !!effectiveTimeSlot;
+  const canShowContent = selectedDate && hasSegments;
 
-  if (!canShow) return null;
+  if (!selectedDate) return null;
 
-  if (isLoading && !hasSegments) {
-    return (
-      <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
-        <div className="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
-          <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
-          Loading timeline…
-        </div>
+  const LoadingState = () => (
+    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+      <div className="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
+        <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+        <span>Loading timeline…</span>
       </div>
-    );
-  }
+    </div>
+  );
+
+  const EmptyState = () => (
+    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+      <div className="flex flex-col items-center justify-center gap-2 py-6 text-center text-gray-400 text-sm px-4">
+        <span>No timeline data available.</span>
+        <span className="text-xs text-gray-500">Select a time slot or check back later.</span>
+      </div>
+    </div>
+  );
+
+  const InitState = () => (
+   
+    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+      <div className="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
+        
+        <span>Select activities, guests, and a start time below.</span>
+      </div>
+    </div>
+  
+  );
+
+  if (isLoading && isFetching) return <LoadingState />;
+  if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
   return (
     <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>

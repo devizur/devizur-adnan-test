@@ -230,14 +230,25 @@ export const bookingApi = {
         bookingId: string;
         selectedSlot: string;   // "09:00" or slot id
         selectedDate: string;   // YYYY-MM-DD
-    }): Promise<{ serial: number; startingTime: string; endingTime: string; itemName: string; itemDuration: string }[]> {
+    }): Promise<{ steps: { serial: number; startingTime: string; endingTime: string; itemName: string; itemDuration: string }[]; bookingId?: string }> {
         const response = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
             "/api/Booking/generateBookingItemSteps",
             params
         );
-        const { success, data } = response.data ?? {};
-        if (!success || !Array.isArray(data)) return [];
-        return data;
+        const { success, data, bookingId } = response.data ?? {};
+        if (!success || !Array.isArray(data)) return { steps: [] };
+        let steps = data;
+        let returnedBookingId = bookingId;
+        if (returnedBookingId && !params.bookingId) {
+            const second = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
+                "/api/Booking/generateBookingItemSteps",
+                { ...params, bookingId: returnedBookingId }
+            );
+            const s = second.data ?? {};
+            if (s.success && Array.isArray(s.data)) steps = s.data;
+            if (s.bookingId) returnedBookingId = s.bookingId;
+        }
+        return { steps, bookingId: returnedBookingId };
     },
     async getDapperStatuses(): Promise<BookingDapperStatus[]> {
         const response = await bookingFlowUrlHttp.get<BookingDapperStatusesResponse>(

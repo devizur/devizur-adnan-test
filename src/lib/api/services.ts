@@ -1,4 +1,4 @@
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult, GenerateBookingItemStepsResponse } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
@@ -193,7 +193,7 @@ export const availabilityApi = {
 
     async getSlots(params: GetAvailabilitySlotsParams): Promise<AvailabilitySlotsResult> {
         const { date, selectedBookableProducts, adults, children, shopId } = params;
-        const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [] };
+        const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [], bookingId: undefined };
         if (selectedBookableProducts.length === 0 || (adults + children) === 0) {
             return empty;
         }
@@ -211,9 +211,13 @@ export const availabilityApi = {
                 return empty;
             }
             const periodsWithSlots = (["Morning", "Afternoon", "Night"] as const).filter(
-                (k) => Array.isArray(data.timeSlots?.[k]) && data.timeSlots![k].length > 0
+                (k) => data.timeSlots && k in data.timeSlots && Array.isArray(data.timeSlots[k])
             );
-            return { timeSlots: data.timeSlots ?? {}, periodsWithSlots };
+            return {
+                timeSlots: data.timeSlots ?? {},
+                periodsWithSlots,
+                bookingId: data.bookingId,
+            };
         } catch {
             return empty;
         }
@@ -222,6 +226,19 @@ export const availabilityApi = {
 
 // Booking API – uses bookingFlowUrlHttp (UAT backend)
 export const bookingApi = {
+    async generateBookingItemSteps(params: {
+        bookingId: string;
+        selectedSlot: string;   // "09:00" or slot id
+        selectedDate: string;   // YYYY-MM-DD
+    }): Promise<{ serial: number; startingTime: string; endingTime: string; itemName: string; itemDuration: string }[]> {
+        const response = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
+            "/api/Booking/generateBookingItemSteps",
+            params
+        );
+        const { success, data } = response.data ?? {};
+        if (!success || !Array.isArray(data)) return [];
+        return data;
+    },
     async getDapperStatuses(): Promise<BookingDapperStatus[]> {
         const response = await bookingFlowUrlHttp.get<BookingDapperStatusesResponse>(
             "/api/Booking/bookingDapperStatuses"

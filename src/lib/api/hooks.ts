@@ -2,6 +2,7 @@
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
+import type { GenerateBookingItemStep } from "./types";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
 import { useAppSelector } from "@/store/hooks";
 
@@ -37,6 +38,8 @@ export const queryKeys = {
     },
     booking: {
         dapperStatuses: () => ["booking", "dapperStatuses"] as const,
+        itemSteps: (bookingId: string, selectedSlot: string, selectedDate: string) =>
+            ["booking", "itemSteps", bookingId, selectedSlot, selectedDate] as const,
     },
 };
 
@@ -129,6 +132,29 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
         queryFn: () => availabilityApi.getSlots(params!),
         enabled: !!params && hasDate && !!hasProducts && !!hasPersons,
         staleTime: 2 * 60 * 1000, // 2 minutes – slots can change
+    });
+}
+
+// Booking hooks – generateBookingItemSteps (timeline bar)
+export function useGenerateBookingItemSteps(
+    bookingId: string | undefined,
+    selectedSlot: string | undefined,
+    selectedDate: string | undefined
+): UseQueryResult<GenerateBookingItemStep[], Error> {
+    return useQuery({
+        queryKey: queryKeys.booking.itemSteps(
+            bookingId ?? "",
+            selectedSlot ?? "",
+            selectedDate ?? ""
+        ),
+        queryFn: () =>
+            bookingApi.generateBookingItemSteps({
+                bookingId: bookingId ?? "",
+                selectedSlot: selectedSlot ?? "",
+                selectedDate: selectedDate ?? "",
+            }),
+        enabled: !!selectedDate && !!selectedSlot,
+        staleTime: 2 * 60 * 1000,
     });
 }
 

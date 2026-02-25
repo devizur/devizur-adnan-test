@@ -31,3 +31,16 @@ export function formatTimeForDisplay(raw: string): string {
   if (h < 12) return `${h}:${String(m).padStart(2, "0")} am`;
   return `${h - 12}:${String(m).padStart(2, "0")} pm`;
 }
+
+/** Convert "9:00 am" / "2:30 pm" → "09:00" / "14:30" for API */
+export function displayTimeToApiSlot(display: string): string {
+  const s = String(display || "").trim().toLowerCase();
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (!m) return "09:00";
+  let h = parseInt(m[1], 10) || 0;
+  const mins = parseInt(m[2], 10) || 0;
+  const isPm = m[3] === "pm";
+  if (isPm && h !== 12) h += 12;
+  if (!isPm && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}

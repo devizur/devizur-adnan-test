@@ -19,6 +19,7 @@ import { Check } from "lucide-react";
 import { formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
+import { BookingTimelineBar } from "./BookingTimelineBar";
 
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
@@ -243,6 +244,14 @@ export function Step1AvailabilitySelection() {
             onChange={(d) => dispatch(setDate(d))}
           />
 
+          <BookingTimelineBar
+            bookingId={slotsData?.bookingId}
+            timeSlot={timeSlot}
+            selectedDate={date ?? undefined}
+            selectedActivities={selectedActivities}
+            selectedPackages={selectedPackages}
+          />
+
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
             {visibleShifts.map((tab) => (
               <button
@@ -250,7 +259,7 @@ export function Step1AvailabilitySelection() {
                 type="button"
                 role="tab"
                 aria-selected={timeOfDay === tab.id}
-                aria-label={`${tab.label} sessions`}
+                aria-label={`${tab.apiKey} sessions`}
                 onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
                 className={cn(
                   "flex-1 min-h-11 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
@@ -259,7 +268,7 @@ export function Step1AvailabilitySelection() {
                     : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
                 )}
               >
-                {tab.label}
+                {tab.apiKey}
               </button>
             ))}
           </div>

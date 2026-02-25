@@ -113,4 +113,17 @@ export type RetrieveTimeSlotsResponse = ApiResponse<RetrieveTimeSlotsData>;
 export interface AvailabilitySlotsResult {
   timeSlots: Record<string, string[]>;
   periodsWithSlots: ("Morning" | "Afternoon" | "Night")[];
+  /** Returned by backend when available (for generateBookingItemSteps) */
+  bookingId?: string;
 }
+
+/** Single step from generateBookingItemSteps API */
+export interface GenerateBookingItemStep {
+  serial: number;
+  startingTime: string;  // "00:00", "00:43" – HH:mm offset from slot start
+  endingTime: string;
+  itemName: string;
+  itemDuration: string;
+}
+
+export type GenerateBookingItemStepsResponse = ApiResponse<GenerateBookingItemStep[]>;

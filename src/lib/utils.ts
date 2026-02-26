@@ -21,4 +21,26 @@ export function formatPrice(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-export const DemoImageUrl = "https://picsum.photos/400/200"
+export const DemoImageUrl = "https://picsum.photos/400/200";
+
+/** Format "09:30" → "9:30 am", "14:00" → "2:00 pm" */
+export function formatTimeForDisplay(raw: string): string {
+  const [h, m] = raw.split(":").map(Number);
+  if (h === 0) return `12:${String(m).padStart(2, "0")} am`;
+  if (h === 12) return `12:${String(m).padStart(2, "0")} pm`;
+  if (h < 12) return `${h}:${String(m).padStart(2, "0")} am`;
+  return `${h - 12}:${String(m).padStart(2, "0")} pm`;
+}
+
+/** Convert "9:00 am" / "2:30 pm" → "09:00" / "14:30" for API */
+export function displayTimeToApiSlot(display: string): string {
+  const s = String(display || "").trim().toLowerCase();
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (!m) return "09:00";
+  let h = parseInt(m[1], 10) || 0;
+  const mins = parseInt(m[2], 10) || 0;
+  const isPm = m[3] === "pm";
+  if (isPm && h !== 12) h += 12;
+  if (!isPm && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}

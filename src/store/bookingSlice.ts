@@ -37,6 +37,8 @@ export interface BookingState {
   timeOfDay: 1 | 2 | 3;
   /** Step 1: selected time slot e.g. "11:00 am" */
   timeSlot: string;
+  /** From retrieveTimeSlots or generateBookingItemSteps – used for subsequent API calls */
+  bookingId: string;
   /** Step 1: number of persons */
   persons: BookingPersons;
   /** Step 1: selected activities (with game no) */
@@ -66,6 +68,7 @@ const initialState: BookingState = {
   date: "",
   timeOfDay: 1,
   timeSlot: "",
+  bookingId: "",
   persons: { adults: 0, children: 0 },
   selectedActivities: [],
   selectedPackages: [],
@@ -103,6 +106,9 @@ const bookingSlice = createSlice({
     },
     setTimeSlot: (state, action: PayloadAction<string>) => {
       state.timeSlot = action.payload;
+    },
+    setBookingId: (state, action: PayloadAction<string>) => {
+      state.bookingId = action.payload;
     },
     setPersons: (state, action: PayloadAction<BookingPersons>) => {
       state.persons = action.payload;
@@ -184,6 +190,7 @@ export const {
   setDate,
   setTimeOfDay,
   setTimeSlot,
+  setBookingId,
   setPersons,
   incrementAdults,
   decrementAdults,

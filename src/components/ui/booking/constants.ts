@@ -24,7 +24,7 @@ export const SLOTS = [
 ] as const;
 
 export const SHIFT = [
-  { id: 1, label: "Morning" },
-  { id: 2, label: "Afternoon" },
-  { id: 3, label: "Evening" },
+  { id: 1, label: "Morning", apiKey: "Morning" as const },
+  { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
+  { id: 3, label: "Evening", apiKey: "Night" as const },
 ] as const;

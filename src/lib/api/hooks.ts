@@ -2,7 +2,9 @@
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus } from "./types";
+import type { GenerateBookingItemStep } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
+import { useAppSelector } from "@/store/hooks";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -32,10 +34,12 @@ export const queryKeys = {
     },
     availability: {
         slots: (params: GetAvailabilitySlotsParams) =>
-            ["availability", "slots", params.date, params.timeOfDay, params.activityIds.join(","), params.packageIds.join(","), params.adults, params.children] as const,
+            ["availability", "slots", params.date, params.shopId, params.selectedBookableProducts.map((p) => `${p.id}-${p.attributeOptionId}`).join(","), params.adults, params.children] as const,
     },
     booking: {
         dapperStatuses: () => ["booking", "dapperStatuses"] as const,
+        itemSteps: (bookingId: string, selectedSlot: string, selectedDate: string) =>
+            ["booking", "itemSteps", bookingId, selectedSlot, selectedDate] as const,
     },
 };
 
@@ -45,6 +49,7 @@ export function useActivities(
     page = 1,
     pageSize = 9
 ): UseQueryResult<Activity[], Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
@@ -53,20 +58,21 @@ export function useActivities(
 
     return useQuery({
         queryKey: hasSearch
-            ? [...queryKeys.activities.search(query), "page", effectivePage, "pageSize", effectivePageSize]
-            : [...queryKeys.activities.list(), "page", effectivePage, "pageSize", effectivePageSize],
+            ? [...queryKeys.activities.search(query), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize]
+            : [...queryKeys.activities.list(), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize],
         queryFn: () =>
             hasSearch
-                ? activitiesApi.search(query, effectivePage, effectivePageSize)
-                : activitiesApi.getAll(effectivePage, effectivePageSize),
+                ? activitiesApi.search(query, shopId, effectivePage, effectivePageSize)
+                : activitiesApi.getAll(shopId, effectivePage, effectivePageSize),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
 
 export function useActivity(id: number): UseQueryResult<Activity | null, Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     return useQuery({
-        queryKey: queryKeys.activities.detail(id),
-        queryFn: () => activitiesApi.getById(id),
+        queryKey: [...queryKeys.activities.detail(id), "shopId", shopId],
+        queryFn: () => activitiesApi.getById(id, shopId),
         enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });
@@ -115,7 +121,7 @@ export function usePackage(id: number): UseQueryResult<Package | null, Error> {
 }
 
 // Availability slots – enabled when date, time of day, and at least one product + persons are selected
-export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null): UseQueryResult<Slot[], Error> {
+export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null): UseQueryResult<AvailabilitySlotsResult, Error> {
     const hasProducts =
         params && (params.activityIds.length > 0 || params.packageIds.length > 0);
     const hasPersons = params && params.adults + params.children > 0;
@@ -126,6 +132,30 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
         queryFn: () => availabilityApi.getSlots(params!),
         enabled: !!params && hasDate && !!hasProducts && !!hasPersons,
         staleTime: 2 * 60 * 1000, // 2 minutes – slots can change
+    });
+}
+
+// Booking hooks – generateBookingItemSteps (timeline bar). Only runs after retrieveTimeSlots has returned.
+export function useGenerateBookingItemSteps(
+    bookingId: string | undefined,
+    selectedSlot: string | undefined,
+    selectedDate: string | undefined,
+    slotsResponseReceived: boolean
+): UseQueryResult<{ steps: GenerateBookingItemStep[]; bookingId?: string }, Error> {
+    return useQuery({
+        queryKey: queryKeys.booking.itemSteps(
+            bookingId ?? "",
+            selectedSlot ?? "",
+            selectedDate ?? ""
+        ),
+        queryFn: () =>
+            bookingApi.generateBookingItemSteps({
+                bookingId: bookingId ?? "",
+                selectedSlot: selectedSlot ?? "",
+                selectedDate: selectedDate ?? "",
+            }),
+        enabled: slotsResponseReceived && !!selectedDate && !!selectedSlot,
+        staleTime: 2 * 60 * 1000,
     });
 }
 

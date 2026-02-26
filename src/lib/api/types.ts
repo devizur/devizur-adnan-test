@@ -1,9 +1,20 @@
 /**
+ * Common API response shape for bookingFlowUrlHttp endpoints.
+ * All booking-flow APIs return { success, message?, data? }.
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
+/**
  * Shared base type for all catalog items (activities, foods, packages).
  * This keeps domain types independent from UI components.
  */
 export interface BaseProduct {
   id: number;
+  productId?: number;
   title: string;
   productName: string;
   price: string;
@@ -14,7 +25,6 @@ export interface BaseProduct {
   duration: string;
   discount?: string;
   timeSlots?: string[];
-  /** Optional supported game options (1, 2, 3) for activities */
   games?: (1 | 2 | 3)[];
 }
 
@@ -73,8 +83,11 @@ export interface GetAvailabilitySlotsParams {
   activityIds: number[];
   /** Selected package IDs */
   packageIds: number[];
+  /** Products with attribute (for retrieveTimeSlots API) */
+  selectedBookableProducts: { id: number; attributeOptionId: number }[];
   adults: number;
   children: number;
+  shopId: number;
 }
 
 // Booking dapper status (from /api/Booking/bookingDapperStatuses)
@@ -85,8 +98,37 @@ export interface BookingDapperStatus {
   versionNo: number;
 }
 
-export interface BookingDapperStatusesResponse {
-  success: boolean;
-  message: string;
-  data: BookingDapperStatus[];
+export type BookingDapperStatusesResponse = ApiResponse<BookingDapperStatus[]>;
+
+/** retrieveTimeSlots response data */
+export interface RetrieveTimeSlotsData {
+  bookingId?: string;
+  selectedDate?: string;
+  timeSlots?: Record<string, string[]>;
 }
+
+export type RetrieveTimeSlotsResponse = ApiResponse<RetrieveTimeSlotsData>;
+
+/** Result from availabilityApi.getSlots – raw timeSlots (all periods) + which periods have slots */
+export interface AvailabilitySlotsResult {
+  timeSlots: Record<string, string[]>;
+  periodsWithSlots: ("Morning" | "Afternoon" | "Night")[];
+  /** Returned by backend when available (for generateBookingItemSteps) */
+  bookingId?: string;
+}
+
+/** Single step from generateBookingItemSteps API */
+export interface GenerateBookingItemStep {
+  serial: number;
+  startingTime: string;  // "00:00", "00:43" – HH:mm offset from slot start
+  endingTime: string;
+  itemName: string;
+  itemDuration: string;
+}
+
+/** generateBookingItemSteps can return bookingId for use in subsequent calls */
+export interface GenerateBookingItemStepsResponseData extends ApiResponse<GenerateBookingItemStep[]> {
+  bookingId?: string;
+}
+
+export type GenerateBookingItemStepsResponse = GenerateBookingItemStepsResponseData;

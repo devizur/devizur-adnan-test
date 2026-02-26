@@ -9,6 +9,7 @@ import {
   setDate,
   setTimeOfDay,
   setTimeSlot,
+  setBookingId,
   addActivity,
   removeActivity,
   setActivityGameNo,
@@ -16,12 +17,15 @@ import {
   removePackage,
 } from "@/store/bookingSlice";
 import { Check } from "lucide-react";
+import { formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
+import { BookingTimelineBar } from "./BookingTimelineBar";
 
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
-  const { date, timeOfDay, timeSlot, selectedActivities, selectedPackages, persons } =
+  const shopId = useAppSelector((state) => state.shop.shopId);
+  const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
@@ -32,15 +36,39 @@ export function Step1AvailabilitySelection() {
   const slotsParams =
     date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
       ? {
-          date,
-          timeOfDay,
-          activityIds: selectedActivities.map((a) => a.activity.id),
-          packageIds: selectedPackages.map((p) => p.id),
-          adults: persons.adults,
-          children: persons.children,
-        }
+        date,
+        timeOfDay,
+        activityIds: selectedActivities.map((a) => a.activity.id),
+        packageIds: selectedPackages.map((p) => p.id),
+        selectedBookableProducts: [
+          ...selectedActivities.map((a) => ({
+            id: (a.activity as { productId?: number }).productId ?? a.activity.id,
+            attributeOptionId: a.gameNo,
+          })),
+          ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+        ],
+        adults: persons.adults,
+        children: persons.children,
+        shopId,
+      }
       : null;
-  const { data: slots = [], isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
+  const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
+  const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
+  const slots = React.useMemo(() => {
+    const ts = slotsData?.timeSlots;
+    if (!ts) return [];
+    const apiKey = SHIFT.find((t) => t.id === timeOfDay)?.apiKey ?? "Morning";
+    const raw = ts[apiKey];
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    return raw.map((t) => ({
+      startTime: formatTimeForDisplay(t),
+      available: 1,
+    }));
+  }, [slotsData?.timeSlots, timeOfDay]);
+  const visibleShifts = React.useMemo(
+    () => SHIFT.filter((tab) => periodsWithSlots.includes(tab.apiKey)),
+    [periodsWithSlots.join(",")]
+  );
 
   const getAvailableOptions = (activity: { games?: (1 | 2 | 3)[] }) => {
     const allowedValues =
@@ -60,6 +88,18 @@ export function Step1AvailabilitySelection() {
       dispatch(setDate(toLocalDateString(new Date())));
     }
   }, [date, dispatch]);
+
+  React.useEffect(() => {
+    if (slotsData?.bookingId) dispatch(setBookingId(slotsData.bookingId));
+  }, [slotsData?.bookingId, dispatch]);
+
+  React.useEffect(() => {
+    if (periodsWithSlots.length === 0) return;
+    const validIds = SHIFT.filter((t) => periodsWithSlots.includes(t.apiKey)).map((t) => t.id);
+    if (validIds.length > 0 && !validIds.includes(timeOfDay)) {
+      dispatch(setTimeOfDay(validIds[0] as 1 | 2 | 3));
+    }
+  }, [periodsWithSlots.join(","), timeOfDay, dispatch]);
 
   const isActivitySelected = (id: number) => selectedActivities.some((i) => i.activity.id === id);
   const getActivityGameNo = (id: number) =>
@@ -118,14 +158,6 @@ export function Step1AvailabilitySelection() {
                       {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
-                    <p className="text-[11px] text-gray-500 mt-1.5">
-                      {getAvailableOptions(activity).map((opt, i, arr) => (
-                        <span key={opt.label}>
-                          {opt.label} ${opt.price.toFixed(2)}
-                          {i < arr.length - 1 ? " · " : ""}
-                        </span>
-                      ))}
-                    </p>
                   </div>
                 </button>
                 {selected && (
@@ -139,15 +171,17 @@ export function Step1AvailabilitySelection() {
                           dispatch(setActivityGameNo({ activityId: activity.id, gameNo: opt.value }));
                         }}
                         aria-pressed={gameNo === opt.value}
-                        aria-label={`${opt.label} for ${activity.title}`}
+                        aria-label={`${opt.label} $${opt.price.toFixed(2)} for ${activity.title}`}
                         className={cn(
-                          "flex-1 min-h-10 py-2 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                          "flex-1 min-h-10 py-2 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                           gameNo === opt.value
                             ? "bg-primary-1 text-secondary"
                             : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
                         )}
                       >
-                        {opt.label}
+                        <span className=" ">{opt.label}</span>
+                        <span className="  opacity-80">/</span>
+                        <span className=" text-[10px] opacity-80">${opt.price.toFixed(2)}</span>
                       </button>
                     ))}
                   </div>
@@ -155,7 +189,7 @@ export function Step1AvailabilitySelection() {
               </div>
             );
           })}
-        
+
           {suggestedPackages.length > 0 && (
             <>
               <p className="text-[11px] text-gray-500 font-medium mt-5 mb-2 uppercase tracking-wider">Packages</p>
@@ -208,21 +242,34 @@ export function Step1AvailabilitySelection() {
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#161616]">
         <div className="px-5 py-4 border-b border-gray-800/80 flex flex-col gap-4">
-          <BookingGuests />
+          <div className="flex justify-between">
 
-          <BookingCalendar
-            value={date ?? ""}
-            onChange={(d) => dispatch(setDate(d))}
+            <BookingGuests />
+
+            <BookingCalendar
+              value={date ?? ""}
+              onChange={(d) => dispatch(setDate(d))}
+            />
+          </div>
+
+
+          <BookingTimelineBar
+            bookingId={reduxBookingId || slotsData?.bookingId}
+            timeSlot={timeSlot}
+            selectedDate={date ?? undefined}
+            slotsResponseReceived={!!slotsData}
+            selectedActivities={selectedActivities}
+            selectedPackages={selectedPackages}
           />
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
-            {SHIFT.map((tab) => (
+            {visibleShifts.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 role="tab"
                 aria-selected={timeOfDay === tab.id}
-                aria-label={`${tab.label} sessions`}
+                aria-label={`${tab.apiKey} sessions`}
                 onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
                 className={cn(
                   "flex-1 min-h-11 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
@@ -231,7 +278,7 @@ export function Step1AvailabilitySelection() {
                     : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
                 )}
               >
-                {tab.label}
+                {tab.apiKey}
               </button>
             ))}
           </div>
@@ -244,13 +291,25 @@ export function Step1AvailabilitySelection() {
                 ? "Start time · Select date, time of day, at least one activity or package, and guests"
                 : slotsLoading
                   ? "Start time · Loading…"
-                  : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
-            }
+                  : slots.length === 0
+                    ? "Start time · No slots available"
+                    : !timeSlot
+                      ? "Start time · Select a time below"
+                      : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
+              }
             </p>
             {slotsParams && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Select start time">
                 {slotsLoading ? (
-                  <div className="col-span-full py-8 text-center text-gray-400 text-sm">Loading available times…</div>
+                  <div className="col-span-full py-8 flex flex-col items-center justify-center gap-3 text-gray-400 text-sm">
+                    <div className="w-8 h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+                    <span>Loading available times…</span>
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="col-span-full py-8 flex flex-col items-center justify-center gap-2 text-gray-400 text-sm text-center px-4">
+                    <span>No time slots available for this period.</span>
+                    <span className="text-xs text-gray-500">Try selecting another time of day or date.</span>
+                  </div>
                 ) : (
                   slots.map((s) => (
                     <button
@@ -259,9 +318,9 @@ export function Step1AvailabilitySelection() {
                       disabled={s.available <= 0}
                       onClick={() => dispatch(setTimeSlot(s.startTime))}
                       aria-pressed={timeSlot === s.startTime}
-                      aria-label={`Select ${s.startTime}, ${s.available} available${s.discount ? `, $${s.discount} off` : ""}`}
+
                       className={cn(
-                        "relative min-h-[4.5rem] py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                        "relative min-h-18 py-3 px-2 rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                         s.available <= 0 && "opacity-50 cursor-not-allowed",
                         timeSlot === s.startTime
                           ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"
@@ -272,11 +331,7 @@ export function Step1AvailabilitySelection() {
                     >
                       <span className="font-semibold text-sm">{s.startTime}</span>
                       <span className="text-xs opacity-70">{s.available} available</span>
-                      {s.discount != null && s.discount > 0 ? (
-                        <span className="absolute top-1 right-1 bg-primary-1 text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                          ${s.discount} off
-                        </span>
-                      ) : null}
+
                     </button>
                   ))
                 )}

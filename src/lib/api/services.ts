@@ -1,11 +1,10 @@
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse } from "./types";
+import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult, GenerateBookingItemStepsResponse } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
 
 // Base API configuration - ready for REST API migration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
 
 async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetch(url);
@@ -30,43 +29,74 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     }
 }
 
+/** Map API product shape to Activity (datasync/products/changes returns productId, productName, etc.) */
+function mapProductToActivity(raw: Record<string, unknown>): Activity {
+    const productId = Number(raw.productId) ?? 0;
+    const productName = String(raw.productName ?? "");
+    const fixedPrice = raw.fixedPrice != null ? Number(raw.fixedPrice) : null;
+    const category = String(raw.categoryName ?? raw.subCategoryName ?? "");
+    return {
+        id: productId,
+        productId,
+        title: productName,
+        productName,
+        price: fixedPrice != null ? `$${fixedPrice}` : "Unavailable",
+        fixedPrice: fixedPrice != null ? `${fixedPrice}` : "Unavailable",
+        unit: "per person",
+        rating: 4.5,
+        image: (raw.image as string) || "https://picsum.photos/400/200",
+        duration: "60 mins",
+        category,
+        discount: "$5 off",
+        timeSlots: ["9:00 am", "11:00 am", "2:00 pm"],
+        games: [1, 2, 3],
+    };
+}
 
 export const activitiesApi = {
 
-    async getAll(page = 1, pageSize = 9): Promise<Activity[]> {
+    async getAll(shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
         const search = new URLSearchParams();
-        search.set("shopId", "1");
+        search.set("shopId", String(shopId));
         search.set("page", String(page));
         search.set("pageSize", String(pageSize));
 
-        return fetchFromApi<Activity[]>(
+        const raw = await fetchFromApi<unknown[]>(
             `/api/datasync/products/changes?${search.toString()}`,
             "fetch activities"
         );
+        return Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
     },
 
 
-    async search(term: string, page = 1, pageSize = 9): Promise<Activity[]> {
+    async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
         const query = term.trim();
 
         const searchParams = new URLSearchParams();
-        searchParams.set("shopId", "1");
+        searchParams.set("shopId", String(shopId));
         searchParams.set("page", String(page));
         searchParams.set("pageSize", String(pageSize));
         if (query) {
-            // Assumes backend accepts `search` as a filter parameter
             searchParams.set("search", query);
         }
 
-        return fetchFromApi<Activity[]>(
+        const raw = await fetchFromApi<unknown[]>(
             `/api/datasync/products/changes?${searchParams.toString()}`,
             "search activities"
         );
+        const all = Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
+        if (!query) return all;
+        const q = query.toLowerCase();
+        return all.filter(
+            (a) =>
+                a.productName.toLowerCase().includes(q) ||
+                a.category.toLowerCase().includes(q)
+        );
     },
 
-    async getById(id: number): Promise<Activity | null> {
-        const activities = await activitiesApi.getAll();
-        return activities.find((activity) => activity.id === id) || null;
+    async getById(id: number, shopId = 1): Promise<Activity | null> {
+        const activities = await activitiesApi.getAll(shopId, 1, 100);
+        return activities.find((a) => a.id === id || (a as any).productId === id) || null;
     },
 };
 
@@ -158,48 +188,68 @@ export const packagesApi = {
     },
 };
 
-// Availability / slots API – returns start times with available count for the selected date, time of day, products and persons
-const FALLBACK_SLOTS: Slot[] = [
-    { startTime: "6:00 am", available: 100 },
-    { startTime: "6:30 am", available: 100, discount: 5 },
-    { startTime: "7:00 am", available: 100 },
-    { startTime: "7:30 am", available: 100 },
-    { startTime: "8:00 am", available: 100 },
-    { startTime: "8:30 am", available: 100 },
-    { startTime: "9:00 am", available: 100 },
-    { startTime: "9:30 am", available: 100 },
-    { startTime: "10:00 am", available: 100 },
-    { startTime: "10:30 am", available: 100 },
-    { startTime: "11:00 am", available: 100, discount: 5 },
-    { startTime: "11:30 am", available: 100 },
-    { startTime: "12:00 pm", available: 100 },
-    { startTime: "12:30 pm", available: 100 },
-    { startTime: "1:00 pm", available: 100 },
-    { startTime: "1:30 pm", available: 100 },
-];
-
-const timeOfDayMap: Record<1 | 2 | 3, string> = { 1: "morning", 2: "afternoon", 3: "evening" };
-
+// Availability / slots API – returns all time slots; filter by period client-side
 export const availabilityApi = {
 
-    async getSlots(params: GetAvailabilitySlotsParams): Promise<Slot[]> {
-        const { date, timeOfDay, activityIds, packageIds, adults, children } = params;
-        if (API_BASE_URL) {
-            const search = new URLSearchParams();
-            search.set("date", date);
-            search.set("timeOfDay", timeOfDayMap[timeOfDay]);
-            if (activityIds.length) search.set("activityIds", activityIds.join(","));
-            if (packageIds.length) search.set("packageIds", packageIds.join(","));
-            search.set("adults", String(adults));
-            search.set("children", String(children));
-            return fetchFromApi<Slot[]>(`/api/availability/slots?${search.toString()}`, "fetch availability slots");
+    async getSlots(params: GetAvailabilitySlotsParams): Promise<AvailabilitySlotsResult> {
+        const { date, selectedBookableProducts, adults, children, shopId } = params;
+        const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [], bookingId: undefined };
+        if (selectedBookableProducts.length === 0 || (adults + children) === 0) {
+            return empty;
         }
-        return [...FALLBACK_SLOTS];
+        try {
+            const response = await bookingFlowUrlHttp.post<RetrieveTimeSlotsResponse>("/api/Booking/retrieveTimeSlots", {
+                bookingId: "",
+                shopId: String(shopId),
+                selectedDate: date,
+                selectedBookableProducts,
+                adultPaxNo: adults,
+                childPaxNo: children,
+            });
+            const { success, data } = response.data ?? {};
+            if (!success || !data?.timeSlots) {
+                return empty;
+            }
+            const periodsWithSlots = (["Morning", "Afternoon", "Night"] as const).filter(
+                (k) => data.timeSlots && k in data.timeSlots && Array.isArray(data.timeSlots[k])
+            );
+            return {
+                timeSlots: data.timeSlots ?? {},
+                periodsWithSlots,
+                bookingId: data.bookingId,
+            };
+        } catch {
+            return empty;
+        }
     },
 };
 
 // Booking API – uses bookingFlowUrlHttp (UAT backend)
 export const bookingApi = {
+    async generateBookingItemSteps(params: {
+        bookingId: string;
+        selectedSlot: string;   // "09:00" or slot id
+        selectedDate: string;   // YYYY-MM-DD
+    }): Promise<{ steps: { serial: number; startingTime: string; endingTime: string; itemName: string; itemDuration: string }[]; bookingId?: string }> {
+        const response = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
+            "/api/Booking/generateBookingItemSteps",
+            params
+        );
+        const { success, data, bookingId } = response.data ?? {};
+        if (!success || !Array.isArray(data)) return { steps: [] };
+        let steps = data;
+        let returnedBookingId = bookingId;
+        if (returnedBookingId && !params.bookingId) {
+            const second = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
+                "/api/Booking/generateBookingItemSteps",
+                { ...params, bookingId: returnedBookingId }
+            );
+            const s = second.data ?? {};
+            if (s.success && Array.isArray(s.data)) steps = s.data;
+            if (s.bookingId) returnedBookingId = s.bookingId;
+        }
+        return { steps, bookingId: returnedBookingId };
+    },
     async getDapperStatuses(): Promise<BookingDapperStatus[]> {
         const response = await bookingFlowUrlHttp.get<BookingDapperStatusesResponse>(
             "/api/Booking/bookingDapperStatuses"

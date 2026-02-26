@@ -19,7 +19,7 @@ export function BookingGuests() {
 
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-12 text-left">Adults</span>
+          <span className="text-sm text-gray-400 w-12 text-left">Adults</span>
           <div className="flex items-center rounded-xl border border-gray-700/80 bg-[#1e1e1e] overflow-hidden">
             <button
               type="button"
@@ -47,7 +47,7 @@ export function BookingGuests() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-12 text-left">Children</span>
+          <span className="text-sm text-gray-400 w-14 text-left">Children</span>
           <div className="flex items-center rounded-xl border border-gray-700/80 bg-[#1e1e1e] overflow-hidden">
             <button
               type="button"

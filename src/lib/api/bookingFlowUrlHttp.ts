@@ -2,6 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { env } from "@/config";
 import { store } from "@/store/store";
 import { clearAuth, setToken } from "@/store/authSlice";
+import type { ApiResponse } from "./types";
 
 const { bookingFlowUrl } = env();
 const baseURL = bookingFlowUrl?.replace(/\/+$/, "") ?? "";
@@ -11,16 +12,12 @@ const bookingFlowUrlHttp = axios.create({
 });
 
 /** Token API response from POST /oauth/token */
-export interface OAuthTokenResponse {
-  success: boolean;
-  message: string;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-  };
-}
+export type OAuthTokenResponse = ApiResponse<{
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}>;
 
 const OAUTH_TOKEN_BODY = {
   clientId: "web_app",

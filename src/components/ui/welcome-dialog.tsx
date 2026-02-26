@@ -8,6 +8,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Star, MapPin, Store, Search } from "lucide-react";
+import { useAppDispatch } from "@/store/hooks";
+import { setShopId } from "@/store/shopSlice";
 
 const SELECTED_SHOP_KEY = "welcome-selected-shop";
 
@@ -15,6 +17,7 @@ const SELECTED_SHOP_KEY = "welcome-selected-shop";
 const SHOPS = [
   {
     id: 1,
+    shopId: 1,
     title: "Santorini Villa",
     description: "Luxury villa overlooking the Aegean Sea, offering breathtaking sunset views and a private infinity pool for ultimate relaxation.",
     tags: [{ type: "rating", label: "4.5", icon: "star" }, { type: "stay", label: "3 Night Stay" }],
@@ -22,6 +25,7 @@ const SHOPS = [
   },
   {
     id: 2,
+    shopId: 2,
     title: "Swiss Chalet",
     description: "Cozy wooden chalet nestled in the Swiss Alps, offering a warm fireplace, scenic mountain views, and direct access to ski slopes.",
     tags: [{ type: "badge", label: "Guest Favorite", icon: "pin" }, { type: "stay", label: "4 Night Stay" }],
@@ -29,6 +33,7 @@ const SHOPS = [
   },
   {
     id: 3,
+    shopId: 3,
     title: "Lakeside Retreat",
     description: "Peaceful retreat by the lake with a private dock, kayaks, and stunning sunrise views.",
     tags: [{ type: "rating", label: "4.8", icon: "star" }, { type: "stay", label: "2 Night Stay" }],
@@ -36,6 +41,7 @@ const SHOPS = [
   },
   {
     id: 4,
+    shopId: 4,
     title: "Urban Loft",
     description: "Modern loft in the heart of the city with rooftop access and skyline views.",
     tags: [{ type: "badge", label: "Trending", icon: "pin" }, { type: "stay", label: "1 Night Stay" }],
@@ -43,6 +49,7 @@ const SHOPS = [
   },
   {
     id: 5,
+    shopId: 5,
     title: "Garden Cottage",
     description: "Charming cottage with a private garden, perfect for a quiet getaway.",
     tags: [{ type: "rating", label: "4.9", icon: "star" }, { type: "stay", label: "5 Night Stay" }],
@@ -51,8 +58,19 @@ const SHOPS = [
 ];
 
 export function WelcomeDialog() {
+  const dispatch = useAppDispatch();
   const [open, setOpen] = React.useState(true);
   const [search, setSearch] = React.useState("");
+
+  // Hydrate shopId from localStorage on mount
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem(SELECTED_SHOP_KEY);
+    if (stored) {
+      const id = parseInt(stored, 10);
+      if (!Number.isNaN(id)) dispatch(setShopId(id));
+    }
+  }, [dispatch]);
 
   React.useEffect(() => {
     setOpen(true);
@@ -60,12 +78,12 @@ export function WelcomeDialog() {
 
   const handleShopSelect = (shop: (typeof SHOPS)[0]) => {
     setOpen(false);
+    dispatch(setShopId(shop.shopId));
     if (typeof window !== "undefined") {
-      localStorage.setItem(SELECTED_SHOP_KEY, String(shop.id));
+      localStorage.setItem(SELECTED_SHOP_KEY, String(shop.shopId));
     }
   };
 
-  // ✅ filter logic
   const filteredShops = React.useMemo(() => {
     if (!search.trim()) return SHOPS;
 
@@ -95,7 +113,7 @@ export function WelcomeDialog() {
       }}
     >
       <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:min-w-[90%] sm:w-4xl h-[90vh] lg:h-[95vh] bg-secondary-2 backdrop-blur-xl p-0 gap-0 text-white border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col shadow-2xl">
-        
+
         {/* Header */}
         <AlertDialogHeader className="px-6 py-5 sm:px-8 sm:py-6 shrink-0 border-b border-white/5">
           <div className="flex items-center gap-3 sm:gap-4 justify-center">
@@ -142,10 +160,10 @@ export function WelcomeDialog() {
               <button
                 key={shop.id}
                 onClick={() => handleShopSelect(shop)}
-                className="group text-left relative h-44 lg:h-60  2xl:h-80 w-full rounded-xl overflow-hidden bg-cover bg-center hover:scale-[1.005] cursor-pointer transition-transform"
+                className="group text-left relative h-44 lg:h-60 2xl:h-80 w-full rounded-xl overflow-hidden bg-cover bg-center hover:scale-[1.005] cursor-pointer transition-transform"
                 style={{ backgroundImage: `url(${shop.image})` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/70 to-black/20" />
 
                 <div className="relative z-10 p-4">
                   <div className="flex flex-wrap gap-2 mb-2">

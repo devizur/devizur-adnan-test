@@ -73,7 +73,7 @@ export function Navbar() {
 
     return (
         <div className="w-full   flex justify-center">
-            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 ">
+            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4 lg:p-0">
                 {/* Logo */}
                 <div className="">
                     {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
@@ -137,26 +137,30 @@ export function Navbar() {
                 </div>
 
                 {/* Mobile: Cart + Hamburger */}
-                <div className="flex lg:hidden items-center gap-3">
+                <div className="flex lg:hidden items-center gap-2 ">
                     <button
                         onClick={() => setIsCartOpen(true)}
-                        className="relative cursor-pointer"
+                        className="relative w-10 h-10 rounded-xl border-2 border-primary-1 flex items-center justify-center text-primary-1 cursor-pointer hover:bg-primary-1/10 transition-colors"
                     >
-                        <div className="w-9 h-9 border-2 border-primary-1 rounded-lg flex items-center justify-center">
-                            <ShoppingBag className="w-4 h-4 text-primary-1" strokeWidth={2.5} />
-                        </div>
+                        <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
                         {totalItems > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-primary-1 text-black text-[9px] font-black min-w-[14px] h-[14px] rounded-full flex items-center justify-center border-2 border-[#05080d] px-1">
+                            <span className="absolute -top-1.5 -right-1.5 bg-primary-1 text-black text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-[#171717]">
                                 {totalItems}
                             </span>
                         )}
                     </button>
                     <button
                         onClick={() => setIsMobileMenuOpen((o) => !o)}
-                        className="w-9 h-9 border-2 border-primary-1 rounded-lg flex items-center justify-center text-primary-1 cursor-pointer"
+                        className={cn(
+                            "w-10 h-10 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-colors",
+                            isMobileMenuOpen
+                                ? "border-primary-1 bg-primary-1/10 text-primary-1"
+                                : "border-primary-1 text-primary-1 hover:bg-primary-1/10"
+                        )}
                         aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                        aria-expanded={isMobileMenuOpen}
                     >
-                        {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
             </nav>
@@ -164,44 +168,72 @@ export function Navbar() {
             {/* Mobile Menu Overlay */}
             <div
                 className={cn(
-                    "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300",
-                    isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+                    "fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ease-out",
+                    "bg-black/70 backdrop-blur-md",
+                    isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                 )}
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-hidden="true"
             />
 
-            {/* Mobile Menu Panel */}
+            {/* Mobile Menu Drawer - slides from right */}
             <div
                 className={cn(
-                    "fixed top-24 right-0 left-0 bottom-0 lg:hidden z-50 bg-[#0a0a0a] border-t border-white/10 flex flex-col overflow-y-auto transition-transform duration-300 ease-out",
-                    isMobileMenuOpen ? "translate-y-0" : "translate-y-full"
+                    "fixed top-0 right-0 bottom-0 w-full max-w-sm lg:hidden z-50",
+                    "bg-secondary-2 border-l border-gray-800/80",
+                    "flex flex-col overflow-hidden",
+                    "shadow-2xl shadow-black/50",
+                    "transition-transform duration-300 ease-out will-change-transform",
+                    isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
                 )}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Mobile navigation menu"
             >
-                <div className="px-5 py-6 space-y-1">
-                    {config.navItems.map((item: { label: string; href: string }) => (
-                        <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                            <div
-                                className={cn(
-                                    "py-3 px-4 rounded-xl text-[15px] font-medium transition-colors cursor-pointer",
-                                    activeLink === item.label
-                                        ? "bg-primary-1/15 text-primary-1"
-                                        : "text-gray-300 hover:bg-white/5 hover:text-white"
-                                )}
-                            >
-                                {item.label}
-                            </div>
-                        </Link>
-                    ))}
+                {/* Drawer Header - safe area for notched devices */}
+                <div className="flex items-center justify-between px-5 py-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-gray-800/80 shrink-0">
+                    <span className="text-sm font-semibold text-white uppercase tracking-wider">Menu</span>
+                    <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="w-10 h-10 rounded-xl border border-gray-700 bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        aria-label="Close menu"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
-                <div className="mt-auto px-5 py-6 space-y-3 border-t border-white/10">
+
+                {/* Nav Links */}
+                <nav className="flex-1 overflow-y-auto px-4 py-5">
+                    <ul className="space-y-1">
+                        {config.navItems.map((item: { label: string; href: string }) => (
+                            <li key={item.href}>
+                                <Link href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                                    <div
+                                        className={cn(
+                                            "py-3.5 px-4 rounded-xl text-[15px] font-medium transition-all duration-200 cursor-pointer",
+                                            activeLink === item.label
+                                                ? "bg-primary-1/15 text-primary-1 border border-primary-1/30"
+                                                : "text-gray-300 hover:bg-white/5 hover:text-white border border-transparent"
+                                        )}
+                                    >
+                                        {item.label}
+                                    </div>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+
+                {/* Actions Footer - safe area for notched devices */}
+                <div className="px-4 py-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-800/80 shrink-0 space-y-3">
+                    <div className="text-[11px] text-gray-500 uppercase tracking-wider px-1 mb-2">Shop & Book</div>
                     <ShopSelectorButton className="w-full" />
                     <button
                         onClick={() => {
                             handleMyBookingsClick();
                             setIsMobileMenuOpen(false);
                         }}
-                        className="w-full py-3 px-6 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-xl hover:bg-primary-1 hover:text-black transition-all cursor-pointer"
+                        className="w-full py-3 px-4 border border-primary-1/40 bg-primary-1/10 text-primary-1 text-sm font-semibold rounded-xl hover:bg-primary-1 hover:text-black transition-all duration-200 cursor-pointer"
                     >
                         {navContent.bookings}
                     </button>

@@ -73,7 +73,7 @@ export function Navbar() {
 
     return (
         <div className="w-full   flex justify-center">
-            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4 lg:p-0">
+            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4  ">
                 {/* Logo */}
                 <div className="">
                     {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}

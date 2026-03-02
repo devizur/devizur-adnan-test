@@ -33,6 +33,7 @@ import { ReduxProvider } from "@/components/providers/redux-provider";
 import { BookingFlowTokenProvider } from "@/components/providers/booking-flow-token-provider";
 import { CartProvider } from "@/contexts/CartContext";
 import { BookingCartProvider } from "@/contexts/BookingCartContext";
+import { ShopDialogProvider } from "@/contexts/ShopDialogContext";
 import { Toaster } from "@/components/ui/toaster";
 import { WelcomeDialog } from "@/components/ui/welcome-dialog";
 
@@ -86,6 +87,7 @@ export default function RootLayout({
           <ReduxProvider>
             <BookingFlowTokenProvider>
               <CartProvider>
+                <ShopDialogProvider>
                 <BookingCartProvider>
                   <BrandGuard currentBrand={brandKey} />
                   <Navbar />
@@ -97,6 +99,7 @@ export default function RootLayout({
                   <WelcomeDialog />
                   <Toaster />
                 </BookingCartProvider>
+                </ShopDialogProvider>
               </CartProvider>
             </BookingFlowTokenProvider>
           </ReduxProvider>

@@ -24,7 +24,14 @@ export function ShopSelectorButton({ className }: { className?: string }) {
       )}
     >
       <Store className="w-4 h-4 shrink-0" />
-      <span className="max-w-[140px] truncate">{label}</span>
+      <span className="max-w-[140px] truncate">
+        <span>
+          {label && label.length > 15
+            ? label.slice(0, 15) + "..."
+            : label}
+        </span>
+      </span>
+
       <ChevronDown className="w-4 h-4 shrink-0 opacity-70" />
     </button>
   );

@@ -74,17 +74,18 @@ export function Navbar() {
     return (
         <div className="w-full   flex justify-center">
             <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4  ">
-                {/* Logo */}
-                <div className="">
-                    {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
-                    <img
-                        src={navContent.logoPath || config.logo}
-                        alt="Logo"
-                        width={98}
-                        height={32}
-                        suppressHydrationWarning
-                    />
-                </div>
+                <Link href="/" >
+                    <div className="">
+                        {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
+                        <img
+                            src={navContent.logoPath || config.logo}
+                            alt="Logo"
+                            width={98}
+                            height={32}
+                            suppressHydrationWarning
+                        />
+                    </div>
+                </Link>
 
                 {/* Navigation Links */}
                 <ul className="hidden lg:flex items-center space-x-10">
@@ -93,11 +94,10 @@ export function Navbar() {
                             <Link href={item.href}>
                                 <button
                                     onClick={() => setActiveLink(item.label)}
-                                    className={`relative text-[14px] font-medium transition-colors duration-300 cursor-pointer ${
-                                        activeLink === item.label
+                                    className={`relative text-[14px] font-medium transition-colors duration-300 cursor-pointer ${activeLink === item.label
                                             ? "text-primary-1"
                                             : "text-gray-300 hover:text-white"
-                                    }`}
+                                        }`}
                                 >
                                     {item.label}
                                     {activeLink === item.label && (
@@ -115,7 +115,7 @@ export function Navbar() {
                 {/* Action Buttons - Desktop */}
                 <div className="hidden lg:flex items-center space-x-4 sm:space-x-6">
                     <ShopSelectorButton />
-                    <button 
+                    <button
                         onClick={handleMyBookingsClick}
                         className="hidden md:block px-6 py-2 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-full hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer"
                     >
@@ -235,8 +235,9 @@ export function Navbar() {
                         }}
                         className="w-full py-3 px-4 border border-primary-1/40 bg-primary-1/10 text-primary-1 text-sm font-semibold rounded-xl hover:bg-primary-1 hover:text-black transition-all duration-200 cursor-pointer"
                     >
-                        {navContent.bookings}
-                    </button>
+                        {navContent.bookings && navContent.bookings.length > 15
+                            ? navContent.bookings.slice(0, 15) + "..."
+                            : navContent.bookings}</button>
                 </div>
             </div>
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />

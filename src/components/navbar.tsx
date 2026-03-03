@@ -15,7 +15,6 @@ export function Navbar() {
     const config = getBrandConfig();
     const pathname = usePathname();
     const router = useRouter();
-    const [activeLink, setActiveLink] = useState("Home");
     const [isNotFound, setIsNotFound] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -35,14 +34,6 @@ export function Navbar() {
         return () => clearInterval(interval);
     }, []);
 
-    // Sync active link with current path
-    useEffect(() => {
-        const current = config.navItems.find((item) => item.href === pathname);
-        if (current) {
-            setActiveLink(current.label);
-        }
-    }, [pathname, config.navItems]);
-
     // Close mobile menu on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -61,6 +52,8 @@ export function Navbar() {
     }, [isMobileMenuOpen]);
 
     const token = useAppSelector((state) => state.auth?.token ?? null);
+    const activeLabel =
+        config.navItems.find((item) => item.href === pathname)?.label ?? "Home";
     const handleMyBookingsClick = () => {
         if (token) {
             router.push("/my-bookings");
@@ -93,14 +86,13 @@ export function Navbar() {
                         <li key={item.href}>
                             <Link href={item.href}>
                                 <button
-                                    onClick={() => setActiveLink(item.label)}
-                                    className={`relative text-[14px] font-medium transition-colors duration-300 cursor-pointer ${activeLink === item.label
+                                    className={`relative text-[14px] font-medium transition-colors duration-300 cursor-pointer ${activeLabel === item.label
                                             ? "text-primary-1"
                                             : "text-gray-300 hover:text-white"
                                         }`}
                                 >
                                     {item.label}
-                                    {activeLink === item.label && (
+                                    {activeLabel === item.label && (
                                         <div className="absolute -bottom-1.5 left-0 right-0 h-[1.5px] bg-primary-1 flex justify-between items-center px-0">
                                             <div className="w-1 h-1 bg-primary-1 rotate-45 -ml-0.5"></div>
                                             <div className="w-1 h-1 bg-primary-1 rotate-45 -mr-0.5"></div>
@@ -211,7 +203,7 @@ export function Navbar() {
                                     <div
                                         className={cn(
                                             "py-3.5 px-4 rounded-xl text-[15px] font-medium transition-all duration-200 cursor-pointer",
-                                            activeLink === item.label
+                                            activeLabel === item.label
                                                 ? "bg-primary-1/15 text-primary-1 border border-primary-1/30"
                                                 : "text-gray-300 hover:bg-white/5 hover:text-white border border-transparent"
                                         )}

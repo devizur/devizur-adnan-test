@@ -14,8 +14,8 @@ interface GuestCounterProps {
   value: number;
   onIncrement: () => void;
   onDecrement: () => void;
-  "aria-label-decrement": string;
-  "aria-label-increment": string;
+  ariaLabelDecrement: string;
+  ariaLabelIncrement: string;
   labelWidthClass?: string;
 }
 
@@ -24,8 +24,8 @@ function GuestCounter({
   value,
   onIncrement,
   onDecrement,
-  "aria-label-decrement": ariaLabelDecrement,
-  "aria-label-increment": ariaLabelIncrement,
+  ariaLabelDecrement,
+  ariaLabelIncrement,
   labelWidthClass = "w-12",
 }: GuestCounterProps) {
   return (
@@ -73,8 +73,8 @@ export function BookingGuests() {
             value={persons.adults}
             onIncrement={() => dispatch(incrementAdults())}
             onDecrement={() => dispatch(decrementAdults())}
-            aria-label-decrement="Decrease adults"
-            aria-label-increment="Increase adults"
+            ariaLabelDecrement="Decrease adults"
+            ariaLabelIncrement="Increase adults"
             labelWidthClass="w-12"
           />
           <GuestCounter
@@ -82,8 +82,8 @@ export function BookingGuests() {
             value={persons.children}
             onIncrement={() => dispatch(incrementChildren())}
             onDecrement={() => dispatch(decrementChildren())}
-            aria-label-decrement="Decrease children"
-            aria-label-increment="Increase children"
+            ariaLabelDecrement="Decrease children"
+            ariaLabelIncrement="Increase children"
             labelWidthClass="w-14"
           />
         </div>

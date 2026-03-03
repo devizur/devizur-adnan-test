@@ -19,18 +19,18 @@ export const queryKeys = {
     foods: {
         all: ["foods"] as const,
         lists: () => [...queryKeys.foods.all, "list"] as const,
-        list: () => [...queryKeys.foods.lists()] as const,
-        search: (term: string) => [...queryKeys.foods.list(), "search", term] as const,
+        list: (shopId: number) => [...queryKeys.foods.lists(), "shopId", shopId] as const,
+        search: (term: string, shopId: number) => [...queryKeys.foods.list(shopId), "search", term] as const,
         details: () => [...queryKeys.foods.all, "detail"] as const,
-        detail: (id: number) => [...queryKeys.foods.details(), id] as const,
+        detail: (id: number, shopId: number) => [...queryKeys.foods.details(), id, "shopId", shopId] as const,
     },
     packages: {
         all: ["packages"] as const,
         lists: () => [...queryKeys.packages.all, "list"] as const,
-        list: () => [...queryKeys.packages.lists()] as const,
-        search: (term: string) => [...queryKeys.packages.list(), "search", term] as const,
+        list: (shopId: number) => [...queryKeys.packages.lists(), "shopId", shopId] as const,
+        search: (term: string, shopId: number) => [...queryKeys.packages.list(shopId), "search", term] as const,
         details: () => [...queryKeys.packages.all, "detail"] as const,
-        detail: (id: number) => [...queryKeys.packages.details(), id] as const,
+        detail: (id: number, shopId: number) => [...queryKeys.packages.details(), id, "shopId", shopId] as const,
     },
     availability: {
         slots: (params: GetAvailabilitySlotsParams) =>
@@ -79,42 +79,70 @@ export function useActivity(id: number): UseQueryResult<Activity | null, Error> 
 }
 
 // Foods hooks
-export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
+export function useFoods(
+    searchTerm?: string,
+    page = 1,
+    pageSize = 9
+): UseQueryResult<Food[], Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
+    const effectivePage = page ?? 1;
+    const effectivePageSize = pageSize ?? 9;
+
     return useQuery({
-        queryKey: hasSearch ? queryKeys.foods.search(query) : queryKeys.foods.list(),
-        queryFn: () => (hasSearch ? foodsApi.search(query) : foodsApi.getAll()),
+        queryKey: hasSearch
+            ? [...queryKeys.foods.search(query, shopId), "page", effectivePage, "pageSize", effectivePageSize]
+            : [...queryKeys.foods.list(shopId), "page", effectivePage, "pageSize", effectivePageSize],
+        queryFn: () =>
+            hasSearch
+                ? foodsApi.search(query, shopId, effectivePage, effectivePageSize)
+                : foodsApi.getAll(shopId, effectivePage, effectivePageSize),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
 
 export function useFood(id: number): UseQueryResult<Food | null, Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     return useQuery({
-        queryKey: queryKeys.foods.detail(id),
-        queryFn: () => foodsApi.getById(id),
+        queryKey: queryKeys.foods.detail(id, shopId),
+        queryFn: () => foodsApi.getById(id, shopId),
         enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });
 }
 
 // Packages hooks
-export function usePackages(searchTerm?: string): UseQueryResult<Package[], Error> {
+export function usePackages(
+    searchTerm?: string,
+    page = 1,
+    pageSize = 9
+): UseQueryResult<Package[], Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
+    const effectivePage = page ?? 1;
+    const effectivePageSize = pageSize ?? 9;
+
     return useQuery({
-        queryKey: hasSearch ? queryKeys.packages.search(query) : queryKeys.packages.list(),
-        queryFn: () => (hasSearch ? packagesApi.search(query) : packagesApi.getAll()),
+        queryKey: hasSearch
+            ? [...queryKeys.packages.search(query, shopId), "page", effectivePage, "pageSize", effectivePageSize]
+            : [...queryKeys.packages.list(shopId), "page", effectivePage, "pageSize", effectivePageSize],
+        queryFn: () =>
+            hasSearch
+                ? packagesApi.search(query, shopId, effectivePage, effectivePageSize)
+                : packagesApi.getAll(shopId, effectivePage, effectivePageSize),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
 
 export function usePackage(id: number): UseQueryResult<Package | null, Error> {
+    const shopId = useAppSelector((state) => state.shop.shopId);
     return useQuery({
-        queryKey: queryKeys.packages.detail(id),
-        queryFn: () => packagesApi.getById(id),
+        queryKey: queryKeys.packages.detail(id, shopId),
+        queryFn: () => packagesApi.getById(id, shopId),
         enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });

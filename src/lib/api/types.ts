@@ -1,46 +1,65 @@
-/**
- * Common API response shape for bookingFlowUrlHttp endpoints.
- * All booking-flow APIs return { success, message?, data? }.
- */
+// Common booking-flow API response shape
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data?: T;
 }
 
-/**
- * Shared base type for all catalog items (activities, foods, packages).
- * This keeps domain types independent from UI components.
- */
-export interface BaseProduct {
-  id: number;
-  productId?: number;
-  title: string;
+// GET /api/Product/advanced response item
+export interface ProductAdvancedItem {
+  productId: number;
   productName: string;
+  productDescription: string;
+  productCode: string;
+  productBarcode: string;
+  categoryId: number;
+  categoryName: string;
+  subCategoryId: number;
+  subCategoryName: string;
+  isComboProduct: boolean;
+  isBookingRequired: boolean;
+  isBundleProduct: boolean;
+  tags: string;
+  allergens: string;
+  thumbnailShortImage: string;
+  thumbnailShortImageUrl: string;
+  attributeOptions: Array<{
+    attributeId: number;
+    attributeName: string;
+    attributeOptionId: number;
+    attributeOptionName: string;
+  }>;
+  attributeCombinations: Array<{
+    productAttributeCombinationId: number;
+    attributeCombinationName: string;
+    attributeCombinationSet: number[];
+    fixedPrice: number;
+    minPrice: number;
+    maxPrice: number;
+  }>;
+}
+
+// Mapped catalog types – extend ProductAdvancedItem with UI-ready fields
+interface MappedProduct extends ProductAdvancedItem {
+  id: number;
+  title: string;
   price: string;
   fixedPrice: string;
   unit: string;
   rating: number;
   image: string;
   duration: string;
+  category: string;
   discount?: string;
   timeSlots?: string[];
   games?: (1 | 2 | 3)[];
 }
 
-export interface Activity extends BaseProduct {
-  category: string;
-}
+export interface Activity extends MappedProduct {}
+export interface Food extends MappedProduct {}
+export interface Package extends MappedProduct {}
 
-export interface Food extends BaseProduct {
-  category: string;
-}
-
-export interface Package extends BaseProduct {
-  category: string;
-}
-
-// Auth types – OTP sign-in flow
+// Auth – OTP sign-in
 export interface RequestOtpRequest {
   email: string;
 }
@@ -64,33 +83,25 @@ export interface SignInResponse {
   token: string;
 }
 
-// Availability / slots (for booking step: select date, persons, products → get slots with start time + available count)
+// Availability slots
 export interface Slot {
-  /** Display label e.g. "6:00 am", "6 am" */
-  startTime: string;
-  /** Number of spots available for this slot */
+  startTime: string;  // e.g. "6:00 am"
   available: number;
-  /** Optional discount in dollars */
-  discount?: number;
+  discount?: number;  
 }
 
 export interface GetAvailabilitySlotsParams {
-  /** Date YYYY-MM-DD */
-  date: string;
-  /** 1 = Morning, 2 = Afternoon, 3 = Evening */
-  timeOfDay: 1 | 2 | 3;
-  /** Selected activity IDs */
+  date: string; 
+  timeOfDay: 1 | 2 | 3;  
   activityIds: number[];
-  /** Selected package IDs */
   packageIds: number[];
-  /** Products with attribute (for retrieveTimeSlots API) */
   selectedBookableProducts: { id: number; attributeOptionId: number }[];
   adults: number;
   children: number;
   shopId: number;
 }
 
-// Booking dapper status (from /api/Booking/bookingDapperStatuses)
+// GET /api/Booking/bookingDapperStatuses
 export interface BookingDapperStatus {
   id: number;
   name: string;
@@ -100,7 +111,7 @@ export interface BookingDapperStatus {
 
 export type BookingDapperStatusesResponse = ApiResponse<BookingDapperStatus[]>;
 
-/** retrieveTimeSlots response data */
+// retrieveTimeSlots response
 export interface RetrieveTimeSlotsData {
   bookingId?: string;
   selectedDate?: string;
@@ -109,18 +120,17 @@ export interface RetrieveTimeSlotsData {
 
 export type RetrieveTimeSlotsResponse = ApiResponse<RetrieveTimeSlotsData>;
 
-/** Result from availabilityApi.getSlots – raw timeSlots (all periods) + which periods have slots */
+// availabilityApi.getSlots result
 export interface AvailabilitySlotsResult {
   timeSlots: Record<string, string[]>;
   periodsWithSlots: ("Morning" | "Afternoon" | "Night")[];
-  /** Returned by backend when available (for generateBookingItemSteps) */
   bookingId?: string;
 }
 
-/** Single step from generateBookingItemSteps API */
+// generateBookingItemSteps single step
 export interface GenerateBookingItemStep {
   serial: number;
-  startingTime: string;  // "00:00", "00:43" – HH:mm offset from slot start
+  startingTime: string;  // HH:mm offset from slot start
   endingTime: string;
   itemName: string;
   itemDuration: string;

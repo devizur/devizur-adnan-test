@@ -1,19 +1,7 @@
-import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult, GenerateBookingItemStepsResponse } from "./types";
+import { Activity, Food, Package, ProductAdvancedItem, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, BookingDapperStatusesResponse, RetrieveTimeSlotsResponse, AvailabilitySlotsResult, GenerateBookingItemStepsResponse } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
-
-// Base API configuration - ready for REST API migration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
-async function fetchJson<T>(url: string): Promise<T> {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-    }
-    return response.json();
-}
-
 
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     try {
@@ -29,162 +17,172 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
     }
 }
 
-/** Map API product shape to Activity (datasync/products/changes returns productId, productName, etc.) */
-function mapProductToActivity(raw: Record<string, unknown>): Activity {
-    const productId = Number(raw.productId) ?? 0;
-    const productName = String(raw.productName ?? "");
-    const fixedPrice = raw.fixedPrice != null ? Number(raw.fixedPrice) : null;
-    const category = String(raw.categoryName ?? raw.subCategoryName ?? "");
+/** Query params for GET /api/Product/advanced */
+export interface ProductAdvancedParams {
+    ShopId: number;
+    CategoryId?: number;
+    SubCategoryId?: number;
+    ProductId?: number;
+    IsBookingRequired?: boolean;
+    IsBundleProduct?: boolean;
+    IsActivity?: boolean;
+    IsFood?: boolean;
+}
+
+async function fetchProductAdvanced(params: ProductAdvancedParams): Promise<ProductAdvancedItem[]> {
+    const search = new URLSearchParams();
+    search.set("ShopId", String(params.ShopId));
+    if (params.CategoryId != null) search.set("CategoryId", String(params.CategoryId));
+    if (params.SubCategoryId != null) search.set("SubCategoryId", String(params.SubCategoryId));
+    if (params.ProductId != null) search.set("ProductId", String(params.ProductId));
+    if (params.IsBookingRequired != null) search.set("IsBookingRequired", String(params.IsBookingRequired));
+    if (params.IsBundleProduct != null) search.set("IsBundleProduct", String(params.IsBundleProduct));
+    if (params.IsActivity != null) search.set("IsActivity", String(params.IsActivity));
+    if (params.IsFood != null) search.set("IsFood", String(params.IsFood));
+
+    const raw = await fetchFromApi<ProductAdvancedItem[]>(
+        `/api/Product/advanced?${search.toString()}`,
+        "fetch product catalog"
+    );
+    return Array.isArray(raw) ? raw : [];
+}
+
+function getPriceFromProduct(item: ProductAdvancedItem): { price: string; fixedPrice: string } {
+    const combo = item.attributeCombinations?.[0];
+    const num = combo?.fixedPrice ?? combo?.minPrice ?? combo?.maxPrice;
+    if (num != null && !Number.isNaN(num)) {
+        const str = String(num);
+        return { price: `$${str}`, fixedPrice: str };
+    }
+    return { price: "Unavailable", fixedPrice: "Unavailable" };
+}
+
+function mapProductToBase(item: ProductAdvancedItem) {
+    const category = item.categoryName || item.subCategoryName || "";
+    const { price, fixedPrice } = getPriceFromProduct(item);
+    const image = item.thumbnailShortImageUrl || "https://picsum.photos/400/200";
     return {
-        id: productId,
-        productId,
-        title: productName,
-        productName,
-        price: fixedPrice != null ? `$${fixedPrice}` : "Unavailable",
-        fixedPrice: fixedPrice != null ? `${fixedPrice}` : "Unavailable",
+        id: item.productId,
+        productId: item.productId,
+        title: item.productName,
+        productName: item.productName,
+        price,
+        fixedPrice,
         unit: "per person",
         rating: 4.5,
-        image: (raw.image as string) || "https://picsum.photos/400/200",
+        image,
         duration: "60 mins",
         category,
         discount: "$5 off",
         timeSlots: ["9:00 am", "11:00 am", "2:00 pm"],
-        games: [1, 2, 3],
+        games: [1, 2, 3] as (1 | 2 | 3)[],
     };
 }
 
+/** Map Product/advanced item to Activity */
+function mapProductToActivity(item: ProductAdvancedItem): Activity {
+    return mapProductToBase(item) as Activity;
+}
+
+/** Map Product/advanced item to Food */
+function mapProductToFood(item: ProductAdvancedItem): Food {
+    return mapProductToBase(item) as Food;
+}
+
+/** Map Product/advanced item to Package */
+function mapProductToPackage(item: ProductAdvancedItem): Package {
+    return mapProductToBase(item) as Package;
+}
+
 export const activitiesApi = {
-
     async getAll(shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
-        const search = new URLSearchParams();
-        search.set("shopId", String(shopId));
-        search.set("page", String(page));
-        search.set("pageSize", String(pageSize));
-
-        const raw = await fetchFromApi<unknown[]>(
-            `/api/datasync/products/changes?${search.toString()}`,
-            "fetch activities"
-        );
-        return Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsActivity: true });
+        const all = raw.map(mapProductToActivity);
+        const start = (page - 1) * pageSize;
+        return all.slice(start, start + pageSize);
     },
 
-
     async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
-        const query = term.trim();
-
-        const searchParams = new URLSearchParams();
-        searchParams.set("shopId", String(shopId));
-        searchParams.set("page", String(page));
-        searchParams.set("pageSize", String(pageSize));
-        if (query) {
-            searchParams.set("search", query);
-        }
-
-        const raw = await fetchFromApi<unknown[]>(
-            `/api/datasync/products/changes?${searchParams.toString()}`,
-            "search activities"
-        );
-        const all = Array.isArray(raw) ? raw.map((item) => mapProductToActivity(item as Record<string, unknown>)) : [];
-        if (!query) return all;
-        const q = query.toLowerCase();
-        return all.filter(
-            (a) =>
-                a.productName.toLowerCase().includes(q) ||
-                a.category.toLowerCase().includes(q)
-        );
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsActivity: true });
+        const all = raw.map(mapProductToActivity);
+        const query = term.trim().toLowerCase();
+        const filtered = query
+            ? all.filter(
+                  (a) =>
+                      a.productName.toLowerCase().includes(query) ||
+                      a.category.toLowerCase().includes(query)
+              )
+            : all;
+        const start = (page - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
     },
 
     async getById(id: number, shopId = 1): Promise<Activity | null> {
-        const activities = await activitiesApi.getAll(shopId, 1, 100);
-        return activities.find((a) => a.id === id || (a as any).productId === id) || null;
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsActivity: true, ProductId: id });
+        const item = raw[0];
+        return item ? mapProductToActivity(item) : null;
     },
 };
 
-// Foods API
+// Foods API – from Product/advanced with IsFood=true
 export const foodsApi = {
-
-    async getAll(): Promise<Food[]> {
-        if (API_BASE_URL) {
-            return fetchFromApi<Food[]>("/api/foods", "fetch foods");
-        }
-
-
-        const [foods1] = await Promise.all([
-            fetchJson<Food[]>("/data/Foods1.json"),
-
-        ]);
-
-        return [...foods1];
+    async getAll(shopId: number, page = 1, pageSize = 9): Promise<Food[]> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsFood: true });
+        const all = raw.map(mapProductToFood);
+        const start = (page - 1) * pageSize;
+        return all.slice(start, start + pageSize);
     },
 
-
-    async search(term: string): Promise<Food[]> {
-        const query = term.trim();
-        if (!query) {
-            return foodsApi.getAll();
-        }
-
-        if (API_BASE_URL) {
-            const encoded = encodeURIComponent(query);
-            return fetchFromApi<Food[]>(`/api/foods?search=${encoded}`, "search foods");
-        }
-
-        const all = await foodsApi.getAll();
-        const normalized = query.toLowerCase();
-        return all.filter(
-            (food) =>
-                food.title.toLowerCase().includes(normalized) ||
-                food.category.toLowerCase().includes(normalized)
-        );
+    async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Food[]> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsFood: true });
+        const all = raw.map(mapProductToFood);
+        const query = term.trim().toLowerCase();
+        const filtered = query
+            ? all.filter(
+                  (food) =>
+                      food.title.toLowerCase().includes(query) ||
+                      food.category.toLowerCase().includes(query)
+              )
+            : all;
+        const start = (page - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
     },
 
-    async getById(id: number): Promise<Food | null> {
-        const foods = await foodsApi.getAll();
-        return foods.find((food) => food.id === id) || null;
+    async getById(id: number, shopId = 1): Promise<Food | null> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsFood: true, ProductId: id });
+        const item = raw[0];
+        return item ? mapProductToFood(item) : null;
     },
 };
 
-// Packages API
+// Packages API – from Product/advanced with IsBundleProduct=true
 export const packagesApi = {
-
-    async getAll(): Promise<Package[]> {
-        if (API_BASE_URL) {
-            return fetchFromApi<Package[]>("/api/packages", "fetch packages");
-        }
-
-
-        const [packages1] = await Promise.all([
-            fetchJson<Package[]>("/data/Packages1.json"),
-
-        ]);
-
-        return [...packages1];
+    async getAll(shopId: number, page = 1, pageSize = 9): Promise<Package[]> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsBundleProduct: true });
+        const all = raw.map(mapProductToPackage);
+        const start = (page - 1) * pageSize;
+        return all.slice(start, start + pageSize);
     },
 
-
-    async search(term: string): Promise<Package[]> {
-        const query = term.trim();
-        if (!query) {
-            return packagesApi.getAll();
-        }
-
-        if (API_BASE_URL) {
-            const encoded = encodeURIComponent(query);
-            return fetchFromApi<Package[]>(`/api/packages?search=${encoded}`, "search packages");
-        }
-
-        const all = await packagesApi.getAll();
-        const normalized = query.toLowerCase();
-        return all.filter(
-            (pkg) =>
-                pkg.title.toLowerCase().includes(normalized) ||
-                pkg.category.toLowerCase().includes(normalized)
-        );
+    async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Package[]> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsBundleProduct: true });
+        const all = raw.map(mapProductToPackage);
+        const query = term.trim().toLowerCase();
+        const filtered = query
+            ? all.filter(
+                  (pkg) =>
+                      pkg.title.toLowerCase().includes(query) ||
+                      pkg.category.toLowerCase().includes(query)
+              )
+            : all;
+        const start = (page - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
     },
 
-    async getById(id: number): Promise<Package | null> {
-        const packages = await packagesApi.getAll();
-        return packages.find((pkg) => pkg.id === id) || null;
+    async getById(id: number, shopId = 1): Promise<Package | null> {
+        const raw = await fetchProductAdvanced({ ShopId: shopId, IsBundleProduct: true, ProductId: id });
+        const item = raw[0];
+        return item ? mapProductToPackage(item) : null;
     },
 };
 
@@ -273,52 +271,31 @@ export const bookingApi = {
 // Auth API – OTP sign-in: request OTP by email, then verify OTP to get token
 export const authApi = {
     async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
-        if (API_BASE_URL) {
-            try {
-                const response = await bookingEngineUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
-                return response.data;
-            } catch (error) {
-                const err = error as AxiosError<any>;
-                const message =
-                    (err.response?.data as any)?.message ||
-                    err.message ||
-                    "Failed to send OTP";
-                throw new Error(message);
-            }
+        try {
+            const response = await bookingEngineUrlHttp.post<RequestOtpResponse>("/api/auth/request-otp", data);
+            return response.data;
+        } catch (error) {
+            const err = error as AxiosError<any>;
+            const message =
+                (err.response?.data as any)?.message ||
+                err.message ||
+                "Failed to send OTP";
+            throw new Error(message);
         }
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        if (data.email) {
-            return { success: true, message: "OTP sent to your email." };
-        }
-        throw new Error("Please provide a valid email address");
     },
 
     /** Verify OTP and return user + token (sign in). */
     async verifyOtp(data: VerifyOtpRequest): Promise<SignInResponse> {
-        if (API_BASE_URL) {
-            try {
-                const response = await bookingEngineUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
-                return response.data;
-            } catch (error) {
-                const err = error as AxiosError<any>;
-                const message =
-                    (err.response?.data as any)?.message ||
-                    err.message ||
-                    "Invalid or expired OTP";
-                throw new Error(message);
-            }
+        try {
+            const response = await bookingEngineUrlHttp.post<SignInResponse>("/api/auth/verify-otp", data);
+            return response.data;
+        } catch (error) {
+            const err = error as AxiosError<any>;
+            const message =
+                (err.response?.data as any)?.message ||
+                err.message ||
+                "Invalid or expired OTP";
+            throw new Error(message);
         }
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        if (data.email && data.otp && data.otp.length >= 4) {
-            return {
-                user: {
-                    id: "otp-user-" + Date.now(),
-                    email: data.email,
-                    name: data.email.split("@")[0],
-                },
-                token: "mock-jwt-token-" + Date.now(),
-            };
-        }
-        throw new Error("Invalid or expired OTP");
     },
 };

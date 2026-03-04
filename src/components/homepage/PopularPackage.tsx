@@ -40,6 +40,8 @@ const PopularPackage: React.FC<PopularPackageProps> = ({ limit, searchTerm }) =>
         );
     }
 
+    if (itemsToShow.length === 0) return null;
+
     return (
         <section className="container mx-auto px-6  pb-20">
             {!hasSearch && (

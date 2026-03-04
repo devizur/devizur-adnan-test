@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 interface PaginationProps {
     page: number;
     hasNextPage: boolean;
+    totalPages?: number;
     isLoading?: boolean;
     label?: string;
     onPageChange: (page: number) => void;
@@ -11,6 +12,7 @@ interface PaginationProps {
 export const Pagination: React.FC<PaginationProps> = ({
     page,
     hasNextPage,
+    totalPages,
     isLoading = false,
     label,
     onPageChange,
@@ -35,11 +37,12 @@ export const Pagination: React.FC<PaginationProps> = ({
 
     const commitInput = () => {
         const numeric = parseInt(inputValue || "0", 10);
-        if (!Number.isNaN(numeric) && numeric >= 1 && numeric !== page && !isLoading) {
-            onPageChange(numeric);
-        } else {
-            setInputValue(String(page));
+        const clamped =
+            totalPages != null ? Math.min(Math.max(1, numeric), totalPages) : numeric;
+        if (!Number.isNaN(clamped) && clamped >= 1 && clamped !== page && !isLoading) {
+            onPageChange(clamped);
         }
+        setInputValue(String(page));
     };
 
     const handleInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
@@ -78,6 +81,12 @@ export const Pagination: React.FC<PaginationProps> = ({
                         onKeyDown={handleInputKeyDown}
                         className="w-14 text-center text-sm font-medium  rounded-md bg-background/90 text-primary px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary disabled:opacity-50"
                     />
+
+                    {totalPages != null && (
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                            of {totalPages}
+                        </span>
+                    )}
 
                     {label && (
                         <span className="text-sm text-muted-foreground whitespace-nowrap">

@@ -14,7 +14,6 @@ async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
   }
 }
 
-/** Query params for GET /api/Product/advanced */
 export interface ProductAdvancedParams {
   ShopId: number;
   CategoryId?: number;
@@ -80,42 +79,35 @@ function mapProductToBase(item: ProductAdvancedItem) {
   };
 }
 
-/** Map Product/advanced item to Activity */
 function mapProductToActivity(item: ProductAdvancedItem): Activity {
   return mapProductToBase(item) as Activity;
 }
 
-/** Map Product/advanced item to Food */
 function mapProductToFood(item: ProductAdvancedItem): Food {
   return mapProductToBase(item) as Food;
 }
 
-/** Map Product/advanced item to Package */
 function mapProductToPackage(item: ProductAdvancedItem): Package {
   return mapProductToBase(item) as Package;
 }
 
 export const activitiesApi = {
-  async getAll(shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
+  async getAll(shopId: number): Promise<Activity[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsActivity: true });
-    const all = raw.map(mapProductToActivity);
-    const start = (page - 1) * pageSize;
-    return all.slice(start, start + pageSize);
+    return raw.map(mapProductToActivity);
   },
 
-  async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Activity[]> {
+  async search(term: string, shopId: number): Promise<Activity[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsActivity: true });
     const all = raw.map(mapProductToActivity);
     const query = term.trim().toLowerCase();
-    const filtered = query
+    return query
       ? all.filter(
           (a) =>
             a.productName.toLowerCase().includes(query) ||
             a.category.toLowerCase().includes(query)
         )
       : all;
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
   },
 
   async getById(id: number, shopId = 1): Promise<Activity | null> {
@@ -125,28 +117,23 @@ export const activitiesApi = {
   },
 };
 
-// Foods API – from Product/advanced with IsFood=true
 export const foodsApi = {
-  async getAll(shopId: number, page = 1, pageSize = 9): Promise<Food[]> {
+  async getAll(shopId: number): Promise<Food[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsFood: true });
-    const all = raw.map(mapProductToFood);
-    const start = (page - 1) * pageSize;
-    return all.slice(start, start + pageSize);
+    return raw.map(mapProductToFood);
   },
 
-  async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Food[]> {
+  async search(term: string, shopId: number): Promise<Food[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsFood: true });
     const all = raw.map(mapProductToFood);
     const query = term.trim().toLowerCase();
-    const filtered = query
+    return query
       ? all.filter(
           (food) =>
             food.title.toLowerCase().includes(query) ||
             food.category.toLowerCase().includes(query)
         )
       : all;
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
   },
 
   async getById(id: number, shopId = 1): Promise<Food | null> {
@@ -156,28 +143,23 @@ export const foodsApi = {
   },
 };
 
-// Packages API – from Product/advanced with IsBundleProduct=true
 export const packagesApi = {
-  async getAll(shopId: number, page = 1, pageSize = 9): Promise<Package[]> {
+  async getAll(shopId: number): Promise<Package[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsBundleProduct: true });
-    const all = raw.map(mapProductToPackage);
-    const start = (page - 1) * pageSize;
-    return all.slice(start, start + pageSize);
+    return raw.map(mapProductToPackage);
   },
 
-  async search(term: string, shopId: number, page = 1, pageSize = 9): Promise<Package[]> {
+  async search(term: string, shopId: number): Promise<Package[]> {
     const raw = await fetchProductAdvanced({ ShopId: shopId, IsBundleProduct: true });
     const all = raw.map(mapProductToPackage);
     const query = term.trim().toLowerCase();
-    const filtered = query
+    return query
       ? all.filter(
           (pkg) =>
             pkg.title.toLowerCase().includes(query) ||
             pkg.category.toLowerCase().includes(query)
         )
       : all;
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
   },
 
   async getById(id: number, shopId = 1): Promise<Package | null> {

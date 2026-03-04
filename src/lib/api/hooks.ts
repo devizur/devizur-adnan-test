@@ -43,27 +43,18 @@ export const queryKeys = {
     },
 };
 
-// Activities hooks
-export function useActivities(
-    searchTerm?: string,
-    page = 1,
-    pageSize = 9
-): UseQueryResult<Activity[], Error> {
+// Activities hooks – fetches all data; pagination is controlled on the frontend
+export function useActivities(searchTerm?: string): UseQueryResult<Activity[], Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
-    const effectivePage = page ?? 1;
-    const effectivePageSize = pageSize ?? 9;
-
     return useQuery({
         queryKey: hasSearch
-            ? [...queryKeys.activities.search(query), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize]
-            : [...queryKeys.activities.list(), "shopId", shopId, "page", effectivePage, "pageSize", effectivePageSize],
+            ? [...queryKeys.activities.search(query), "shopId", shopId]
+            : [...queryKeys.activities.list(), "shopId", shopId],
         queryFn: () =>
-            hasSearch
-                ? activitiesApi.search(query, shopId, effectivePage, effectivePageSize)
-                : activitiesApi.getAll(shopId, effectivePage, effectivePageSize),
+            hasSearch ? activitiesApi.search(query, shopId) : activitiesApi.getAll(shopId),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -78,27 +69,18 @@ export function useActivity(id: number): UseQueryResult<Activity | null, Error> 
     });
 }
 
-// Foods hooks
-export function useFoods(
-    searchTerm?: string,
-    page = 1,
-    pageSize = 9
-): UseQueryResult<Food[], Error> {
+// Foods hooks – fetches all data; pagination is controlled on the frontend
+export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
-    const effectivePage = page ?? 1;
-    const effectivePageSize = pageSize ?? 9;
-
     return useQuery({
         queryKey: hasSearch
-            ? [...queryKeys.foods.search(query, shopId), "page", effectivePage, "pageSize", effectivePageSize]
-            : [...queryKeys.foods.list(shopId), "page", effectivePage, "pageSize", effectivePageSize],
+            ? [...queryKeys.foods.search(query, shopId)]
+            : [...queryKeys.foods.list(shopId)],
         queryFn: () =>
-            hasSearch
-                ? foodsApi.search(query, shopId, effectivePage, effectivePageSize)
-                : foodsApi.getAll(shopId, effectivePage, effectivePageSize),
+            hasSearch ? foodsApi.search(query, shopId) : foodsApi.getAll(shopId),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -113,27 +95,18 @@ export function useFood(id: number): UseQueryResult<Food | null, Error> {
     });
 }
 
-// Packages hooks
-export function usePackages(
-    searchTerm?: string,
-    page = 1,
-    pageSize = 9
-): UseQueryResult<Package[], Error> {
+// Packages hooks – fetches all data; pagination is controlled on the frontend
+export function usePackages(searchTerm?: string): UseQueryResult<Package[], Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);
     const query = searchTerm?.trim() ?? "";
     const hasSearch = query.length > 0;
 
-    const effectivePage = page ?? 1;
-    const effectivePageSize = pageSize ?? 9;
-
     return useQuery({
         queryKey: hasSearch
-            ? [...queryKeys.packages.search(query, shopId), "page", effectivePage, "pageSize", effectivePageSize]
-            : [...queryKeys.packages.list(shopId), "page", effectivePage, "pageSize", effectivePageSize],
+            ? [...queryKeys.packages.search(query, shopId)]
+            : [...queryKeys.packages.list(shopId)],
         queryFn: () =>
-            hasSearch
-                ? packagesApi.search(query, shopId, effectivePage, effectivePageSize)
-                : packagesApi.getAll(shopId, effectivePage, effectivePageSize),
+            hasSearch ? packagesApi.search(query, shopId) : packagesApi.getAll(shopId),
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }

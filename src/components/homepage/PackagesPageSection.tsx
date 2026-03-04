@@ -1,8 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ProductCard from "@/components/ui/reused/ProductCard";
 import { usePackages } from "@/lib/api/hooks";
 import { Pagination } from "@/components/ui/reused/Pagination";
+
+const PAGE_SIZE = 9;
 
 interface PackagesPageSectionProps {
     searchTerm?: string;
@@ -10,12 +12,16 @@ interface PackagesPageSectionProps {
 
 const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 9;
-    const { data: packages = [], isLoading, error } = usePackages(
-        searchTerm,
-        currentPage,
-        pageSize
-    );
+    const { data: allPackages = [], isLoading, error } = usePackages(searchTerm);
+
+    // Frontend pagination: slice full list by current page
+    const paginatedPackages = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return allPackages.slice(start, start + PAGE_SIZE);
+    }, [allPackages, currentPage]);
+
+    const totalPages = Math.ceil(allPackages.length / PAGE_SIZE) || 1;
+    const hasNextPage = currentPage < totalPages;
 
     // Reset to first page when search term changes
     useEffect(() => {
@@ -28,8 +34,6 @@ const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm })
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
     }, [currentPage]);
-
-    const hasNextPage = packages.length === pageSize;
 
     if (isLoading) {
         return (
@@ -51,7 +55,7 @@ const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm })
         );
     }
 
-    if (!packages.length) {
+    if (!allPackages.length) {
         return (
             <section className="container mx-auto pb-20">
                 <div className="text-center py-20">
@@ -64,13 +68,14 @@ const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm })
     return (
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {packages.map((pkg) => (
+                {paginatedPackages.map((pkg) => (
                     <ProductCard key={pkg.id} item={pkg} />
                 ))}
             </div>
             <Pagination
                 page={currentPage}
                 hasNextPage={hasNextPage}
+                totalPages={totalPages}
                 isLoading={isLoading}
                 onPageChange={setCurrentPage}
             />

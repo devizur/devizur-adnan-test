@@ -4,7 +4,6 @@ import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
-import { SHIFT, OPTIONS } from "./constants";
 import {
   setDate,
   setTimeOfDay,
@@ -21,6 +20,18 @@ import { formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 import { BookingTimelineBar } from "./BookingTimelineBar";
+
+const OPTIONS = [
+  { label: "1 Game", value: 1 },
+  { label: "2 Games", value: 2 },
+  { label: "3 Games", value: 3 },
+] as const;
+
+const SHIFT = [
+  { id: 1, label: "Morning", apiKey: "Morning" as const },
+  { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
+  { id: 3, label: "Evening", apiKey: "Night" as const },
+] as const;
 
 export function Step1AvailabilitySelection() {
   const dispatch = useAppDispatch();
@@ -154,7 +165,8 @@ export function Step1AvailabilitySelection() {
                   </div>
                   <div className="p-3">
                     <h4 className="font-medium text-white truncate">{activity.title}</h4>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                 
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
                       {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
@@ -162,28 +174,44 @@ export function Step1AvailabilitySelection() {
                 </button>
                 {selected && (
                   <div className="flex gap-1.5 mt-2 px-0.5">
-                    {getAvailableOptions(activity).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          dispatch(setActivityGameNo({ activityId: activity.id, gameNo: opt.value }));
-                        }}
-                        aria-pressed={gameNo === opt.value}
-                        aria-label={`${opt.label} $${opt.price.toFixed(2)} for ${activity.title}`}
-                        className={cn(
-                          "flex-1 min-h-10 py-2 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                          gameNo === opt.value
-                            ? "bg-primary-1 text-secondary"
-                            : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
-                        )}
-                      >
-                        <span className=" ">{opt.label}</span>
-                        <span className="  opacity-80">/</span>
-                        <span className=" text-[10px] opacity-80">${opt.price.toFixed(2)}</span>
-                      </button>
-                    ))}
+                    {getAvailableOptions(activity).map((opt) => {
+                      const basePrice = Number((activity as any).fixedPrice);
+                      const hasPrice = !Number.isNaN(basePrice) && basePrice > 0;
+                      const optionPrice = hasPrice ? basePrice * opt.value : undefined;
+                      const priceLabel = hasPrice
+                        ? `$${optionPrice!.toFixed(2)}`
+                        : "Unavailable";
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(
+                              setActivityGameNo({ activityId: activity.id, gameNo: opt.value })
+                            );
+                          }}
+                          aria-pressed={gameNo === opt.value}
+                          aria-label={
+                            hasPrice
+                              ? `${opt.label} ${priceLabel} for ${activity.title}`
+                              : `${opt.label} price unavailable for ${activity.title}`
+                          }
+                          className={cn(
+                            "flex-1 min-h-10 py-2 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                            gameNo === opt.value
+                              ? "bg-primary-1 text-secondary"
+                              : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                          )}
+                        >
+                          <span className=" ">{opt.label}</span>
+                          <span className="  opacity-80">/</span>
+                          <span className=" text-[10px] opacity-80">
+                            {priceLabel}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>

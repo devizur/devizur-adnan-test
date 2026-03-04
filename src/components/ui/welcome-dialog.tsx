@@ -10,11 +10,16 @@ import {
 import { Star, MapPin, Store, Search } from "lucide-react";
 import { useAppDispatch } from "@/store/hooks";
 import { setShopId } from "@/store/shopSlice";
+import { clearAuth } from "@/store/authSlice";
+import { resetBooking } from "@/store/bookingSlice";
+import { useCart } from "@/contexts/CartContext";
+import { useBookingCart } from "@/contexts/BookingCartContext";
+import { useShopDialog } from "@/contexts/ShopDialogContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SELECTED_SHOP_KEY = "welcome-selected-shop";
 
-
-const SHOPS = [
+export const SHOPS = [
   {
     id: 1,
     shopId: 1,
@@ -59,29 +64,36 @@ const SHOPS = [
 
 export function WelcomeDialog() {
   const dispatch = useAppDispatch();
-  const [open, setOpen] = React.useState(true);
+  const { isOpen, openShopDialog, closeShopDialog } = useShopDialog();
+  const { clearCart } = useCart();
+  const { resetBookingCart } = useBookingCart();
+  const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
 
-  // Hydrate shopId from localStorage on mount
+  // Hydrate shopId from localStorage on mount; open dialog if no shop selected
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem(SELECTED_SHOP_KEY);
     if (stored) {
       const id = parseInt(stored, 10);
       if (!Number.isNaN(id)) dispatch(setShopId(id));
+    } else {
+      openShopDialog();
     }
-  }, [dispatch]);
-
-  React.useEffect(() => {
-    setOpen(true);
-  }, []);
+  }, [dispatch, openShopDialog]);
 
   const handleShopSelect = (shop: (typeof SHOPS)[0]) => {
-    setOpen(false);
+    dispatch(clearAuth());
+    dispatch(resetBooking());
+    clearCart();
+    resetBookingCart();
+    queryClient.clear();
     dispatch(setShopId(shop.shopId));
     if (typeof window !== "undefined") {
       localStorage.setItem(SELECTED_SHOP_KEY, String(shop.shopId));
     }
+    closeShopDialog();
+    setSearch("");
   };
 
   const filteredShops = React.useMemo(() => {
@@ -104,12 +116,13 @@ export function WelcomeDialog() {
     });
   }, [search]);
 
+  const open = isOpen;
+
   return (
     <AlertDialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) return;
-        setOpen(next);
+        if (!next) closeShopDialog();
       }}
     >
       <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:min-w-[90%] sm:w-4xl h-[90vh] lg:h-[95vh] bg-secondary-2 backdrop-blur-xl p-0 gap-0 text-white border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col shadow-2xl">

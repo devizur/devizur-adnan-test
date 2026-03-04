@@ -40,6 +40,8 @@ const PopularActivities: React.FC<PopularActivitiesProps> = ({ limit, searchTerm
         );
     }
 
+    if (itemsToShow.length === 0) return null;
+
     return (
         <section className="container  mx-auto  pb-20">
             {!hasSearch && (

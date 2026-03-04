@@ -1,8 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ActivitiesCard from "@/components/ui/reused/ActivitiesCard";
 import { useActivities } from "@/lib/api/hooks";
 import { Pagination } from "@/components/ui/reused/Pagination";
+
+const PAGE_SIZE = 9;
 
 interface ActivitiesPageSectionProps {
     searchTerm?: string;
@@ -10,12 +12,16 @@ interface ActivitiesPageSectionProps {
 
 const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTerm }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 9;
-    const { data: activities = [], isLoading, error } = useActivities(
-        searchTerm,
-        currentPage,
-        pageSize
-    );
+    const { data: allActivities = [], isLoading, error } = useActivities(searchTerm);
+
+    // Frontend pagination: slice full list by current page
+    const paginatedActivities = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return allActivities.slice(start, start + PAGE_SIZE);
+    }, [allActivities, currentPage]);
+
+    const totalPages = Math.ceil(allActivities.length / PAGE_SIZE) || 1;
+    const hasNextPage = currentPage < totalPages;
 
     // Reset to first page when search term changes
     useEffect(() => {
@@ -28,8 +34,6 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
     }, [currentPage]);
-
-    const hasNextPage = activities.length === pageSize;
 
     if (isLoading) {
         return (
@@ -51,7 +55,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
         );
     }
 
-    if (!activities.length) {
+    if (!allActivities.length) {
         return (
             <section className="container mx-auto pb-20">
                 <div className="text-center py-20">
@@ -64,7 +68,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
     return (
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {activities.map((activity, index) => {
+                {paginatedActivities.map((activity, index) => {
                     const key = `${(activity as any).productId ?? activity.id}-${index}`;
                     return (
                         <ActivitiesCard
@@ -78,6 +82,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
             <Pagination
                 page={currentPage}
                 hasNextPage={hasNextPage}
+                totalPages={totalPages}
                 isLoading={isLoading}
                 label={searchTerm?.trim() ? `Results for "${searchTerm.trim()}"` : undefined}
                 onPageChange={setCurrentPage}

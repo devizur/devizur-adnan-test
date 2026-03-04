@@ -152,33 +152,43 @@ export function BookingTimelineBar({
 
   if (!selectedDate) return null;
 
-  const LoadingState = () => (
+  const StatusCard: React.FC<{
+    children: React.ReactNode;
+    alignCenter?: boolean;
+    showSpinner?: boolean;
+  }> = ({ children, alignCenter = true, showSpinner = false }) => (
     <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
-      <div className="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
-        <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
-        <span>Loading timeline…</span>
+      <div
+        className={cn(
+          "py-6 text-gray-400 text-sm",
+          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center gap-2 text-center px-4"
+        )}
+      >
+        {showSpinner && (
+          <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+        )}
+        {children}
       </div>
     </div>
+  );
+
+  const LoadingState = () => (
+    <StatusCard showSpinner>
+      <span>Loading timeline…</span>
+    </StatusCard>
   );
 
   const EmptyState = () => (
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
-      <div className="flex flex-col items-center justify-center gap-2 py-6 text-center text-gray-400 text-sm px-4">
-        <span>No timeline data available.</span>
-        <span className="text-xs text-gray-500">Select a time slot or check back later.</span>
-      </div>
-    </div>
+    <StatusCard alignCenter={false}>
+      <span>No timeline data available.</span>
+      <span className="text-xs text-gray-500">Select a time slot or check back later.</span>
+    </StatusCard>
   );
 
   const InitState = () => (
-   
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
-      <div className="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
-        
-        <span>Select activities, guests, and a start time below.</span>
-      </div>
-    </div>
-  
+    <StatusCard>
+      <span>Select activities, guests, and a start time below.</span>
+    </StatusCard>
   );
 
   if (isLoading && isFetching) return <LoadingState />;

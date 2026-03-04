@@ -16,7 +16,6 @@ import type {
   BookingDetails,
   PerPersonBreakdown,
 } from "@/components/ui/booking/types";
-import { OPTIONS } from "@/components/ui/booking/constants";
 
 const DEFAULT_ADULT_PRICE = 12;
 const DEFAULT_CHILD_PRICE = 9;
@@ -188,14 +187,18 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     [state.people.adults, state.people.children]
   );
 
-  /** Dynamic pricing from selected activities + game options (OPTIONS). When no activities, use defaults. */
+  /** Dynamic pricing from selected activities + game options; when no activities, use defaults. */
   const pricing = useMemo((): BookingPricing => {
     if (state.activities.length === 0) {
       return { adultPrice: DEFAULT_ADULT_PRICE, childPrice: DEFAULT_CHILD_PRICE };
     }
     const total = state.activities.reduce((sum, item) => {
-      const opt = OPTIONS.find((o) => o.value === item.gameOption);
-      return sum + (opt?.price ?? DEFAULT_ADULT_PRICE);
+      const base = Number(item.activity.fixedPrice);
+      const games = item.gameOption ?? 1;
+      if (!Number.isNaN(base) && base > 0) {
+        return sum + base * games;
+      }
+      return sum + DEFAULT_ADULT_PRICE;
     }, 0);
     const adultPrice = total / state.activities.length;
     const childPrice = Math.round(adultPrice * CHILD_PRICE_RATIO * 100) / 100;

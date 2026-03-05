@@ -38,8 +38,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             }`}
         >
             {/* Decorative Glow - scaled down on mobile/tablet */}
-            <div className="absolute top-20 left-1/2 sm:left-40 -translate-x-1/2 -translate-y-1/2 w-40 h-24 sm:w-64 sm:h-40 md:w-[250px] md:h-[150px] bg-blue-400/25 blur-[80px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none z-0" />
-
+           <div className="absolute top-25 left-40 -translate-x-1/2 -translate-y-1/2 w-250 h-150 bg-blue-400/25 blur-[150px] rounded-full pointer-events-none z-0"></div>
             <div
                 className={`container mx-auto my-8 sm:my-12 md:my-15 flex flex-col space-y-3 sm:space-y-4 lg:space-y-5 z-10 relative ${
                     isCenter ? "items-center justify-center" : "items-start justify-start"

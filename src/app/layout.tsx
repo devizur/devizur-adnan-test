@@ -36,6 +36,7 @@ import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { ShopDialogProvider } from "@/contexts/ShopDialogContext";
 import { Toaster } from "@/components/ui/toaster";
 import { WelcomeDialog } from "@/components/ui/welcome-dialog";
+import { BackToTopButton } from "@/components/ui/BackToTopButton";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
@@ -128,6 +129,7 @@ export default function RootLayout({
                   <main className="flex-1">
                     {children}
                   </main>
+                  <BackToTopButton />
                   <Footer />
                   <ColorComponent />
                   <WelcomeDialog />

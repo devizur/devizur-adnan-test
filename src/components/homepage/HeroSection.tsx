@@ -37,7 +37,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 fullHeight ? "min-h-screen flex items-center" : ""
             }`}
         >
-            {/* Decorative Glow - scaled down on mobile/tablet */}
+            {/* Decorative Glow */}
            <div className="absolute top-25 left-40 -translate-x-1/2 -translate-y-1/2 w-250 h-150 bg-blue-400/25 blur-[150px] rounded-full pointer-events-none z-0"></div>
             <div
                 className={`container mx-auto my-8 sm:my-12 md:my-15 flex flex-col space-y-3 sm:space-y-4 lg:space-y-5 z-10 relative ${

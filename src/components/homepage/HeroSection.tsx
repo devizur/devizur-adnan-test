@@ -33,23 +33,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
     return (
         <section
-            className={`relative pt-32 px-6 overflow-hidden ${
+            className={`relative pt-24 sm:pt-28 md:pt-32 px-4 sm:px-6 overflow-hidden ${
                 fullHeight ? "min-h-screen flex items-center" : ""
             }`}
         >
-            {/* Decorative Glow */}
-            <div className="absolute top-25 left-40 -translate-x-1/2 -translate-y-1/2 w-250 h-150 bg-blue-400/25 blur-[150px] rounded-full pointer-events-none z-0"></div>
+            {/* Decorative Glow - scaled down on mobile/tablet */}
+            <div className="absolute top-20 left-1/2 sm:left-40 -translate-x-1/2 -translate-y-1/2 w-40 h-24 sm:w-64 sm:h-40 md:w-[250px] md:h-[150px] bg-blue-400/25 blur-[80px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div
-                className={`container mx-auto my-15 flex flex-col space-y-4 lg:space-y-5 z-10 relative ${
+                className={`container mx-auto my-8 sm:my-12 md:my-15 flex flex-col space-y-3 sm:space-y-4 lg:space-y-5 z-10 relative ${
                     isCenter ? "items-center justify-center" : "items-start justify-start"
                 }`}
             >
                 {/* Badge */}
                 {showBadge && (
                     <div className={`w-full flex ${isCenter ? "justify-center" : "justify-start"}`}>
-                        <div className="flex px-3 py-1 lg:mb-12 bg-primary-1 rounded-full">
-                            <span className="text-black text-[14px] font-bold tracking-tight">
+                        <div className="flex px-2.5 py-1 sm:px-3 lg:mb-12 bg-primary-1 rounded-full">
+                            <span className="text-black text-xs sm:text-[14px] font-bold tracking-tight">
                                 {badgeText}
                             </span>
                         </div>
@@ -58,7 +58,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* Main Heading */}
                 <h1
-                    className={`text-3xl lg:text-5xl font-semibold tracking-tighter leading-none text-primary ${
+                    className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tighter leading-tight sm:leading-none text-primary max-w-full ${
                         isCenter ? "text-center" : ""
                     }`}
                 >
@@ -67,7 +67,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* Subheading */}
                 <p
-                    className={`text-primary font-light text-sm opacity-90 ${
+                    className={`text-primary font-light text-xs sm:text-sm opacity-90 max-w-full ${
                         isCenter ? "text-center" : ""
                     }`}
                 >
@@ -77,7 +77,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Search Bar */}
                 {showSearch && (
                     <div
-                        className={`relative w-full max-w-126.75 group my-8 ${
+                        className={`relative w-full max-w-full md:max-w-2xl lg:max-w-126.75 group my-6 sm:my-8 ${
                             isCenter ? "mx-auto" : ""
                         }`}
                     >
@@ -86,10 +86,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             placeholder={searchPlaceholder}
                             value={searchTerm ?? ""}
                             onChange={(e) => onSearchChange?.(e.target.value)}
-                            className="lg:w-126.75 w-full h-11 bg-white/5 border border-white/10 rounded-[12px] py-4 pl-6 pr-6 text-white placeholder-gray-500 focus:outline-none focus:border-primary-1/40 focus:bg-white/[0.07] transition-all duration-300"
+                            className="w-full h-10 sm:h-11 bg-white/5 border border-white/10 rounded-[10px] sm:rounded-[12px] py-3 sm:py-4 pl-4 pr-10 sm:pl-6 sm:pr-6 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-primary-1/40 focus:bg-white/[0.07] transition-all duration-300"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-1 transition-colors cursor-pointer">
-                            <Search className="w-5 h-5 opacity-60" />
+                            <Search className="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
                         </div>
                     </div>
                 )}

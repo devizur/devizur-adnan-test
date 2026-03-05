@@ -39,9 +39,43 @@ import { WelcomeDialog } from "@/components/ui/welcome-dialog";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getBrandConfig();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+  const metadataBase = appUrl ? new URL(appUrl.startsWith("http") ? appUrl : `https://${appUrl}`) : undefined;
+
   return {
-    title: config.name,
+    title: {
+      // Default tab title: "<Hero title> | <Site name>"
+      default: `${config.name} ||   ${config.content.home.heroTitle }`,
+      // When a page sets its own title, it becomes "<Page title> | <Site name>"
+      template: `%s | ${config.name}`,
+    },
     description: config.content.home.heroSubtitle,
+    metadataBase,
+    openGraph: {
+      title: config.name || config.content.home.heroTitle ,
+      description: config.content.home.heroSubtitle,
+      url: "/",
+      siteName: config.name,
+      type: "website",
+      images: [
+        {
+          url: config.logo || "/favicon.ico",
+          width: 1200,
+          height: 630,
+          alt: `${config.name} logo`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: config.content.home.heroTitle || config.name,
+      description: config.content.home.heroSubtitle,
+      images: [config.logo || "/favicon.ico"],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
     icons: {
       icon: config.logo || "/favicon.ico",
     },

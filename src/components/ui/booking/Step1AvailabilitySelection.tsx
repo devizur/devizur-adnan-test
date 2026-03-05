@@ -151,7 +151,7 @@ export function Step1AvailabilitySelection() {
                   <div className="relative aspect-2/1 sm:aspect-3/1 overflow-hidden">
                     <img
                       src={activity.image || "https://picsum.photos/400/200"}
-                      alt=""
+                      alt={(activity as any).title || "Activity image"}
                       className={cn(
                         "w-full h-full object-cover transition-transform duration-200",
                         selected ? "brightness-110" : "group-hover:scale-[1.02]"
@@ -242,7 +242,7 @@ export function Step1AvailabilitySelection() {
                       <div className="relative aspect-2/1 sm:aspect-3/1 overflow-hidden">
                         <img
                           src={pkg.image || "https://picsum.photos/400/200"}
-                          alt=""
+                          alt={pkg.title || "Package image"}
                           className={cn(
                             "w-full h-full object-cover transition-transform duration-200",
                             selected ? "brightness-110" : "group-hover:scale-[1.02]"

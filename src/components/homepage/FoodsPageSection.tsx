@@ -70,8 +70,8 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     return (
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {paginatedFoods.map((food) => (
-                    <FoodCard key={food.id} item={food} />
+                {paginatedFoods.map((food, index) => (
+                    <FoodCard key={`${food.id}-${index}`} item={food} />
                 ))}
             </div>
             <Pagination

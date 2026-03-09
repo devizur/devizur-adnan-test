@@ -16,7 +16,7 @@ import {
   removePackage,
 } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
-import type { AttributeCombinationItem } from "@/lib/api/types";
+import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
 import { Check } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";

@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Activity, Package, Food } from "@/lib/api/types";
+import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 
 export interface BookingPersons {
   adults: number;
@@ -41,8 +41,12 @@ export interface BookingState {
   bookingId: string;
   /** Step 1: number of persons */
   persons: BookingPersons;
-  /** Step 1: selected activities (with game no) */
-  selectedActivities: { activity: Activity; gameNo: number }[];
+  /** Step 1: selected activities (game no and/or API attribute combination for dynamic options) */
+  selectedActivities: {
+    activity: Activity;
+    gameNo: number;
+    combination?: AttributeCombinationItem;
+  }[];
   /** Step 1: selected packages */
   selectedPackages: Package[];
   /** Step 2: optional food add-ons */
@@ -125,13 +129,26 @@ const bookingSlice = createSlice({
     decrementChildren: (state) => {
       state.persons.children = Math.max(0, state.persons.children - 1);
     },
-    addActivity: (state, action: PayloadAction<{ activity: Activity; gameNo?: number }>) => {
-      const { activity, gameNo = 1 } = action.payload;
+    addActivity: (
+      state,
+      action: PayloadAction<{
+        activity: Activity;
+        gameNo?: number;
+        combination?: AttributeCombinationItem;
+      }>
+    ) => {
+      const { activity, gameNo = 1, combination } = action.payload;
       const existing = state.selectedActivities.findIndex((i) => i.activity.id === activity.id);
+      const finalGameNo = Math.min(3, Math.max(1, gameNo));
       if (existing >= 0) {
-        state.selectedActivities[existing].gameNo = Math.min(3, Math.max(1, gameNo));
+        state.selectedActivities[existing].gameNo = finalGameNo;
+        if (combination !== undefined) state.selectedActivities[existing].combination = combination;
       } else {
-        state.selectedActivities.push({ activity, gameNo: Math.min(3, Math.max(1, gameNo)) });
+        state.selectedActivities.push({
+          activity,
+          gameNo: finalGameNo,
+          ...(combination !== undefined && { combination }),
+        });
       }
     },
     removeActivity: (state, action: PayloadAction<number>) => {
@@ -142,6 +159,13 @@ const bookingSlice = createSlice({
     setActivityGameNo: (state, action: PayloadAction<{ activityId: number; gameNo: number }>) => {
       const item = state.selectedActivities.find((i) => i.activity.id === action.payload.activityId);
       if (item) item.gameNo = Math.min(3, Math.max(1, action.payload.gameNo)) as 1 | 2 | 3;
+    },
+    setActivityCombination: (
+      state,
+      action: PayloadAction<{ activityId: number; combination: AttributeCombinationItem }>
+    ) => {
+      const item = state.selectedActivities.find((i) => i.activity.id === action.payload.activityId);
+      if (item) item.combination = action.payload.combination;
     },
     addPackage: (state, action: PayloadAction<Package>) => {
       if (state.selectedPackages.some((p) => p.id === action.payload.id)) return;
@@ -199,6 +223,7 @@ export const {
   addActivity,
   removeActivity,
   setActivityGameNo,
+  setActivityCombination,
   addPackage,
   removePackage,
   addFood,

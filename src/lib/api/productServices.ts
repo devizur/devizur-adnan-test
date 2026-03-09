@@ -61,6 +61,17 @@ function mapProductToBase(item: ProductAdvancedItem) {
   const category = item.categoryName || item.subCategoryName || "";
   const { price, fixedPrice } = getPriceFromProduct(item);
   const image = item.thumbnailShortImageUrl || "https://picsum.photos/400/200";
+  const opts = item.attributeOptions ?? [];
+  const combos = item.attributeCombinations ?? [];
+  // Derive games from API: e.g. "Game Type" options 1 Game → 1, 2 Games → 2
+  const gameTypeAttr = opts.filter((o) => /game\s*type|number\s*of\s*games/i.test(o.attributeName));
+  const gameTypeOptionCount =
+    gameTypeAttr.length > 0 ? new Set(gameTypeAttr.map((o) => o.attributeOptionId)).size : 0;
+  const games: (1 | 2 | 3)[] =
+    gameTypeOptionCount > 0
+      ? ([1, 2, 3].slice(0, Math.min(3, gameTypeOptionCount)) as (1 | 2 | 3)[])
+      : ([1, 2, 3] as (1 | 2 | 3)[]);
+
   return {
     id: item.productId,
     productId: item.productId,
@@ -75,7 +86,13 @@ function mapProductToBase(item: ProductAdvancedItem) {
     category,
     discount: "$5 off",
     timeSlots: ["9:00 am", "11:00 am", "2:00 pm"],
-    games: [1, 2, 3] as (1 | 2 | 3)[],
+    games,
+    attributeOptions: item.attributeOptions ?? [],
+    attributeCombinations: (item.attributeCombinations ?? []).map((c) => ({
+      ...c,
+      minPrice: c.minPrice ?? null,
+      maxPrice: c.maxPrice ?? null,
+    })),
   };
 }
 

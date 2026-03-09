@@ -199,7 +199,7 @@ export function BookingTimelineBar({
       {/* Top row: Start | time markers | Finish */}
       <div className="relative flex items-start gap-2 mb-1 min-w-0">
         <span className="text-[11px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
-        <div className="flex-1 relative min-h-[20px] min-w-0 overflow-hidden">
+        <div className="flex-1 relative min-h-[25px] min-w-0 overflow-hidden">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
             const clamped = Math.max(0, Math.min(100, pct));

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Package } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductCardProps {
   item: Package;
@@ -15,8 +16,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }
     const { packageItems } = useCart();
     const isInCart = packageItems.some((i) => i.pkg.id === item.id);
 
-    return (
-    <Card className="p-2  bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
+  return (
+    <Card className="p-2 bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
       <div className="relative h-48 rounded-[10px] overflow-hidden">
         <img
           src={item.image}
@@ -84,6 +85,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }
             {isInCart ? "Book Now: Selected" : "Book Now"}
           </Button>
         </BookingDialog>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const ProductCardSkeleton: React.FC = () => {
+  return (
+    <Card className="p-2 bg-secondary-2 border border-transparent">
+      <div className="relative h-48 rounded-[10px] overflow-hidden">
+        <Skeleton className="w-full h-full" />
+      </div>
+
+      <CardContent className="px-1.5 pb-2">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1 mr-2">
+            <Skeleton className="h-3 sm:h-4 w-3/4 mb-2" />
+            <Skeleton className="h-2.5 sm:h-3 w-1/2" />
+          </div>
+          <Skeleton className="h-4 sm:h-5 w-12 sm:w-16" />
+        </div>
+
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <Skeleton className="h-2.5 sm:h-3 w-24" />
+          <Skeleton className="h-2 sm:h-2.5 w-12" />
+        </div>
+
+        <Skeleton className="h-8 sm:h-10 w-full rounded-[8px] sm:rounded-[10px]" />
       </CardContent>
     </Card>
   );

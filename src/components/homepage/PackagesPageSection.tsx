@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import ProductCard from "@/components/ui/reused/ProductCard";
+import ProductCard, { ProductCardSkeleton } from "@/components/ui/reused/ProductCard";
 import { usePackages } from "@/lib/api/hooks";
 import { Pagination } from "@/components/ui/reused/Pagination";
 
@@ -38,8 +38,10 @@ const PackagesPageSection: React.FC<PackagesPageSectionProps> = ({ searchTerm })
     if (isLoading) {
         return (
             <section className="container mx-auto pb-20">
-                <div className="text-center py-20">
-                    <p className="text-primary">Loading packages...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                        <ProductCardSkeleton key={index} />
+                    ))}
                 </div>
             </section>
         );

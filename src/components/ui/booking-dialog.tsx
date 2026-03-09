@@ -18,7 +18,7 @@ import { Step1AvailabilitySelection } from "@/components/ui/booking/Step1Availab
 import { Step2FoodSelection } from "@/components/ui/booking/Step2FoodSelection";
 import { Step3HolderDetails } from "@/components/ui/booking/Step3HolderDetails";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
-import type { Activity, Package, Food } from "@/lib/api/types";
+import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
 
 const REMAINING_TIME = 60 * 5; // 5 minutes
@@ -77,12 +77,19 @@ export function BookingDialog({
     console.log("[BookingDialog] shopId:", shopId);
     dispatch(resetBooking());
     if (initialActivity) {
-      const allowedValues =
-        initialActivity.games && initialActivity.games.length > 0
-          ? initialActivity.games
-          : [1, 2, 3];
-      const defaultGameNo = (allowedValues[0] ?? 1) as 1 | 2 | 3;
-      dispatch(addActivity({ activity: initialActivity, gameNo: defaultGameNo }));
+      const combos = (initialActivity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
+        .attributeCombinations;
+      const hasCombos = Array.isArray(combos) && combos.length > 0;
+      if (hasCombos && combos![0]) {
+        dispatch(addActivity({ activity: initialActivity, gameNo: 1, combination: combos![0] }));
+      } else {
+        const allowedValues =
+          initialActivity.games && initialActivity.games.length > 0
+            ? initialActivity.games
+            : [1, 2, 3];
+        const defaultGameNo = (allowedValues[0] ?? 1) as 1 | 2 | 3;
+        dispatch(addActivity({ activity: initialActivity, gameNo: defaultGameNo }));
+      }
     }
     if (initialPackage) {
       dispatch(addPackage(initialPackage));

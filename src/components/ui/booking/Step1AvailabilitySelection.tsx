@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
-import { cn } from "@/lib/utils";
 import {
+  useAppDispatch,
+  useAppSelector,
   setDate,
   setTimeOfDay,
   setTimeSlot,
@@ -12,11 +11,14 @@ import {
   addActivity,
   removeActivity,
   setActivityGameNo,
+  setActivityCombination,
   addPackage,
   removePackage,
-} from "@/store/bookingSlice";
+} from "@/store";
+import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
+import type { AttributeCombinationItem } from "@/lib/api/types";
 import { Check } from "lucide-react";
-import { formatTimeForDisplay } from "@/lib/utils";
+import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 import { BookingTimelineBar } from "./BookingTimelineBar";
@@ -47,21 +49,24 @@ export function Step1AvailabilitySelection() {
   const slotsParams =
     date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
       ? {
-        date,
-        timeOfDay,
-        activityIds: selectedActivities.map((a) => a.activity.id),
-        packageIds: selectedPackages.map((p) => p.id),
-        selectedBookableProducts: [
-          ...selectedActivities.map((a) => ({
-            id: (a.activity as { productId?: number }).productId ?? a.activity.id,
-            attributeOptionId: a.gameNo,
-          })),
-          ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
-        ],
-        adults: persons.adults,
-        children: persons.children,
-        shopId,
-      }
+          date,
+          timeOfDay,
+          activityIds: selectedActivities.map((a) => a.activity.id),
+          packageIds: selectedPackages.map((p) => p.id),
+          selectedBookableProducts: [
+            ...selectedActivities.map((a) => ({
+              id: (a.activity as { productId?: number }).productId ?? a.activity.id,
+              attributeOptionId:
+                a.combination && a.combination.attributeCombinationSet?.length > 0
+                  ? a.combination.attributeCombinationSet[0]
+                  : a.gameNo,
+            })),
+            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+          ],
+          adults: persons.adults,
+          children: persons.children,
+          shopId,
+        }
       : null;
   const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
   const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
@@ -93,6 +98,18 @@ export function Step1AvailabilitySelection() {
     const available = getAvailableOptions(activity);
     return (available[0]?.value ?? 1) as 1 | 2 | 3;
   };
+
+  /** Activity has dynamic options from API (attributeCombinations) */
+  const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
+    const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
+      .attributeCombinations;
+    return Array.isArray(combos) && combos.length > 0 ? combos : [];
+  };
+
+  const getSelectedCombination = (activityId: number) =>
+    selectedActivities.find((i) => i.activity.id === activityId)?.combination;
+  const isCombinationSelected = (activityId: number, combo: AttributeCombinationItem) =>
+    getSelectedCombination(activityId)?.productAttributeCombinationId === combo.productAttributeCombinationId;
 
   React.useEffect(() => {
     if (!date) {
@@ -130,15 +147,29 @@ export function Step1AvailabilitySelection() {
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
+            const combinations = getCombinations(activity);
+            const hasDynamicOptions = combinations.length > 0;
+            const defaultCombo = combinations[0];
+
             return (
               <div key={activity.id} className="relative group">
                 <button
                   type="button"
-                  onClick={() =>
-                    selected
-                      ? dispatch(removeActivity(activity.id))
-                      : dispatch(addActivity({ activity, gameNo: getDefaultGameNo(activity) }))
-                  }
+                  onClick={() => {
+                    if (selected) {
+                      dispatch(removeActivity(activity.id));
+                    } else if (hasDynamicOptions && defaultCombo) {
+                      dispatch(
+                        addActivity({
+                          activity,
+                          gameNo: 1,
+                          combination: defaultCombo,
+                        })
+                      );
+                    } else {
+                      dispatch(addActivity({ activity, gameNo: getDefaultGameNo(activity) }));
+                    }
+                  }}
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
@@ -165,14 +196,46 @@ export function Step1AvailabilitySelection() {
                   </div>
                   <div className="p-3">
                     <h4 className="font-medium text-white truncate">{activity.title}</h4>
-                 
                     <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
                       {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
                   </div>
                 </button>
-                {selected && (
+                {selected && hasDynamicOptions && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 px-0.5">
+                    {combinations.map((combo) => {
+                      const priceLabel =
+                        combo.fixedPrice != null && !Number.isNaN(combo.fixedPrice)
+                          ? `$${Number(combo.fixedPrice).toFixed(2)}`
+                          : "—";
+                      return (
+                        <button
+                          key={combo.productAttributeCombinationId}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(
+                              setActivityCombination({ activityId: activity.id, combination: combo })
+                            );
+                          }}
+                          aria-pressed={isCombinationSelected(activity.id, combo)}
+                          aria-label={`${combo.attributeCombinationName} ${priceLabel}`}
+                          className={cn(
+                            "min-h-10 py-2 px-3 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                            isCombinationSelected(activity.id, combo)
+                              ? "bg-primary-1 text-secondary"
+                              : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                          )}
+                        >
+                          <span>{combo.attributeCombinationName}</span>
+                          <span className="opacity-80 ml-1">/ {priceLabel}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {selected && !hasDynamicOptions && (
                   <div className="flex gap-1.5 mt-2 px-0.5">
                     {getAvailableOptions(activity).map((opt) => {
                       const basePrice = Number((activity as any).fixedPrice);
@@ -204,11 +267,9 @@ export function Step1AvailabilitySelection() {
                               : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
                           )}
                         >
-                          <span className=" ">{opt.label}</span>
-                          <span className="  opacity-80">/</span>
-                          <span className=" text-[10px] opacity-80">
-                            {priceLabel}
-                          </span>
+                          <span>{opt.label}</span>
+                          <span className="opacity-80">/</span>
+                          <span className="text-[10px] opacity-80">{priceLabel}</span>
                         </button>
                       );
                     })}

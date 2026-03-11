@@ -78,6 +78,7 @@ export function Step1AvailabilitySelection() {
   // Reset slotsRequested when key inputs change so user must click again
   React.useEffect(() => {
     setSlotsRequested(false);
+    dispatch(setTimeSlot(""));
   }, [
     date,
     selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
@@ -85,9 +86,11 @@ export function Step1AvailabilitySelection() {
     persons.adults,
     persons.kids,
   ]);
-  const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
+  // Hide stale cached data when user hasn't clicked "Get Time Slots" yet
+  const effectiveSlotsData = slotsRequested ? slotsData : undefined;
+  const periodsWithSlots = effectiveSlotsData?.periodsWithSlots ?? [];
   const slots = React.useMemo(() => {
-    const ts = slotsData?.timeSlots;
+    const ts = effectiveSlotsData?.timeSlots;
     if (!ts) return [];
     const apiKey = SHIFT.find((t) => t.id === timeOfDay)?.apiKey ?? "Morning";
     const raw = ts[apiKey];
@@ -96,7 +99,7 @@ export function Step1AvailabilitySelection() {
       startTime: formatTimeForDisplay(t),
       available: 1,
     }));
-  }, [slotsData?.timeSlots, timeOfDay]);
+  }, [effectiveSlotsData?.timeSlots, timeOfDay]);
   const visibleShifts = React.useMemo(
     () => SHIFT.filter((tab) => periodsWithSlots.includes(tab.apiKey)),
     [periodsWithSlots.join(",")]
@@ -159,8 +162,8 @@ export function Step1AvailabilitySelection() {
   }, [date, dispatch]);
 
   React.useEffect(() => {
-    if (slotsData?.bookingId) dispatch(setBookingId(slotsData.bookingId));
-  }, [slotsData?.bookingId, dispatch]);
+    if (effectiveSlotsData?.bookingId) dispatch(setBookingId(effectiveSlotsData.bookingId));
+  }, [effectiveSlotsData?.bookingId, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -416,10 +419,10 @@ export function Step1AvailabilitySelection() {
           
 
           <BookingTimelineBar
-            bookingId={reduxBookingId || slotsData?.bookingId}
+            bookingId={reduxBookingId || effectiveSlotsData?.bookingId}
             timeSlot={timeSlot}
             selectedDate={date ?? undefined}
-            slotsResponseReceived={!!slotsData && !!timeSlot}
+            slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
             selectedActivities={selectedActivities}
             selectedPackages={selectedPackages}
           />

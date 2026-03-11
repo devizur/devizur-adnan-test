@@ -157,11 +157,11 @@ export function BookingTimelineBar({
     alignCenter?: boolean;
     showSpinner?: boolean;
   }> = ({ children, alignCenter = true, showSpinner = false }) => (
-    <div className={cn("rounded-sm bg-[#1e1e1e] border border-gray-800 px-2 py-1", className)}>
+    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm overflow-hidden min-w-0", className)}>
       <div
         className={cn(
-          "py-2 text-gray-400 text-[10px]",
-          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center gap-1 text-center"
+          "h-[calc(18px+20px+8px+2px)] text-gray-400 text-[10px]",
+          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center justify-center gap-0.5"
         )}
       >
         {showSpinner && (
@@ -173,9 +173,21 @@ export function BookingTimelineBar({
   );
 
   const LoadingState = () => (
-    <StatusCard showSpinner>
-      <span>Loading timeline…</span>
-    </StatusCard>
+    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-4 rounded-sm overflow-hidden min-w-0", className)}>
+    
+      {/* Bar skeleton – matches: h-5 rounded-md border */}
+      <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
+        <div className="flex-[3]  rounded-l-md bg-gray-700/50 animate-pulse" />
+        <div className="flex-[2] bg-gray-700/40 animate-pulse" />
+        <div className="flex-[2] rounded-r-md bg-gray-700/40 animate-pulse" />
+      </div>
+      {/* Labels skeleton – matches: mt-0.5 text-[9px] */}
+      <div className="flex mt-0.5 overflow-hidden min-w-0">
+        <div className="flex-[3] h-2 rounded bg-gray-700/40 animate-pulse" />
+        <div className="flex-[2] h-2 rounded bg-gray-700/30 animate-pulse" />
+        <div className="flex-[2] h-2 rounded bg-gray-700/40 animate-pulse" />
+      </div>
+    </div>
   );
 
   const EmptyState = () => (

@@ -108,7 +108,7 @@ export interface GetAvailabilitySlotsParams {
   packageIds: number[];
   selectedBookableProducts: { id: number; attributeOptionId: number }[];
   adults: number;
-  children: number;
+  kids: number;
   shopId: number;
 }
 

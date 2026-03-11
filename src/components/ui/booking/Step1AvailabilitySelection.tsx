@@ -49,7 +49,7 @@ export function Step1AvailabilitySelection() {
   const [slotsRequested, setSlotsRequested] = React.useState(false);
 
   const canFetchSlots =
-    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0;
+    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.kids > 0;
 
   const slotsParams =
     canFetchSlots && slotsRequested
@@ -69,7 +69,7 @@ export function Step1AvailabilitySelection() {
             ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
           ],
           adults: persons.adults,
-          children: persons.children,
+          kids: persons.kids,
           shopId,
         }
       : null;
@@ -83,7 +83,7 @@ export function Step1AvailabilitySelection() {
     selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
     selectedPackages.map((p) => p.id).join(","),
     persons.adults,
-    persons.children,
+    persons.kids,
   ]);
   const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
   const slots = React.useMemo(() => {

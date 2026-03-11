@@ -146,7 +146,7 @@ export function BookingDialog({
     }
   }, [remainingSeconds, isOpen, dispatch]);
 
-  const canProceedStep1 = timeSlot && (persons.adults + persons.children) > 0;
+  const canProceedStep1 = timeSlot && (persons.adults + persons.kids) > 0;
   const hasSelectionStep1 = selectedActivities.length > 0 || selectedPackages.length > 0;
 
   const handleAddBooking = (e?: React.FormEvent) => {

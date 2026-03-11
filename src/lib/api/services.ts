@@ -20,9 +20,9 @@ export { activitiesApi, foodsApi, packagesApi };
 // Availability / slots API – returns all time slots; filter by period client-side
 export const availabilityApi = {
   async getSlots(params: GetAvailabilitySlotsParams): Promise<AvailabilitySlotsResult> {
-    const { date, selectedBookableProducts, adults, children, shopId } = params;
+    const { date, selectedBookableProducts, adults, kids, shopId } = params;
     const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [], bookingId: undefined };
-    if (selectedBookableProducts.length === 0 || adults + children === 0) {
+    if (selectedBookableProducts.length === 0 || adults + kids === 0) {
       return empty;
     }
     try {
@@ -34,7 +34,7 @@ export const availabilityApi = {
           selectedDate: date,
           selectedBookableProducts,
           adultPaxNo: adults,
-          childPaxNo: children,
+          childPaxNo: kids,
         }
       );
       const { success, data } = response.data ?? {};

@@ -3,7 +3,7 @@ import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/ap
 
 export interface BookingPersons {
   adults: number;
-  children: number;
+  kids: number;
 }
 
 export interface SelectedFoodItem {
@@ -73,7 +73,7 @@ const initialState: BookingState = {
   timeOfDay: 1,
   timeSlot: "",
   bookingId: "",
-  persons: { adults: 0, children: 0 },
+  persons: { adults: 0, kids: 0 },
   selectedActivities: [],
   selectedPackages: [],
   selectedFoods: [],
@@ -123,11 +123,11 @@ const bookingSlice = createSlice({
     decrementAdults: (state) => {
       state.persons.adults = Math.max(0, state.persons.adults - 1);
     },
-    incrementChildren: (state) => {
-      state.persons.children += 1;
+    incrementKids: (state) => {
+      state.persons.kids += 1;
     },
-    decrementChildren: (state) => {
-      state.persons.children = Math.max(0, state.persons.children - 1);
+    decrementKids: (state) => {
+      state.persons.kids = Math.max(0, state.persons.kids - 1);
     },
     addActivity: (
       state,
@@ -218,8 +218,8 @@ export const {
   setPersons,
   incrementAdults,
   decrementAdults,
-  incrementChildren,
-  decrementChildren,
+  incrementKids,
+  decrementKids,
   addActivity,
   removeActivity,
   setActivityGameNo,

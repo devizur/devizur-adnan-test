@@ -157,15 +157,15 @@ export function BookingTimelineBar({
     alignCenter?: boolean;
     showSpinner?: boolean;
   }> = ({ children, alignCenter = true, showSpinner = false }) => (
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm overflow-hidden min-w-0", className)}>
       <div
         className={cn(
-          "py-6 text-gray-400 text-sm",
-          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center gap-2 text-center px-4"
+          "h-[calc(18px+20px+8px+2px)] text-gray-400 text-[10px]",
+          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center justify-center gap-0.5"
         )}
       >
         {showSpinner && (
-          <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+          <div className="w-3 h-3 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
         )}
         {children}
       </div>
@@ -173,15 +173,27 @@ export function BookingTimelineBar({
   );
 
   const LoadingState = () => (
-    <StatusCard showSpinner>
-      <span>Loading timeline…</span>
-    </StatusCard>
+    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-4 rounded-sm overflow-hidden min-w-0", className)}>
+    
+      {/* Bar skeleton – matches: h-5 rounded-md border */}
+      <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
+        <div className="flex-[3]  rounded-l-md bg-gray-700/50 animate-pulse" />
+        <div className="flex-[2] bg-gray-700/40 animate-pulse" />
+        <div className="flex-[2] rounded-r-md bg-gray-700/40 animate-pulse" />
+      </div>
+      {/* Labels skeleton – matches: mt-0.5 text-[9px] */}
+      <div className="flex mt-0.5 overflow-hidden min-w-0">
+        <div className="flex-[3] h-2 rounded bg-gray-700/40 animate-pulse" />
+        <div className="flex-[2] h-2 rounded bg-gray-700/30 animate-pulse" />
+        <div className="flex-[2] h-2 rounded bg-gray-700/40 animate-pulse" />
+      </div>
+    </div>
   );
 
   const EmptyState = () => (
     <StatusCard alignCenter={false}>
       <span>No timeline data available.</span>
-      <span className="text-xs text-gray-500">Select a time slot or check back later.</span>
+      <span className="text-[9px] text-gray-500">Select a time slot or check back later.</span>
     </StatusCard>
   );
 
@@ -195,11 +207,11 @@ export function BookingTimelineBar({
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
   return (
-    <div className={cn("  bg-[#1e1e1e] border border-gray-800 p-2 rounded-sm   overflow-hidden min-w-0", className)}>
+    <div className={cn("  bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm   overflow-hidden min-w-0", className)}>
       {/* Top row: Start | time markers | Finish */}
-      <div className="relative flex items-start gap-2 mb-1 min-w-0">
-        <span className="text-[11px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
-        <div className="flex-1 relative min-h-[20px] min-w-0 overflow-hidden">
+      <div className="relative flex items-start gap-2 mb-0.5 min-w-0">
+        <span className="text-[9px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
+        <div className="flex-1 relative min-h-[18px] min-w-0 overflow-hidden">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
             const clamped = Math.max(0, Math.min(100, pct));
@@ -209,18 +221,18 @@ export function BookingTimelineBar({
                 className="absolute top-0 flex flex-col items-center"
                 style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
               >
-                <div className="w-px h-2.5 bg-gray-600" />
-                <span className="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">
+                <div className="w-px h-1.5 bg-gray-600" />
+                <span className="text-[8px] text-gray-400 mt-0.5 whitespace-nowrap">
                   {formatMinutesToTime(m)}
                 </span>
               </div>
             );
           })}
         </div>
-        <span className="text-[11px] text-primary-1 uppercase tracking-wider shrink-0">Finish</span>
+        <span className="text-[9px] text-primary-1 uppercase tracking-wider shrink-0">Finish</span>
       </div>
       
-      <div className="flex h-8 rounded-lg overflow-hidden border border-gray-700/50 min-w-0">
+      <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
@@ -241,14 +253,14 @@ export function BookingTimelineBar({
         })}
       </div>
       {/* Activity labels */}
-      <div className="flex mt-1.5 overflow-hidden min-w-0">
+      <div className="flex mt-0.5 overflow-hidden min-w-0">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           return (
             <div
               key={`${seg.name}-${idx}`}
-              className={cn("text-[11px] font-medium truncate", color.text)}
+              className={cn("text-[9px] font-medium truncate", color.text)}
               style={{ flex: `0 0 ${Math.max(0, pct)}%`, minWidth: 0 }}
               title={seg.name}
             >

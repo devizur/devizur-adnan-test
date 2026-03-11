@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { useFoods } from "@/lib/api/hooks";
-import FoodCard from "../ui/reused/FoodCard";
+import FoodCard, { FoodCardSkeleton } from "../ui/reused/FoodCard";
 import { Pagination } from "@/components/ui/reused/Pagination";
 
 const PAGE_SIZE = 9;
@@ -38,8 +38,10 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     if (isLoading) {
         return (
             <section className="container mx-auto pb-20">
-                <div className="text-center py-20">
-                    <p className="text-primary">Loading foods...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                        <FoodCardSkeleton key={index} />
+                    ))}
                 </div>
             </section>
         );
@@ -68,8 +70,8 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     return (
         <section className="container mx-auto pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {paginatedFoods.map((food) => (
-                    <FoodCard key={food.id} item={food} />
+                {paginatedFoods.map((food, index) => (
+                    <FoodCard key={`${food.id}-${index}`} item={food} />
                 ))}
             </div>
             <Pagination

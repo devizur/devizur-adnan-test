@@ -5,8 +5,8 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import {
   incrementAdults,
   decrementAdults,
-  incrementChildren,
-  decrementChildren,
+  incrementKids,
+  decrementKids,
 } from "@/store/bookingSlice";
 
 interface GuestCounterProps {
@@ -78,12 +78,12 @@ export function BookingGuests() {
             labelWidthClass="w-12"
           />
           <GuestCounter
-            label="Children"
-            value={persons.children}
-            onIncrement={() => dispatch(incrementChildren())}
-            onDecrement={() => dispatch(decrementChildren())}
-            ariaLabelDecrement="Decrease children"
-            ariaLabelIncrement="Increase children"
+            label="Kids"
+            value={persons.kids}
+            onIncrement={() => dispatch(incrementKids())}
+            onDecrement={() => dispatch(decrementKids())}
+            ariaLabelDecrement="Decrease kids"
+            ariaLabelIncrement="Increase kids"
             labelWidthClass="w-14"
           />
         </div>

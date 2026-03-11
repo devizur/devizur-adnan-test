@@ -9,7 +9,7 @@ export type BookingActivityItem = {
 /** Global people selection for the whole booking (not per activity) */
 export type BookingPeople = {
   adults: number;
-  children: number;
+  kids: number;
 };
 
 /** Pricing used for per-person calculation */
@@ -31,10 +31,10 @@ export type BookingDetails = Record<string, string>;
 /** Per-person bill breakdown */
 export type PerPersonBreakdown = {
   adultsCount: number;
-  childrenCount: number;
+  kidsCount: number;
   adultPrice: number;
   childPrice: number;
   adultsSubtotal: number;
-  childrenSubtotal: number;
+  kidsSubtotal: number;
   total: number;
 };

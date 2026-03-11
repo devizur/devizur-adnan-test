@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Food } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FoodCardProps {
     item: Food;
@@ -92,6 +93,36 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action
                         </Button>
                     </BookingDialog>
                 )}
+            </CardContent>
+        </Card>
+    );
+};
+
+export const FoodCardSkeleton: React.FC = () => {
+    return (
+        <Card className="p-2 bg-secondary-2 border border-transparent">
+            <div className="relative h-48 rounded-[10px] overflow-hidden">
+                <Skeleton className="w-full h-full" />
+            </div>
+
+            <CardContent className="px-1.5 pb-2 pt-2 sm:pt-3">
+                <div className="flex justify-between items-start mb-2 sm:mb-3">
+                    <div className="flex-1 pr-1.5 sm:pr-2 min-w-0">
+                        <Skeleton className="h-3 sm:h-4 w-3/4 mb-1.5" />
+                        <Skeleton className="h-2.5 sm:h-3 w-1/3" />
+                    </div>
+                    <div className="text-right shrink-0">
+                        <Skeleton className="h-4 sm:h-5 w-14 sm:w-16 mb-1" />
+                        <Skeleton className="h-2.5 sm:h-3 w-10 sm:w-12" />
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center mb-2 sm:mb-4">
+                    <Skeleton className="h-2.5 sm:h-3 w-24" />
+                    <Skeleton className="h-2 sm:h-2.5 w-12" />
+                </div>
+
+                <Skeleton className="h-8 sm:h-10 w-full rounded-[8px] sm:rounded-[10px]" />
             </CardContent>
         </Card>
     );

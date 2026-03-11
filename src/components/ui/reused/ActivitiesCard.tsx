@@ -8,6 +8,7 @@ import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
 import { DemoImageUrl } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -90,6 +91,30 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                         {isInCart ? "Book Now: Selected" : "Book Now"}
                     </Button>
                 </BookingDialog>
+            </CardContent>
+        </Card>
+    );
+};
+
+export const ActivitiesCardSkeleton: React.FC = () => {
+    return (
+        <Card className="p-2 bg-secondary-2 border border-transparent">
+            <div className="relative h-48 rounded-[10px] overflow-hidden">
+                <Skeleton className="w-full h-full" />
+            </div>
+
+            <CardContent className="px-1.5 pb-2">
+                <div className="flex justify-between items-start mb-2">
+                    <Skeleton className="h-3 sm:h-4 w-3/4" />
+                    <Skeleton className="h-4 sm:h-5 w-14 sm:w-16" />
+                </div>
+
+                <div className="flex justify-between items-center mb-3 sm:mb-4">
+                    <Skeleton className="h-2.5 sm:h-3 w-24" />
+                    <Skeleton className="h-2 sm:h-2.5 w-12" />
+                </div>
+
+                <Skeleton className="h-8 sm:h-10 w-full rounded-[8px] sm:rounded-[10px]" />
             </CardContent>
         </Card>
     );

@@ -22,11 +22,11 @@ export function Step2FoodSelection() {
         Optional food add-ons. Select items to include with your booking.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 scrollbar-dark">
-        {foods.map((food) => {
+        {foods.map((food, index) => {
           const qty = getQuantity(food.id);
           return (
             <FoodCard
-              key={food.id}
+              key={`${food.id}-${index}`}
               item={food}
               showTimeSlots={false}
               action={

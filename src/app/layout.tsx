@@ -45,9 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: {
-      // Default tab title: "<Hero title> | <Site name>"
       default: `${config.name} ||   ${config.content.home.heroTitle }`,
-      // When a page sets its own title, it becomes "<Page title> | <Site name>"
       template: `%s | ${config.name}`,
     },
     description: config.content.home.heroSubtitle,
@@ -91,8 +89,7 @@ export default function RootLayout({
   const brandKey = process.env.NEXT_PUBLIC_BRAND;
   const config = getBrandConfig();
 
-  // Determine font-family variable. 
-  // We use the exact name from config to support external fonts.
+
   const activeFontFamily = config.theme.fontFamily ? `'${config.theme.fontFamily}', sans-serif` : "var(--font-geist-sans)";
 
   return (

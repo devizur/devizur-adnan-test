@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
-import { cn } from "@/lib/utils";
 import {
+  useAppDispatch,
+  useAppSelector,
   setDate,
   setTimeOfDay,
   setTimeSlot,
@@ -12,11 +11,14 @@ import {
   addActivity,
   removeActivity,
   setActivityGameNo,
+  setActivityCombination,
   addPackage,
   removePackage,
-} from "@/store/bookingSlice";
+} from "@/store";
+import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
+import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
 import { Check } from "lucide-react";
-import { formatTimeForDisplay } from "@/lib/utils";
+import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 import { BookingTimelineBar } from "./BookingTimelineBar";
@@ -44,29 +46,51 @@ export function Step1AvailabilitySelection() {
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
 
+  const [slotsRequested, setSlotsRequested] = React.useState(false);
+
+  const canFetchSlots =
+    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.kids > 0;
+
   const slotsParams =
-    date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
+    canFetchSlots && slotsRequested
       ? {
-        date,
-        timeOfDay,
-        activityIds: selectedActivities.map((a) => a.activity.id),
-        packageIds: selectedPackages.map((p) => p.id),
-        selectedBookableProducts: [
-          ...selectedActivities.map((a) => ({
-            id: (a.activity as { productId?: number }).productId ?? a.activity.id,
-            attributeOptionId: a.gameNo,
-          })),
-          ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
-        ],
-        adults: persons.adults,
-        children: persons.children,
-        shopId,
-      }
+          date,
+          timeOfDay,
+          activityIds: selectedActivities.map((a) => a.activity.id),
+          packageIds: selectedPackages.map((p) => p.id),
+          selectedBookableProducts: [
+            ...selectedActivities.map((a) => ({
+              id: (a.activity as { productId?: number }).productId ?? a.activity.id,
+              attributeOptionId:
+                a.combination && a.combination.attributeCombinationSet?.length > 0
+                  ? a.combination.attributeCombinationSet[0]
+                  : a.gameNo,
+            })),
+            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+          ],
+          adults: persons.adults,
+          kids: persons.kids,
+          shopId,
+        }
       : null;
   const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
-  const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
+
+  // Reset slotsRequested when key inputs change so user must click again
+  React.useEffect(() => {
+    setSlotsRequested(false);
+    dispatch(setTimeSlot(""));
+  }, [
+    date,
+    selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
+    selectedPackages.map((p) => p.id).join(","),
+    persons.adults,
+    persons.kids,
+  ]);
+  // Hide stale cached data when user hasn't clicked "Get Time Slots" yet
+  const effectiveSlotsData = slotsRequested ? slotsData : undefined;
+  const periodsWithSlots = effectiveSlotsData?.periodsWithSlots ?? [];
   const slots = React.useMemo(() => {
-    const ts = slotsData?.timeSlots;
+    const ts = effectiveSlotsData?.timeSlots;
     if (!ts) return [];
     const apiKey = SHIFT.find((t) => t.id === timeOfDay)?.apiKey ?? "Morning";
     const raw = ts[apiKey];
@@ -75,7 +99,7 @@ export function Step1AvailabilitySelection() {
       startTime: formatTimeForDisplay(t),
       available: 1,
     }));
-  }, [slotsData?.timeSlots, timeOfDay]);
+  }, [effectiveSlotsData?.timeSlots, timeOfDay]);
   const visibleShifts = React.useMemo(
     () => SHIFT.filter((tab) => periodsWithSlots.includes(tab.apiKey)),
     [periodsWithSlots.join(",")]
@@ -94,6 +118,43 @@ export function Step1AvailabilitySelection() {
     return (available[0]?.value ?? 1) as 1 | 2 | 3;
   };
 
+  /** Activity has dynamic options from API (attributeCombinations) */
+  const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
+    const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
+      .attributeCombinations;
+    return Array.isArray(combos) && combos.length > 0 ? combos : [];
+  };
+
+  const getSelectedCombination = (activityId: number) =>
+    selectedActivities.find((i) => i.activity.id === activityId)?.combination;
+
+  /** Group attributeOptions by attributeName for per-attribute selection UI */
+  const getAttributeGroups = (activity: Activity) => {
+    const options = activity.attributeOptions ?? [];
+    const groups: { attributeId: number; attributeName: string; options: typeof options }[] = [];
+    for (const opt of options) {
+      let group = groups.find((g) => g.attributeId === opt.attributeId);
+      if (!group) {
+        group = { attributeId: opt.attributeId, attributeName: opt.attributeName, options: [] };
+        groups.push(group);
+      }
+      group.options.push(opt);
+    }
+    return groups;
+  };
+
+  /** Find the combination whose attributeCombinationSet matches the given option IDs */
+  const findCombinationByOptions = (activity: Activity, selectedOptionIds: number[]) => {
+    const combos = getCombinations(activity);
+    return combos.find((c) => {
+      const set = c.attributeCombinationSet;
+      return (
+        set.length === selectedOptionIds.length &&
+        selectedOptionIds.every((id) => set.includes(id))
+      );
+    });
+  };
+
   React.useEffect(() => {
     if (!date) {
       dispatch(setDate(toLocalDateString(new Date())));
@@ -101,8 +162,8 @@ export function Step1AvailabilitySelection() {
   }, [date, dispatch]);
 
   React.useEffect(() => {
-    if (slotsData?.bookingId) dispatch(setBookingId(slotsData.bookingId));
-  }, [slotsData?.bookingId, dispatch]);
+    if (effectiveSlotsData?.bookingId) dispatch(setBookingId(effectiveSlotsData.bookingId));
+  }, [effectiveSlotsData?.bookingId, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -130,15 +191,29 @@ export function Step1AvailabilitySelection() {
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
+            const combinations = getCombinations(activity);
+            const hasDynamicOptions = combinations.length > 0;
+            const defaultCombo = combinations[0];
+
             return (
               <div key={activity.id} className="relative group">
                 <button
                   type="button"
-                  onClick={() =>
-                    selected
-                      ? dispatch(removeActivity(activity.id))
-                      : dispatch(addActivity({ activity, gameNo: getDefaultGameNo(activity) }))
-                  }
+                  onClick={() => {
+                    if (selected) {
+                      dispatch(removeActivity(activity.id));
+                    } else if (hasDynamicOptions && defaultCombo) {
+                      dispatch(
+                        addActivity({
+                          activity,
+                          gameNo: 1,
+                          combination: defaultCombo,
+                        })
+                      );
+                    } else {
+                      dispatch(addActivity({ activity, gameNo: getDefaultGameNo(activity) }));
+                    }
+                  }}
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
@@ -165,14 +240,65 @@ export function Step1AvailabilitySelection() {
                   </div>
                   <div className="p-3">
                     <h4 className="font-medium text-white truncate">{activity.title}</h4>
-                 
                     <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
                       {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
                   </div>
                 </button>
-                {selected && (
+                {selected && hasDynamicOptions && (
+                  <div className="mt-2 px-0.5 space-y-2">
+                    {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
+                      const selectedIds =
+                        getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
+                      return (
+                        <div key={group.attributeId}>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.options.map((opt) => {
+                              const isOptSelected = selectedIds.includes(opt.attributeOptionId);
+                              return (
+                                <button
+                                  key={opt.attributeOptionId}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const otherIds = selectedIds.filter(
+                                      (id) =>
+                                        !group.options.some(
+                                          (o) => o.attributeOptionId === id
+                                        )
+                                    );
+                                    const newIds = [...otherIds, opt.attributeOptionId];
+                                    const matched = findCombinationByOptions(activity, newIds);
+                                    if (matched) {
+                                      dispatch(
+                                        setActivityCombination({
+                                          activityId: activity.id,
+                                          combination: matched,
+                                        })
+                                      );
+                                    }
+                                  }}
+                                  aria-pressed={isOptSelected}
+                                  aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
+                                  className={cn(
+                                    "min-h-10 py-2 px-3 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                                    isOptSelected
+                                      ? "bg-primary-1 text-secondary"
+                                      : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                                  )}
+                                >
+                                  {opt.attributeOptionName}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {selected && !hasDynamicOptions && (
                   <div className="flex gap-1.5 mt-2 px-0.5">
                     {getAvailableOptions(activity).map((opt) => {
                       const basePrice = Number((activity as any).fixedPrice);
@@ -204,11 +330,9 @@ export function Step1AvailabilitySelection() {
                               : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
                           )}
                         >
-                          <span className=" ">{opt.label}</span>
-                          <span className="  opacity-80">/</span>
-                          <span className=" text-[10px] opacity-80">
-                            {priceLabel}
-                          </span>
+                          <span>{opt.label}</span>
+                          <span className="opacity-80">/</span>
+                          <span className="text-[10px] opacity-80">{priceLabel}</span>
                         </button>
                       );
                     })}
@@ -278,17 +402,32 @@ export function Step1AvailabilitySelection() {
               value={date ?? ""}
               onChange={(d) => dispatch(setDate(d))}
             />
+            <button
+            type="button"
+            disabled={!canFetchSlots || slotsLoading}
+            onClick={() => setSlotsRequested(true)}
+            className={cn(
+              "self-start min-h-9 py-3 px-5 rounded-xl text-xs font-medium transition-all duration-200 bg-primary-1 text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+              canFetchSlots && !slotsLoading
+                ? "cursor-pointer hover:brightness-110"
+                : "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {slotsLoading ? "Loading…" : "Get Time Slots"}
+          </button>
           </div>
-
+          
 
           <BookingTimelineBar
-            bookingId={reduxBookingId || slotsData?.bookingId}
+            bookingId={reduxBookingId || effectiveSlotsData?.bookingId}
             timeSlot={timeSlot}
             selectedDate={date ?? undefined}
-            slotsResponseReceived={!!slotsData}
+            slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
             selectedActivities={selectedActivities}
             selectedPackages={selectedPackages}
           />
+
+
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
             {visibleShifts.map((tab) => (

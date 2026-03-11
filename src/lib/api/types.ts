@@ -39,6 +39,16 @@ export interface ProductAdvancedItem {
   }>;
 }
 
+// Attribute combination (from API) – used for dynamic activity options (e.g. "1 Game Adult", "2 Games Kids")
+export interface AttributeCombinationItem {
+  productAttributeCombinationId: number;
+  attributeCombinationName: string;
+  attributeCombinationSet: number[];
+  fixedPrice: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+}
+
 // Mapped catalog types – extend ProductAdvancedItem with UI-ready fields
 interface MappedProduct extends ProductAdvancedItem {
   id: number;
@@ -52,6 +62,7 @@ interface MappedProduct extends ProductAdvancedItem {
   category: string;
   discount?: string;
   timeSlots?: string[];
+  /** When API provides attributeOptions/attributeCombinations, options are dynamic (e.g. 1 Game, 2 Games from API) */
   games?: (1 | 2 | 3)[];
 }
 
@@ -97,7 +108,7 @@ export interface GetAvailabilitySlotsParams {
   packageIds: number[];
   selectedBookableProducts: { id: number; attributeOptionId: number }[];
   adults: number;
-  children: number;
+  kids: number;
   shopId: number;
 }
 

@@ -157,15 +157,15 @@ export function BookingTimelineBar({
     alignCenter?: boolean;
     showSpinner?: boolean;
   }> = ({ children, alignCenter = true, showSpinner = false }) => (
-    <div className={cn("rounded-xl bg-[#1e1e1e] border border-gray-800 p-4", className)}>
+    <div className={cn("rounded-sm bg-[#1e1e1e] border border-gray-800 px-2 py-1", className)}>
       <div
         className={cn(
-          "py-6 text-gray-400 text-sm",
-          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center gap-2 text-center px-4"
+          "py-2 text-gray-400 text-[10px]",
+          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center gap-1 text-center"
         )}
       >
         {showSpinner && (
-          <div className="w-4 h-4 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+          <div className="w-3 h-3 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
         )}
         {children}
       </div>
@@ -181,7 +181,7 @@ export function BookingTimelineBar({
   const EmptyState = () => (
     <StatusCard alignCenter={false}>
       <span>No timeline data available.</span>
-      <span className="text-xs text-gray-500">Select a time slot or check back later.</span>
+      <span className="text-[9px] text-gray-500">Select a time slot or check back later.</span>
     </StatusCard>
   );
 

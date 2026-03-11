@@ -38,7 +38,7 @@ export interface BookingCartState {
   bookingDetails: BookingDetails;
 }
 
-const defaultPeople: BookingPeople = { adults: 0, children: 0 };
+const defaultPeople: BookingPeople = { adults: 0, kids: 0 };
 
 const defaultState: BookingCartState = {
   activities: [],
@@ -62,11 +62,11 @@ interface BookingCartContextType extends BookingCartState {
   removeActivity: (activityId: number) => void;
   setActivityGameOption: (activityId: number, gameOption: 1 | 2 | 3) => void;
   setAdults: (count: number) => void;
-  setChildren: (count: number) => void;
+  setKids: (count: number) => void;
   incrementAdults: () => void;
   decrementAdults: () => void;
-  incrementChildren: () => void;
-  decrementChildren: () => void;
+  incrementKids: () => void;
+  decrementKids: () => void;
   isActivitySelected: (activityId: number) => boolean;
   getActivityGameOption: (activityId: number) => 1 | 2 | 3 | undefined;
   totalPeople: number;
@@ -140,10 +140,10 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const setChildren = useCallback((count: number) => {
+  const setKids = useCallback((count: number) => {
     setState((prev) => ({
       ...prev,
-      people: { ...prev.people, children: Math.max(0, count) },
+      people: { ...prev.people, kids: Math.max(0, count) },
     }));
   }, []);
 
@@ -158,17 +158,17 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const incrementChildren = useCallback(() => {
+  const incrementKids = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      people: { ...prev.people, children: prev.people.children + 1 },
+      people: { ...prev.people, kids: prev.people.kids + 1 },
     }));
   }, []);
 
-  const decrementChildren = useCallback(() => {
+  const decrementKids = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      people: { ...prev.people, children: Math.max(0, prev.people.children - 1) },
+      people: { ...prev.people, kids: Math.max(0, prev.people.kids - 1) },
     }));
   }, []);
 
@@ -183,8 +183,8 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
   );
 
   const totalPeople = useMemo(
-    () => state.people.adults + state.people.children,
-    [state.people.adults, state.people.children]
+    () => state.people.adults + state.people.kids,
+    [state.people.adults, state.people.kids]
   );
 
   /** Dynamic pricing from selected activities + game options; when no activities, use defaults. */
@@ -206,17 +206,17 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
   }, [state.activities]);
 
   const perPersonBreakdown = useMemo((): PerPersonBreakdown => {
-    const { adults, children } = state.people;
+    const { adults, kids } = state.people;
     const adultsSubtotal = adults * pricing.adultPrice;
-    const childrenSubtotal = children * pricing.childPrice;
+    const kidsSubtotal = kids * pricing.childPrice;
     return {
       adultsCount: adults,
-      childrenCount: children,
+      kidsCount: kids,
       adultPrice: pricing.adultPrice,
       childPrice: pricing.childPrice,
       adultsSubtotal,
-      childrenSubtotal,
-      total: adultsSubtotal + childrenSubtotal,
+      kidsSubtotal,
+      total: adultsSubtotal + kidsSubtotal,
     };
   }, [state.people, pricing]);
 
@@ -247,11 +247,11 @@ export function BookingCartProvider({ children }: { children: ReactNode }) {
     removeActivity,
     setActivityGameOption,
     setAdults,
-    setChildren,
+    setKids,
     incrementAdults,
     decrementAdults,
-    incrementChildren,
-    decrementChildren,
+    incrementKids,
+    decrementKids,
     isActivitySelected,
     getActivityGameOption,
     totalPeople,

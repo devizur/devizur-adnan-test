@@ -419,7 +419,7 @@ export function Step1AvailabilitySelection() {
             bookingId={reduxBookingId || slotsData?.bookingId}
             timeSlot={timeSlot}
             selectedDate={date ?? undefined}
-            slotsResponseReceived={!!slotsData}
+            slotsResponseReceived={!!slotsData && !!timeSlot}
             selectedActivities={selectedActivities}
             selectedPackages={selectedPackages}
           />

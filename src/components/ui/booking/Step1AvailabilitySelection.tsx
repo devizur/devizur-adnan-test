@@ -46,8 +46,13 @@ export function Step1AvailabilitySelection() {
   const activityList = activities.slice(0, 10);
   const suggestedPackages = packages.slice(0, 4);
 
+  const [slotsRequested, setSlotsRequested] = React.useState(false);
+
+  const canFetchSlots =
+    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0;
+
   const slotsParams =
-    date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.children > 0
+    canFetchSlots && slotsRequested
       ? {
           date,
           timeOfDay,
@@ -69,6 +74,17 @@ export function Step1AvailabilitySelection() {
         }
       : null;
   const { data: slotsData, isLoading: slotsLoading } = useAvailabilitySlots(slotsParams);
+
+  // Reset slotsRequested when key inputs change so user must click again
+  React.useEffect(() => {
+    setSlotsRequested(false);
+  }, [
+    date,
+    selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
+    selectedPackages.map((p) => p.id).join(","),
+    persons.adults,
+    persons.children,
+  ]);
   const periodsWithSlots = slotsData?.periodsWithSlots ?? [];
   const slots = React.useMemo(() => {
     const ts = slotsData?.timeSlots;
@@ -383,8 +399,21 @@ export function Step1AvailabilitySelection() {
               value={date ?? ""}
               onChange={(d) => dispatch(setDate(d))}
             />
+            <button
+            type="button"
+            disabled={!canFetchSlots || slotsLoading}
+            onClick={() => setSlotsRequested(true)}
+            className={cn(
+              "self-start min-h-9 py-3 px-5 rounded-xl text-xs font-medium transition-all duration-200 bg-primary-1 text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+              canFetchSlots && !slotsLoading
+                ? "cursor-pointer hover:brightness-110"
+                : "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {slotsLoading ? "Loading…" : "Get Time Slots"}
+          </button>
           </div>
-
+          
 
           <BookingTimelineBar
             bookingId={reduxBookingId || slotsData?.bookingId}
@@ -394,6 +423,8 @@ export function Step1AvailabilitySelection() {
             selectedActivities={selectedActivities}
             selectedPackages={selectedPackages}
           />
+
+
 
           <div className="flex gap-2" role="tablist" aria-label="Time of day">
             {visibleShifts.map((tab) => (

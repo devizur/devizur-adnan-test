@@ -108,8 +108,33 @@ export function Step1AvailabilitySelection() {
 
   const getSelectedCombination = (activityId: number) =>
     selectedActivities.find((i) => i.activity.id === activityId)?.combination;
-  const isCombinationSelected = (activityId: number, combo: AttributeCombinationItem) =>
-    getSelectedCombination(activityId)?.productAttributeCombinationId === combo.productAttributeCombinationId;
+
+  /** Group attributeOptions by attributeName for per-attribute selection UI */
+  const getAttributeGroups = (activity: Activity) => {
+    const options = activity.attributeOptions ?? [];
+    const groups: { attributeId: number; attributeName: string; options: typeof options }[] = [];
+    for (const opt of options) {
+      let group = groups.find((g) => g.attributeId === opt.attributeId);
+      if (!group) {
+        group = { attributeId: opt.attributeId, attributeName: opt.attributeName, options: [] };
+        groups.push(group);
+      }
+      group.options.push(opt);
+    }
+    return groups;
+  };
+
+  /** Find the combination whose attributeCombinationSet matches the given option IDs */
+  const findCombinationByOptions = (activity: Activity, selectedOptionIds: number[]) => {
+    const combos = getCombinations(activity);
+    return combos.find((c) => {
+      const set = c.attributeCombinationSet;
+      return (
+        set.length === selectedOptionIds.length &&
+        selectedOptionIds.every((id) => set.includes(id))
+      );
+    });
+  };
 
   React.useEffect(() => {
     if (!date) {
@@ -203,34 +228,56 @@ export function Step1AvailabilitySelection() {
                   </div>
                 </button>
                 {selected && hasDynamicOptions && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 px-0.5">
-                    {combinations.map((combo) => {
-                      const priceLabel =
-                        combo.fixedPrice != null && !Number.isNaN(combo.fixedPrice)
-                          ? `$${Number(combo.fixedPrice).toFixed(2)}`
-                          : "—";
+                  <div className="mt-2 px-0.5 space-y-2">
+                    {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
+                      const selectedIds =
+                        getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
                       return (
-                        <button
-                          key={combo.productAttributeCombinationId}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            dispatch(
-                              setActivityCombination({ activityId: activity.id, combination: combo })
-                            );
-                          }}
-                          aria-pressed={isCombinationSelected(activity.id, combo)}
-                          aria-label={`${combo.attributeCombinationName} ${priceLabel}`}
-                          className={cn(
-                            "min-h-10 py-2 px-3 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                            isCombinationSelected(activity.id, combo)
-                              ? "bg-primary-1 text-secondary"
-                              : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
-                          )}
-                        >
-                          <span>{combo.attributeCombinationName}</span>
-                          <span className="opacity-80 ml-1">/ {priceLabel}</span>
-                        </button>
+                        <div key={group.attributeId}>
+                          <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-1">
+                            {group.attributeName}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.options.map((opt) => {
+                              const isOptSelected = selectedIds.includes(opt.attributeOptionId);
+                              return (
+                                <button
+                                  key={opt.attributeOptionId}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const otherIds = selectedIds.filter(
+                                      (id) =>
+                                        !group.options.some(
+                                          (o) => o.attributeOptionId === id
+                                        )
+                                    );
+                                    const newIds = [...otherIds, opt.attributeOptionId];
+                                    const matched = findCombinationByOptions(activity, newIds);
+                                    if (matched) {
+                                      dispatch(
+                                        setActivityCombination({
+                                          activityId: activity.id,
+                                          combination: matched,
+                                        })
+                                      );
+                                    }
+                                  }}
+                                  aria-pressed={isOptSelected}
+                                  aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
+                                  className={cn(
+                                    "min-h-10 py-2 px-3 rounded-xl text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                                    isOptSelected
+                                      ? "bg-primary-1 text-secondary"
+                                      : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                                  )}
+                                >
+                                  {opt.attributeOptionName}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>

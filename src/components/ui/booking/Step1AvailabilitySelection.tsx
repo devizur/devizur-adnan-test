@@ -234,9 +234,6 @@ export function Step1AvailabilitySelection() {
                         getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
                       return (
                         <div key={group.attributeId}>
-                          <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-1">
-                            {group.attributeName}
-                          </p>
                           <div className="flex flex-wrap gap-1.5">
                             {group.options.map((opt) => {
                               const isOptSelected = selectedIds.includes(opt.attributeOptionId);

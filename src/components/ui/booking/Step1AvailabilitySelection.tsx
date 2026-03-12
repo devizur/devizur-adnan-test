@@ -179,16 +179,16 @@ export function Step1AvailabilitySelection() {
   const isPackageSelected = (id: number) => selectedPackages.some((p) => p.id === id);
 
   return (
-    <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
+    <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
       {/* Left panel - Activity List */}
-      <div className="w-full lg:w-1/3 overflow-hidden shrink-0    lg:min-h-0 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-800/80  ">
+      <div className="w-full md:w-[300px] lg:w-1/3 shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-800/80 bg-[#161616]">
         <div className="px-3 sm:px-4 py-3 sm:py-3.5 border-b border-gray-800/80 shrink-0">
           <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
             Choose activities
           </h3>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto lg:overflow-x-visible lg:flex-col lg:space-y-3 scrollbar-dark pb-1 -mx-1 px-1">
+        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3 md:p-3">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
@@ -218,13 +218,13 @@ export function Step1AvailabilitySelection() {
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
-                    "w-[220px] sm:w-[260px] lg:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 lg:shrink",
+                    "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
                     selected
                       ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
                       : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
                   )}
                 >
-                  <div className="relative h-16 sm:h-auto sm:aspect-2/1 lg:aspect-3/1 overflow-hidden shrink-0">
+                  <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
                     <img
                       src={activity.image || "https://picsum.photos/400/200"}
                       alt={(activity as any).title || "Activity image"}
@@ -347,11 +347,11 @@ export function Step1AvailabilitySelection() {
           {suggestedPackages.length > 0 && (
             <>
               <p className="text-[11px] text-gray-500 font-medium mt-3 sm:mt-5 mb-1.5 sm:mb-2 uppercase tracking-wider">Packages</p>
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto lg:overflow-x-visible lg:flex-col lg:space-y-3 scrollbar-dark pb-1 -mx-1 px-1">
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
                 {suggestedPackages.map((pkg) => {
                   const selected = isPackageSelected(pkg.id);
                   return (
-                    <div key={pkg.id} className="relative group shrink-0 lg:shrink">
+                    <div key={pkg.id} className="relative group shrink-0 md:shrink">
                       <button
                         type="button"
                         onClick={() =>
@@ -360,13 +360,13 @@ export function Step1AvailabilitySelection() {
                         aria-pressed={selected}
                         aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
                         className={cn(
-                          "w-[220px] sm:w-[260px] lg:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 lg:shrink",
+                          "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
                           selected
                             ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
                             : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
                         )}
                       >
-                        <div className="relative h-16 sm:h-auto sm:aspect-2/1 lg:aspect-3/1 overflow-hidden shrink-0">
+                        <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
                           <img
                             src={pkg.image || "https://picsum.photos/400/200"}
                             alt={pkg.title || "Package image"}
@@ -397,8 +397,8 @@ export function Step1AvailabilitySelection() {
 
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#161616]">
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-800/80 flex flex-col gap-3 sm:gap-4 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-3">
+        <div className="px-4 sm:px-5 md:px-5 py-3 sm:py-4 border-b border-gray-800/80 flex flex-col gap-3 sm:gap-4 md:gap-4 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-3 md:gap-4">
             <BookingGuests />
             <BookingCalendar
               value={date ?? ""}
@@ -431,7 +431,7 @@ export function Step1AvailabilitySelection() {
 
 
 
-          <div className="flex gap-1.5 sm:gap-2" role="tablist" aria-label="Time of day">
+          <div className="flex gap-1.5 sm:gap-2 md:gap-2" role="tablist" aria-label="Time of day">
             {visibleShifts.map((tab) => (
               <button
                 key={tab.id}
@@ -441,7 +441,7 @@ export function Step1AvailabilitySelection() {
                 aria-label={`${tab.apiKey} sessions`}
                 onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
                 className={cn(
-                  "flex-1 min-h-10 sm:min-h-11 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                  "flex-1 min-h-10 sm:min-h-11 md:min-h-11 py-2 sm:py-2.5 rounded-lg sm:rounded-xl md:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                   timeOfDay === tab.id
                     ? "bg-primary-1 text-secondary"
                     : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
@@ -453,9 +453,9 @@ export function Step1AvailabilitySelection() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 py-3 sm:py-4 space-y-4 sm:space-y-5 scrollbar-dark">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 md:px-5 py-3 sm:py-4 md:py-4 space-y-4 sm:space-y-5 scrollbar-dark">
           <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2 sm:mb-3">
+            <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2 sm:mb-3 md:mb-3">
               {!slotsParams
                 ? "Start time · Select date, time of day, at least one activity or package, and guests"
                 : slotsLoading
@@ -468,7 +468,7 @@ export function Step1AvailabilitySelection() {
               }
             </p>
             {slotsParams && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2" role="group" aria-label="Select start time">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-1.5 sm:gap-2 md:gap-2" role="group" aria-label="Select start time">
                 {slotsLoading ? (
                   <div className="col-span-full py-6 sm:py-8 flex flex-col items-center justify-center gap-2 sm:gap-3 text-gray-400 text-xs sm:text-sm">
                     <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
@@ -488,7 +488,7 @@ export function Step1AvailabilitySelection() {
                       onClick={() => dispatch(setTimeSlot(s.startTime))}
                       aria-pressed={timeSlot === s.startTime}
                       className={cn(
-                        "relative min-h-14 sm:min-h-18 py-2.5 sm:py-3 px-1.5 sm:px-2 rounded-lg sm:rounded-xl border text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                        "relative min-h-14 sm:min-h-18 md:min-h-18 py-2.5 sm:py-3 md:py-3 px-1.5 sm:px-2 md:px-2 rounded-lg sm:rounded-xl border text-xs sm:text-sm md:text-sm transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
                         s.available <= 0 && "opacity-50 cursor-not-allowed",
                         timeSlot === s.startTime
                           ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"

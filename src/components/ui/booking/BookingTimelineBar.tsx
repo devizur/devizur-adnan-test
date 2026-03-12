@@ -211,14 +211,14 @@ export function BookingTimelineBar({
       {/* Top row: Start | time markers | Finish */}
       <div className="relative flex items-start gap-2 mb-0.5 min-w-0">
         <span className="text-[9px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
-        <div className="flex-1 relative min-h-[18px] min-w-0 overflow-hidden">
+        <div className="flex-1 relative min-h-[18px] min-w-0 overflow-hidden    ">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
             const clamped = Math.max(0, Math.min(100, pct));
             return (
               <div
                 key={m}
-                className="absolute top-0 flex flex-col items-center"
+                className="absolute pl-10 top-0 flex flex-col items-center"
                 style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
               >
                 <div className="w-px h-1.5 bg-gray-600" />

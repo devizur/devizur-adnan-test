@@ -197,25 +197,25 @@ export function BookingDialog({
     <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
-        className="min-w-[90%] max-w-4xl h-[90vh] flex flex-col bg-[#161616] p-0 gap-0 text-white border border-gray-800/80 rounded-2xl overflow-hidden"
+        className={cn(
+          "flex flex-col bg-[#161616] p-0 gap-0 text-white overflow-hidden",
+          "max-sm:inset-0 max-sm:top-0 max-sm:left-0 max-sm:right-0 max-sm:bottom-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:h-full max-sm:min-w-0 max-sm:max-w-none max-sm:min-h-dvh max-sm:max-h-dvh max-sm:rounded-none max-sm:border-0",
+          "sm:min-w-[90%] sm:max-w-4xl sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-800/80"
+        )}
       >
-        <AlertDialogHeader className="px-6 pt-5 pb-4 border-b border-gray-800/80 shrink-0">
-          <div className="flex items-center justify-between w-full pr-4">
-           
-           
-            <div className="mr-4">
-              <AlertDialogTitle className="text-xl font-semibold text-white whitespace-nowrap">
-                Create booking
-              </AlertDialogTitle>
-            </div>
+        <AlertDialogHeader className="px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-3 sm:pb-5 border-b border-gray-800/80 shrink-0">
+          <div className="flex items-center justify-between gap-4 w-full min-w-0">
+            <AlertDialogTitle className="text-base sm:text-lg font-semibold text-white whitespace-nowrap shrink-0">
+              Create booking
+            </AlertDialogTitle>
 
-            <div className="flex items-center justify-between gap-2   ">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center min-w-0 flex-1 overflow-x-auto scrollbar-dark justify-center py-1">
+              <div className="flex items-center gap-2 shrink-0">
                 {STEPS.map((s, i) => (
                   <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
                     <div
                       className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-medium transition-colors shrink-0",
                         step === s.id && "bg-primary-1/15 text-primary-1",
                         step > s.id && "text-gray-400",
                         step < s.id && "text-gray-500"
@@ -223,7 +223,7 @@ export function BookingDialog({
                     >
                       <span
                         className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold shrink-0",
                           step === s.id && "bg-primary-1 text-black",
                           step > s.id && "bg-gray-700 text-gray-300",
                           step < s.id && "bg-gray-800 text-gray-500"
@@ -231,43 +231,43 @@ export function BookingDialog({
                       >
                         {step > s.id ? "✓" : s.id}
                       </span>
-                      <span className="hidden sm:inline">{s.label}</span>
+                      <span className="whitespace-nowrap">{s.label}</span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <span className="text-gray-700 px-0.5">›</span>
+                      <span className="text-gray-700 px-1 shrink-0 text-xs">›</span>
                     )}
                   </React.Fragment>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 ">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-1/10 border border-primary-1/30 whitespace-nowrap">
-                <Clock className="w-4 h-4 text-primary-1" />
-                <span className="text-sm font-medium text-primary-1">
-                  {formattedRemaining} left
-                </span>
-              </div>
-
+            <div className="flex items-center gap-3 shrink-0">
+              <span
+                className="flex items-center gap-1.5 text-xs font-medium text-primary-1 whitespace-nowrap"
+                title={`${formattedRemaining} left`}
+              >
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                {formattedRemaining}<span className="hidden sm:inline"> left</span>
+              </span>
               <button
                 type="button"
                 onClick={handleClose}
-                className="min-h-11 min-w-11 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+                className="min-h-9 min-w-9 sm:min-h-10 sm:min-w-10 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
                 aria-label="Close dialog"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-
           </div>
-
         </AlertDialogHeader>
 
         <div
           className={cn(
-            "flex-1 scrollbar-dark",
-            (isFoodFirst ? step === 2 : step === 1) ? "min-h-0 flex flex-col overflow-hidden" : "overflow-y-auto px-6 py-5"
+            "flex-1 min-h-0 scrollbar-dark overflow-y-auto overscroll-y-contain",
+            (isFoodFirst ? step === 2 : step === 1) ? "flex flex-col overflow-hidden" : "",
+            (isFoodFirst ? step === 2 : step === 1) ? "" : "px-4 py-4 sm:px-6 sm:py-5"
           )}
+          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
           {isFoodFirst ? (
             <>
@@ -284,11 +284,15 @@ export function BookingDialog({
           )}
         </div>
 
-        <AlertDialogFooter className="px-6 py-4 border-t border-gray-800/80 flex-row justify-between gap-3 flex-wrap bg-[#161616] shrink-0">
-          <div className="flex items-center gap-2">
+        <AlertDialogFooter
+          className={cn(
+            "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-gray-800/80 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
+          )}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <AlertDialogCancel
               onClick={handleClose}
-              className="m-0 min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+              className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
             >
               Cancel
             </AlertDialogCancel>
@@ -297,19 +301,19 @@ export function BookingDialog({
                 type="button"
                 variant="outline"
                 onClick={handleBack}
-                className="min-h-11 px-4 border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
               >
                 Back
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {step === 1 && (
               <Button
                 type="button"
                 disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                 onClick={handleNext}
-                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
               >
                 Next
               </Button>
@@ -321,7 +325,7 @@ export function BookingDialog({
                   variant="outline"
                   onClick={handleSkip}
                   aria-label="Skip food selection"
-                  className="min-h-11 px-4 border border-gray-700 text-gray-400 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                 >
                   Skip
                 </Button>
@@ -329,7 +333,7 @@ export function BookingDialog({
                   type="button"
                   disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                   onClick={handleNext}
-                  className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                  className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
                 >
                   Next
                 </Button>
@@ -339,7 +343,7 @@ export function BookingDialog({
               <Button
                 type="submit"
                 form="bookingForm"
-                className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
               >
                 Add to booking
               </Button>

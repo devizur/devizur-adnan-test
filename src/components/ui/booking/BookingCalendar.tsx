@@ -119,7 +119,7 @@ export function BookingCalendar({
   }
 
   return (
-    <div className={cn("relative flex items-center justify-center gap-1", className)}>
+    <div className={cn("relative flex items-center justify-center gap-2", className)}>
       <button
         type="button"
         onClick={() => setDisplayDate(-1)}
@@ -131,7 +131,7 @@ export function BookingCalendar({
       <button
         type="button"
         onClick={() => setIsCalendarOpen((open) => !open)}
-        className="text-sm font-medium text-white min-w-[200px] text-center py-2 px-3 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
+        className="text-sm font-medium text-white min-w-[220px] text-center py-2.5 px-4 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
         aria-label="Open date picker"
         aria-expanded={isCalendarOpen}
       >

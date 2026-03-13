@@ -11,7 +11,7 @@ interface Step3HolderDetailsProps {
 }
 
 const inputBase =
-  "h-11 rounded-xl border border-gray-700 bg-[#1e1e1e] text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-primary-1/30 focus-visible:border-primary-1 transition-colors cursor-text";
+  "min-h-11 h-11 rounded-xl border border-gray-700 bg-[#1e1e1e] text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-primary-1/30 focus-visible:border-primary-1 transition-colors cursor-text text-base touch-manipulation";
 
 function Field({
   id,
@@ -62,11 +62,11 @@ export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
   };
 
   return (
-    <form id="bookingForm" onSubmit={onSubmit} className="space-y-5">
+    <form id="bookingForm" onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
       <p className="text-[11px] text-gray-500 uppercase tracking-wider">
         Booking holder details
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
         <Field
           id="firstName"
           name="firstName"

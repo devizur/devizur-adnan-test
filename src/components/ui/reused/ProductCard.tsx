@@ -51,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }
 
         <div className="flex justify-between items-center mb-2 sm:mb-4">
           <span className="text-gray-500 text-[10px] sm:text-xs font-medium">
-            Duration: {item.duration}
+            Duration: {item.duration || "--"}
           </span>
           <span className="text-gray-500 text-[9px] sm:text-[10px] font-medium">
             {item.unit}

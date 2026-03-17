@@ -242,7 +242,7 @@ export function Step1AvailabilitySelection() {
                   <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
                     <h4 className="font-medium text-xs sm:text-base text-white truncate">{activity.title}</h4>
                     <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 line-clamp-1 sm:line-clamp-2">
-                      {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
+                      {activity.timeSlots?.slice(0, 3).join(", ") || "--"}
                       {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
                     </p>
                   </div>

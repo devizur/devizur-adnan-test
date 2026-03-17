@@ -79,7 +79,7 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
                       onClick={() => onToggleTarget(opt.modifierId)}
                       className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm text-left cursor-pointer touch-manipulation transition-colors ${
                         isSelected
-                          ? "bg-primary-1 text-black border-primary-1 shadow-[0_0_18px_rgba(255,236,0,0.45)]"
+                          ? "bg-primary-1 text-black border-primary-1  "
                           : "bg-[#181818] text-gray-100 border-gray-800 hover:bg-[#202020] hover:border-primary-1/40"
                       }`}
                     >

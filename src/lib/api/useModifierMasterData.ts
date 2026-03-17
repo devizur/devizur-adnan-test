@@ -1,9 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-
-const BASE_URL =
-  "https://devizur-pos-backend-core-cdavc5ebecgcdben.eastasia-01.azurewebsites.net/api/datasync";
+import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 
 const formatLastSyncForServer = (lastSync: string | number | Date | null | undefined) => {
   if (!lastSync) return "01-Jan-1970";
@@ -40,24 +38,19 @@ const fetchAllPages = async ({
   // Simple pagination loop mirroring the reference implementation
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const url = `${BASE_URL}/${entityName}/changes?shopId=${shopId}&lastSync=${formattedLastSync}&page=${page}&pageSize=${pageSize}`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      let bodyText = "";
-      try {
-        bodyText = await response.text();
-      } catch (e: any) {
-        bodyText = e?.message ?? "";
+    const response = await bookingEngineUrlHttp.get(
+      `/api/datasync/${entityName}/changes`,
+      {
+        params: {
+          shopId,
+          lastSync: formattedLastSync,
+          page,
+          pageSize,
+        },
       }
+    );
 
-      throw new Error(
-        `Failed to fetch ${entityName}: ${response.status} ${response.statusText} - ${bodyText}`
-      );
-    }
-
-    const data = await response.json();
+    const data = response.data;
     const rows = Array.isArray(data) ? data : [];
 
     allRows = [...allRows, ...rows];

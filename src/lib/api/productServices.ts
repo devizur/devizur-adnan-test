@@ -81,7 +81,7 @@ function mapProductToBase(item: ProductAdvancedItem) {
     price,
     fixedPrice,
     unit: "per person",
-    rating: item.rating || "--",
+    rating: item.rating ?? "--",
     image,
     duration: "",
     category,

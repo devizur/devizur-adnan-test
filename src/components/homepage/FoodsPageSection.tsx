@@ -1,6 +1,6 @@
-"use client";
+ "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { useFoodsAlignedWithModifiers } from "@/lib/api/hooks";
+import { useFoods } from "@/lib/api/hooks";
 import FoodCard, { FoodCardSkeleton } from "../ui/reused/FoodCard";
 import { Pagination } from "@/components/ui/reused/Pagination";
 
@@ -12,8 +12,7 @@ interface FoodsPageSectionProps {
 
 const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const { data: combinedFoods, isLoading, error } = useFoodsAlignedWithModifiers(searchTerm);
-    const allFoods = combinedFoods ?? [];
+    const { data: allFoods = [], isLoading, error } = useFoods(searchTerm);
 
     // Frontend pagination: slice full list by current page
     const paginatedFoods = useMemo(() => {
@@ -28,12 +27,6 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
-
-    // Log combined foods + modifiers (single JSON per food) for debugging
-    useEffect(() => {
-        if (!combinedFoods) return;
-        console.log("[FoodsPage] foods + modifiers (aligned):", combinedFoods);
-    }, [combinedFoods]);
 
     // Smooth scroll to top on page change
     useEffect(() => {
@@ -81,7 +74,6 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
                     <FoodCard
                         key={`${food.id}-${index}`}
                         item={food}
-                        modifierNames={food.modifierTargets?.map((t) => t.productName) ?? []}
                     />
                 ))}
             </div>

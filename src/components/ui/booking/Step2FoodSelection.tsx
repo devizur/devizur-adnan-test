@@ -2,27 +2,20 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { useFoodsAlignedWithModifiers, type FoodWithModifiers } from "@/lib/api/hooks";
+import { useFoods } from "@/lib/api/hooks";
+import type { Food } from "@/lib/api/types";
 import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
 import FoodCard from "@/components/ui/reused/FoodCard";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+import { FoodModifierDialog } from "@/components/ui/booking/FoodModifierDialog";
 
 export function Step2FoodSelection() {
   const dispatch = useAppDispatch();
   const { selectedFoods } = useAppSelector((state) => state.booking);
-  const { data: foods = [] } = useFoodsAlignedWithModifiers();
+  const { data: foods = [] } = useFoods();
 
-  const [modifierFood, setModifierFood] = React.useState<FoodWithModifiers | null>(null);
+  const [modifierFood, setModifierFood] = React.useState<Food | null>(null);
   const [selectedTargetProductIds, setSelectedTargetProductIds] = React.useState<number[]>([]);
   const [isModifierDialogOpen, setIsModifierDialogOpen] = React.useState(false);
 
@@ -37,14 +30,8 @@ export function Step2FoodSelection() {
     );
   };
 
-  const handleAddClick = (food: FoodWithModifiers) => {
-    const hasModifiers = food.modifierTargets && food.modifierTargets.length > 0;
-
-    if (!hasModifiers) {
-      dispatch(addFood({ food }));
-      return;
-    }
-
+  const handleAddClick = (food: Food) => {
+    // We always open the dialog; hook inside dialog will decide if there are modifiers.
     setModifierFood(food);
     setSelectedTargetProductIds([]);
     setIsModifierDialogOpen(true);
@@ -78,7 +65,6 @@ export function Step2FoodSelection() {
               key={`${food.id}-${index}`}
               item={food}
               showTimeSlots={false}
-              modifierNames={food.modifierTargets.map((t) => t.productName)}
               action={
                 qty === 0 ? (
                   <Button
@@ -127,55 +113,20 @@ export function Step2FoodSelection() {
         })}
       </div>
 
-      <AlertDialog open={isModifierDialogOpen} onOpenChange={setIsModifierDialogOpen}>
-        <AlertDialogContent size="default">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {modifierFood ? `Select modifiers for ${modifierFood.title}` : "Select modifiers"}
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-
-          <div className="mt-2 max-h-72 overflow-y-auto space-y-3 text-sm">
-            {modifierFood?.modifierTargets.map((t) => {
-              const isSelected = selectedTargetProductIds.includes(t.productId);
-              return (
-                <button
-                  key={t.modifierGroupTargetId}
-                  type="button"
-                  onClick={() => handleToggleTarget(t.productId)}
-                  className={`px-2 py-1 rounded-full text-xs border cursor-pointer touch-manipulation ${
-                    isSelected
-                      ? "bg-primary-1 text-black border-primary-1"
-                      : "bg-black/40 text-gray-200 border-gray-700 hover:bg-black/60"
-                  }`}
-                >
-                  {t.productName}
-                </button>
-              );
-            })}
-
-            {!modifierFood?.modifierTargets.length && (
-              <p className="text-sm text-muted-foreground">No modifiers available for this food.</p>
-            )}
-          </div>
-
-          <AlertDialogFooter className="mt-4">
-            <AlertDialogCancel
-              onClick={() => {
-                setIsModifierDialogOpen(false);
-                setModifierFood(null);
-                setSelectedTargetProductIds([]);
-              }}
-              size="sm"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmModifiers} size="sm">
-              Confirm &amp; add
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <FoodModifierDialog
+        open={isModifierDialogOpen}
+        onOpenChange={(open) => {
+          setIsModifierDialogOpen(open);
+          if (!open) {
+            setModifierFood(null);
+            setSelectedTargetProductIds([]);
+          }
+        }}
+        food={modifierFood}
+        selectedTargetProductIds={selectedTargetProductIds}
+        onToggleTarget={handleToggleTarget}
+        onConfirm={handleConfirmModifiers}
+      />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanst
 import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi, modifiersApi } from "./services";
 import type { GenerateBookingItemStep } from "./types";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
-import type { ModifierTarget } from "./modifierServices";
 import { useAppSelector } from "@/store/hooks";
 
 // Query keys for React Query
@@ -88,68 +87,7 @@ export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
     });
 }
 
-// (Legacy) Combined foods + modifier targets – no longer used directly by components,
-// but kept for potential reuse. Returns foods and all flattened modifier targets.
-export function useFoodsWithModifiers(
-    searchTerm?: string
-): UseQueryResult<{ foods: Food[]; modifierTargets: ModifierTarget[] }, Error> {
-    const shopId = useAppSelector((state) => state.shop.shopId);
-    const query = searchTerm?.trim() ?? "";
-    const hasSearch = query.length > 0;
-
-    return useQuery({
-        queryKey: queryKeys.foods.withModifiers(shopId, hasSearch ? query : undefined),
-        queryFn: async () => {
-            const [foods, modifierTargets] = await Promise.all([
-                hasSearch ? foodsApi.search(query, shopId) : foodsApi.getAll(shopId),
-                modifiersApi.getTargets(shopId),
-            ]);
-            return { foods, modifierTargets };
-        },
-        staleTime: 5 * 60 * 1000,
-    });
-}
-
-export type FoodWithModifiers = Food & {
-    /**
-     * All modifier targets whose productId matches this food's id.
-     * This app doesn't need full modifierGroup details, only the aligned targets.
-     */
-    modifierTargets: ModifierTarget[];
-};
-
-// Single combined hook: returns foods already aligned with their modifier groups.
-// Each array item is one JSON object that contains both food and its modifiers.
-export function useFoodsAlignedWithModifiers(
-    searchTerm?: string
-): UseQueryResult<FoodWithModifiers[], Error> {
-    const shopId = useAppSelector((state) => state.shop.shopId);
-    const query = searchTerm?.trim() ?? "";
-    const hasSearch = query.length > 0;
-
-    return useQuery<FoodWithModifiers[], Error>({
-        queryKey: queryKeys.foods.withModifiers(shopId, hasSearch ? query : undefined),
-        queryFn: async () => {
-            const [foods, allActiveTargets] = await Promise.all([
-                hasSearch ? foodsApi.search(query, shopId) : foodsApi.getAll(shopId),
-                modifiersApi.getTargets(shopId),
-            ]);
-
-            // For this app we only care about targets where target.productId === food.id
-            return foods.map((food) => {
-                const modifierTargetsForFood = allActiveTargets.filter(
-                    (t) => t.productId === food.id
-                );
-
-                return {
-                    ...food,
-                    modifierTargets: modifierTargetsForFood,
-                };
-            });
-        },
-        staleTime: 5 * 60 * 1000,
-    });
-}
+// (Legacy) Combined foods + modifier targets hook removed; use `useFoods` + `useProductModifiers` instead.
 
 export function useFood(id: number): UseQueryResult<Food | null, Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);

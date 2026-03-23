@@ -36,13 +36,16 @@ const STEPS_FOOD_FIRST = [
 
 interface BookingDialogProps {
   children: React.ReactNode;
- 
+
   initialActivity?: Activity;
-   
+
   initialPackage?: Package;
- 
+
   initialFood?: Food;
   onConfirm?: () => void;
+  /** Controlled open state (e.g. foods page after modifier dialog). Use with onOpenChange. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function BookingDialog({
@@ -51,6 +54,8 @@ export function BookingDialog({
   initialPackage,
   initialFood,
   onConfirm,
+  open: openControlled,
+  onOpenChange: onOpenChangeControlled,
 }: BookingDialogProps) {
   const dispatch = useAppDispatch();
   const cart = useCart();
@@ -61,7 +66,19 @@ export function BookingDialog({
   const isFoodFirst = flowMode === "foodFirst";
   const STEPS = isFoodFirst ? STEPS_FOOD_FIRST : STEPS_ACTIVITY_FIRST;
 
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const isControlled = openControlled !== undefined;
+  const isOpen = isControlled ? openControlled : uncontrolledOpen;
+  const setIsOpen = React.useCallback(
+    (next: boolean) => {
+      if (isControlled) {
+        onOpenChangeControlled?.(next);
+      } else {
+        setUncontrolledOpen(next);
+      }
+    },
+    [isControlled, onOpenChangeControlled]
+  );
 
   const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);

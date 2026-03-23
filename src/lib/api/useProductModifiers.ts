@@ -60,12 +60,12 @@ export function getProductModifiersForProduct(
 export function useProductModifiers(productId: number | string | null | undefined) {
   const shopId = useAppSelector((state) => state.shop.shopId);
 
-  const { data } = useModifierMasterData({
+  const { data, isPending } = useModifierMasterData({
     shopId,
     enabled: Boolean(shopId),
   });
 
-  return useMemo(() => {
+  const modifierGroups = useMemo(() => {
     if (!productId || !data) return [];
 
     return getProductModifiersForProduct(
@@ -76,5 +76,10 @@ export function useProductModifiers(productId: number | string | null | undefine
       (data as ModifierMasterDataShape).productModifiers
     );
   }, [productId, data]);
+
+  /** True while master data is loading – don't treat empty groups as "no modifiers" yet */
+  const isModifiersPending = Boolean(shopId) && isPending;
+
+  return { modifierGroups, isModifiersPending };
 }
 

@@ -33,17 +33,18 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
 }) => {
   // Use backend productId explicitly to match modifier targets
   const productId = food?.productId ?? null;
-  const modifierGroups = useProductModifiers(productId);
+  const { modifierGroups, isModifiersPending } = useProductModifiers(productId);
 
-  // If dialog is opened for a food that has no modifiers, just auto-confirm and close.
+  // If dialog is opened for a food that has no modifiers, auto-confirm after master data loads.
   React.useEffect(() => {
     if (!open) return;
     if (!food) return;
+    if (isModifiersPending) return;
     if (modifierGroups.length === 0) {
       onConfirm();
       onOpenChange(false);
     }
-  }, [open, food, modifierGroups.length, onConfirm, onOpenChange]);
+  }, [open, food, isModifiersPending, modifierGroups.length, onConfirm, onOpenChange]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +60,11 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
         </div>
 
         <div className="mt-3 max-h-72 overflow-y-auto space-y-2 text-sm scrollbar-dark">
-          {modifierGroups.map((group) => (
+          {isModifiersPending && (
+            <p className="text-sm text-muted-foreground py-4 text-center">Loading modifiers…</p>
+          )}
+          {!isModifiersPending &&
+            modifierGroups.map((group) => (
             <div key={group.modifierGroupId} className="space-y-1.5">
               <div className="text-xs font-semibold text-gray-200">
                 {group.modifierGroupName}
@@ -96,7 +101,7 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
             </div>
           ))}
 
-          {!modifierGroups.length && (
+          {!isModifiersPending && !modifierGroups.length && (
             <p className="text-sm text-muted-foreground">
               No modifiers available for this food.
             </p>

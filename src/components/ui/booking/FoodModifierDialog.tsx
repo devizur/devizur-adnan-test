@@ -88,11 +88,11 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
                           : "bg-[#181818] text-gray-100 border-gray-800 hover:bg-[#202020] hover:border-primary-1/40"
                       }`}
                     >
-                      <span className="font-medium truncate">
+                      <span className="font-medium truncate ">
                         {opt.modifierName || opt.name || `Modifier #${opt.modifierId}`}
                       </span>
-                      <span className="ml-2 text-xs sm:text-sm font-semibold text-primary-1">
-                        {price > 0 ? `+${price}` : "Included"}
+                      <span className="ml-2 text-xs sm:text-sm font-semibold ">
+                        {price > 0 ? `+ $${price.toFixed(2)}` : "Included"}
                       </span>
                     </button>
                   );

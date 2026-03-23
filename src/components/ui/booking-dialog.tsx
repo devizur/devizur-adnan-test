@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
-import { Step1AvailabilitySelection } from "@/components/ui/booking/Step1AvailabilitySelection";
-import { Step2FoodSelection } from "@/components/ui/booking/Step2FoodSelection";
+import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
+import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { Step3HolderDetails } from "@/components/ui/booking/Step3HolderDetails";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
@@ -36,11 +36,11 @@ const STEPS_FOOD_FIRST = [
 
 interface BookingDialogProps {
   children: React.ReactNode;
-  /** When provided (e.g. from "Book Now" on a card), dialog opens with this activity pre-selected in step 1 */
+ 
   initialActivity?: Activity;
-  /** When provided, dialog opens with this package pre-selected in step 1 */
+   
   initialPackage?: Package;
-  /** When provided, dialog opens with this food pre-selected in step 2 */
+ 
   initialFood?: Food;
   onConfirm?: () => void;
 }
@@ -209,7 +209,7 @@ export function BookingDialog({
               Create booking
             </AlertDialogTitle>
 
-            <div className="flex items-center min-w-0 flex-1 overflow-x-auto scrollbar-dark justify-center py-1">
+            <div className=" hidden lg:flex items-center min-w-0 flex-1 overflow-x-auto scrollbar-dark justify-center py-1">
               <div className="flex items-center gap-2 shrink-0">
                 {STEPS.map((s, i) => (
                   <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
@@ -271,14 +271,14 @@ export function BookingDialog({
         >
           {isFoodFirst ? (
             <>
-              {step === 1 && <Step2FoodSelection />}
-              {step === 2 && <Step1AvailabilitySelection />}
+              {step === 1 && <StepFoodSelection />}
+              {step === 2 && <StepAvailabilitySelection />}
               {step === 3 && <Step3HolderDetails onSubmit={handleAddBooking} />}
             </>
           ) : (
             <>
-              {step === 1 && <Step1AvailabilitySelection />}
-              {step === 2 && <Step2FoodSelection />}
+              {step === 1 && <StepAvailabilitySelection />}
+              {step === 2 && <StepFoodSelection />}
               {step === 3 && <Step3HolderDetails onSubmit={handleAddBooking} />}
             </>
           )}

@@ -10,7 +10,7 @@ import FoodCard from "@/components/ui/reused/FoodCard";
 import { Button } from "@/components/ui/button";
 import { FoodModifierDialog } from "@/components/ui/booking/FoodModifierDialog";
 
-export function Step2FoodSelection() {
+export function StepFoodSelection() {
   const dispatch = useAppDispatch();
   const { selectedFoods } = useAppSelector((state) => state.booking);
   const { data: foods = [] } = useFoods();
@@ -31,7 +31,6 @@ export function Step2FoodSelection() {
   };
 
   const handleAddClick = (food: Food) => {
-    // We always open the dialog; hook inside dialog will decide if there are modifiers.
     setModifierFood(food);
     setSelectedTargetProductIds([]);
     setIsModifierDialogOpen(true);
@@ -39,9 +38,7 @@ export function Step2FoodSelection() {
 
   const handleConfirmModifiers = () => {
     if (!modifierFood) return;
-
-    // For now we only log chosen modifiers; booking state still stores just the food + quantity.
-    console.log("[Step2FoodSelection] Selected modifiers for food:", {
+    console.log("[StepFoodSelection] Selected modifiers for food:", {
       foodId: modifierFood.id,
       selectedTargetProductIds,
     });

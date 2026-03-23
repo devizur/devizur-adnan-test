@@ -35,7 +35,7 @@ const SHIFT = [
   { id: 3, label: "Evening", apiKey: "Night" as const },
 ] as const;
 
-export function Step1AvailabilitySelection() {
+export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
@@ -118,7 +118,7 @@ export function Step1AvailabilitySelection() {
     return (available[0]?.value ?? 1) as 1 | 2 | 3;
   };
 
-  /** Activity has dynamic options from API (attributeCombinations) */
+ 
   const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
     const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
       .attributeCombinations;

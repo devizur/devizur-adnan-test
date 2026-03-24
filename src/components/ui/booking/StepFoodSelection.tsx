@@ -58,9 +58,7 @@ export function StepFoodSelection() {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <p className="text-xs sm:text-sm text-muted-foreground">
-        Optional food add-ons. Select items (and any modifiers) to include with your booking.
-      </p>
+     
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 scrollbar-dark">
         {foods.map((food, index) => {
           const qty = getQuantity(food.id);
@@ -86,7 +84,7 @@ export function StepFoodSelection() {
                       variant="outline"
                       size="icon"
                       aria-label={`Decrease quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-gray-200 hover:bg-gray-800 cursor-pointer touch-manipulation"
+                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-primary/90 hover:bg-gray-800 cursor-pointer touch-manipulation"
                       onClick={() => {
                         if (qty <= 1) dispatch(removeFood(food.id));
                         else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
@@ -95,7 +93,7 @@ export function StepFoodSelection() {
                       <Minus className="w-4 h-4" />
                     </Button>
                     <span
-                      className="text-sm font-medium text-gray-100 tabular-nums"
+                      className="text-sm font-medium text-primary/90 tabular-nums"
                       aria-live="polite"
                     >
                       {qty} in cart

@@ -35,11 +35,10 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
   onDecrementModifier,
   onConfirm,
 }) => {
-  // Use backend productId explicitly to match modifier targets
   const productId = food?.productId ?? null;
   const { modifierGroups, isModifiersPending } = useProductModifiers(productId);
 
-  // If dialog is opened for a food that has no modifiers, auto-confirm after master data loads.
+
   React.useEffect(() => {
     if (!open) return;
     if (!food) return;
@@ -72,80 +71,80 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent  className="border-secondary" size="default">
+      <AlertDialogContent className="border-secondary" size="default">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-primary">
             {food ? `Select modifiers for ${food.title}` : "Select modifiers"}
           </AlertDialogTitle>
+          <div className=" text-xs text-primary-1">
+            Choose modifier options for this food. Prices are shown per option.
+          </div>
         </AlertDialogHeader>
 
-        <div className="mt-1.5 text-xs text-primary-1">
-          Choose modifier options for this food. Prices are shown per option.
-        </div>
 
-        <div className="mt-3 max-h-72 overflow-y-auto space-y-2 text-sm scrollbar-dark">
+
+        <div className="max-h-72 overflow-y-auto space-y-2 text-sm scrollbar-dark">
           {isModifiersPending && (
             <p className="text-sm text-muted-foreground py-4 text-center">Loading modifiers…</p>
           )}
           {!isModifiersPending &&
             modifierGroups.map((group) => (
-            <div key={group.modifierGroupId} className="space-y-1.5">
-              <div className="text-xs font-semibold text-gray-200">
-                {group.modifierGroupName}
-              </div>
-              <div className="space-y-1">
-                {group.options.map((opt: any) => {
-                  const qty = modifierQuantities[opt.modifierId] ?? 0;
-                  const price =
-                    typeof opt.additionalPrice === "number" && !Number.isNaN(opt.additionalPrice)
-                      ? opt.additionalPrice
-                      : 0;
+              <div key={group.modifierGroupId} className="space-y-1.5">
+                <div className="text-xs font-semibold text-primary/90">
+                  {group.modifierGroupName}
+                </div>
+                <div className="space-y-1">
+                  {group.options.map((opt: any) => {
+                    const qty = modifierQuantities[opt.modifierId] ?? 0;
+                    const price =
+                      typeof opt.additionalPrice === "number" && !Number.isNaN(opt.additionalPrice)
+                        ? opt.additionalPrice
+                        : 0;
 
-                  return (
-                    <div
-                      key={`${group.modifierGroupId}-${opt.modifierId}`}
-                      className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm text-left cursor-pointer touch-manipulation transition-colors ${
-                        qty > 0
-                          ? "bg-primary-1 text-black border-primary-1  "
-                          : "bg-[#181818] text-gray-100 border-gray-800 hover:bg-[#202020] hover:border-primary-1/40"
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 pr-3">
-                        <span className="font-medium truncate ">
-                          {opt.modifierName || opt.name || `Modifier #${opt.modifierId}`}
-                        </span>
-                        <span className="text-[11px] opacity-80">
-                          {price > 0 ? `+ $${price.toFixed(2)}` : "Included"}
-                        </span>
+                    return (
+                      <div
+                        key={`${group.modifierGroupId}-${opt.modifierId}`}
+                        className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm text-left cursor-pointer touch-manipulation transition-colors ${qty > 0
+                            ? "bg-primary-1 text-black border-primary-1  "
+                            : "bg-[#181818] text-primary/90 border-gray-800 hover:bg-[#202020] hover:border-primary-1/40"
+                          }`}
+                      >
+                        <div className="flex flex-col min-w-0 pr-3">
+                          <span className="font-medium truncate ">
+                            {opt.modifierName || opt.name || `Modifier #${opt.modifierId}`}
+                          </span>
+                          <span className="text-[11px] opacity-80">
+                            {price > 0 ? `+ $${price.toFixed(2)}` : "Included"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 rounded-md border border-gray-700 bg-black/20 text-primary/90 hover:bg-black/40"
+                            onClick={() => onDecrementModifier(opt.modifierId)}
+                            aria-label={`Decrease ${opt.modifierName || opt.name || "modifier"}`}
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </Button>
+                          <span className="w-6 text-center font-semibold tabular-nums">{qty}</span>
+                          <Button
+                            type="button"
+                            size="icon"
+                            className="h-7 w-7 rounded-md bg-primary-1 text-black hover:bg-primary-1-hover"
+                            onClick={() => onIncrementModifier(opt.modifierId)}
+                            aria-label={`Increase ${opt.modifierName || opt.name || "modifier"}`}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          className="h-7 w-7 rounded-md border border-gray-700 bg-black/20 text-gray-100 hover:bg-black/40"
-                          onClick={() => onDecrementModifier(opt.modifierId)}
-                          aria-label={`Decrease ${opt.modifierName || opt.name || "modifier"}`}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </Button>
-                        <span className="w-6 text-center font-semibold tabular-nums">{qty}</span>
-                        <Button
-                          type="button"
-                          size="icon"
-                          className="h-7 w-7 rounded-md bg-primary-1 text-black hover:bg-primary-1-hover"
-                          onClick={() => onIncrementModifier(opt.modifierId)}
-                          aria-label={`Increase ${opt.modifierName || opt.name || "modifier"}`}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
           {!isModifiersPending && !modifierGroups.length && (
             <p className="text-sm text-muted-foreground">

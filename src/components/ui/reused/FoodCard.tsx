@@ -58,7 +58,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifi
                                 {modifierNames.slice(0, 3).map((name, idx) => (
                                     <span
                                         key={`${name}-${idx}`}
-                                        className="px-1.5 py-0.5 rounded-full bg-black/40 text-[9px] sm:text-[10px] text-gray-200"
+                                        className="px-1.5 py-0.5 rounded-full bg-black/40 text-[9px] sm:text-[10px] text-primary/90"
                                     >
                                         {name}
                                     </span>

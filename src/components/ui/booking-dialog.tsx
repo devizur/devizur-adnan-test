@@ -43,7 +43,6 @@ interface BookingDialogProps {
 
   initialFood?: Food;
   onConfirm?: () => void;
-  /** Controlled open state (e.g. foods page after modifier dialog). Use with onOpenChange. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -118,8 +117,7 @@ export function BookingDialog({
         dispatch(setStep(1));
       }
     }
-  }, [isOpen, shopId]); // eslint-disable-line react-hooks/exhaustive-deps -- only when dialog opens
-
+  }, [isOpen, shopId]);  
   React.useEffect(() => {
     if (!isOpen) {
       if (timerRef.current) {
@@ -241,7 +239,7 @@ export function BookingDialog({
                       <span
                         className={cn(
                           "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold shrink-0",
-                          step === s.id && "bg-primary-1 text-primary",
+                          step === s.id && "bg-primary-1 text-secondary",
                           step > s.id && "bg-gray-700 text-gray-300",
                           step < s.id && "bg-gray-800 text-gray-500"
                         )}
@@ -269,7 +267,7 @@ export function BookingDialog({
               <button
                 type="button"
                 onClick={handleClose}
-                className="min-h-9 min-w-9 sm:min-h-10 sm:min-w-10 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+                className="min-h-9 min-w-9 sm:min-h-10 sm:min-w-10 p-2 rounded-xl text-gray-400 hover:text-primary hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />

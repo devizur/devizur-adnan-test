@@ -21,6 +21,7 @@ export function formatPrice(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
+/** Demo image used everywhere for catalog cards */
 export const DemoImageUrl = "https://picsum.photos/400/200";
 
 /** Format "09:30" → "9:30 am", "14:00" → "2:00 pm" */

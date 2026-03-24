@@ -12,11 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface FoodCardProps {
     item: Food;
     showTimeSlots?: boolean;
+    /** Optional: modifier names associated with this food (from modifier master data) */
+    modifierNames?: string[];
     /** When provided, renders instead of the default Book Now button (e.g. quantity controls in booking flow) */
     action?: React.ReactNode;
 }
 
-const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifierNames, action }) => {
     const { getFoodQuantity } = useCart();
     const quantity = getFoodQuantity(item.id);
     const isInCart = quantity > 0;
@@ -43,7 +45,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action
             </div>
 
             <CardContent className="px-1.5 pb-2 pt-2 sm:pt-3">
-                <div className="flex justify-between items-start mb-2 sm:mb-3">
+                <div className="flex justify-between items-start mb-1.5 sm:mb-2.5">
                     <div className="flex-1 pr-1.5 sm:pr-2 min-w-0">
                         <h3 className="text-xs sm:text-[15px] font-bold text-primary tracking-tight leading-tight mb-0.5 sm:mb-1">
                             {item.title}
@@ -51,6 +53,23 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action
                         <span className="text-[10px] sm:text-[12px] text-gray-400 font-medium">
                             Freshly Prepared
                         </span>
+                        {modifierNames && modifierNames.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                                {modifierNames.slice(0, 3).map((name, idx) => (
+                                    <span
+                                        key={`${name}-${idx}`}
+                                        className="px-1.5 py-0.5 rounded-full bg-black/40 text-[9px] sm:text-[10px] text-primary/90"
+                                    >
+                                        {name}
+                                    </span>
+                                ))}
+                                {modifierNames.length > 3 && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-black/40 text-[9px] sm:text-[10px] text-gray-400">
+                                        +{modifierNames.length - 3} more
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <div className="text-right shrink-0">
                         <div className="text-primary-1 text-base sm:text-[18px] font-bold">
@@ -75,7 +94,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, action
                             </Button>
                         ))}
                         {item.timeSlots.length > 3 && (
-                            <div className="w-8 h-7 sm:w-10 sm:h-9 bg-primary/[0.04] border border-white/10 rounded-full text-[9px] sm:text-[11px] font-bold text-gray-400 flex items-center justify-center">
+                            <div className="w-8 h-7 sm:w-10 sm:h-9 bg-primary/4 border border-white/10 rounded-full text-[9px] sm:text-[11px] font-bold text-gray-400 flex items-center justify-center">
                                 +{item.timeSlots.length - 3}
                             </div>
                         )}

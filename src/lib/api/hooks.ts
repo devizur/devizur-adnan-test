@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from "@tanstack/react-query";
-import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi } from "./services";
+import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, bookingApi, modifiersApi } from "./services";
 import type { GenerateBookingItemStep } from "./types";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
 import { useAppSelector } from "@/store/hooks";
@@ -23,6 +23,8 @@ export const queryKeys = {
         search: (term: string, shopId: number) => [...queryKeys.foods.list(shopId), "search", term] as const,
         details: () => [...queryKeys.foods.all, "detail"] as const,
         detail: (id: number, shopId: number) => [...queryKeys.foods.details(), id, "shopId", shopId] as const,
+        withModifiers: (shopId: number, term: string | undefined) =>
+            [...queryKeys.foods.all, "withModifiers", "shopId", shopId, term ?? ""] as const,
     },
     packages: {
         all: ["packages"] as const,
@@ -84,6 +86,8 @@ export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
+
+// (Legacy) Combined foods + modifier targets hook removed; use `useFoods` + `useProductModifiers` instead.
 
 export function useFood(id: number): UseQueryResult<Food | null, Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);

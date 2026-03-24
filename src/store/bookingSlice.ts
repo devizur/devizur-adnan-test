@@ -9,6 +9,16 @@ export interface BookingPersons {
 export interface SelectedFoodItem {
   food: Food;
   quantity: number;
+  selectedModifiers?: SelectedFoodModifier[];
+}
+
+export interface SelectedFoodModifier {
+  modifierId: number;
+  modifierName: string;
+  additionalPrice: number;
+  quantity: number;
+  modifierGroupId?: number;
+  modifierGroupName?: string;
 }
 
 export interface HolderDetails {
@@ -174,13 +184,23 @@ const bookingSlice = createSlice({
     removePackage: (state, action: PayloadAction<number>) => {
       state.selectedPackages = state.selectedPackages.filter((p) => p.id !== action.payload);
     },
-    addFood: (state, action: PayloadAction<{ food: Food; quantity?: number }>) => {
-      const { food, quantity = 1 } = action.payload;
+    addFood: (
+      state,
+      action: PayloadAction<{
+        food: Food;
+        quantity?: number;
+        selectedModifiers?: SelectedFoodModifier[];
+      }>
+    ) => {
+      const { food, quantity = 1, selectedModifiers } = action.payload;
       const existing = state.selectedFoods.findIndex((i) => i.food.id === food.id);
       if (existing >= 0) {
         state.selectedFoods[existing].quantity += quantity;
+        if (selectedModifiers) {
+          state.selectedFoods[existing].selectedModifiers = selectedModifiers;
+        }
       } else {
-        state.selectedFoods.push({ food, quantity });
+        state.selectedFoods.push({ food, quantity, ...(selectedModifiers ? { selectedModifiers } : {}) });
       }
     },
     removeFood: (state, action: PayloadAction<number>) => {

@@ -3,24 +3,62 @@
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useFoods } from "@/lib/api/hooks";
+import type { Food } from "@/lib/api/types";
 import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
+import type { SelectedFoodModifier } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
 import FoodCard from "@/components/ui/reused/FoodCard";
 import { Button } from "@/components/ui/button";
+import { FoodModifierDialog } from "@/components/ui/booking/FoodModifierDialog";
 
-export function Step2FoodSelection() {
+export function StepFoodSelection() {
   const dispatch = useAppDispatch();
   const { selectedFoods } = useAppSelector((state) => state.booking);
   const { data: foods = [] } = useFoods();
 
+  const [modifierFood, setModifierFood] = React.useState<Food | null>(null);
+  const [modifierQuantities, setModifierQuantities] = React.useState<Record<number, number>>({});
+  const [isModifierDialogOpen, setIsModifierDialogOpen] = React.useState(false);
+
   const getQuantity = (foodId: number) =>
     selectedFoods.find((i) => i.food.id === foodId)?.quantity ?? 0;
 
+  const handleIncrementModifier = (modifierId: number) => {
+    setModifierQuantities((prev) => ({ ...prev, [modifierId]: (prev[modifierId] ?? 0) + 1 }));
+  };
+
+  const handleDecrementModifier = (modifierId: number) => {
+    setModifierQuantities((prev) => {
+      const next = { ...prev };
+      const qty = (next[modifierId] ?? 0) - 1;
+      if (qty <= 0) delete next[modifierId];
+      else next[modifierId] = qty;
+      return next;
+    });
+  };
+
+  const handleAddClick = (food: Food) => {
+    setModifierFood(food);
+    setModifierQuantities({});
+    setIsModifierDialogOpen(true);
+  };
+
+  const handleConfirmModifiers = (selectedModifiers: SelectedFoodModifier[]) => {
+    if (!modifierFood) return;
+    console.log("[StepFoodSelection] Selected modifiers for food:", {
+      foodId: modifierFood.id,
+      selectedModifiers,
+    });
+
+    dispatch(addFood({ food: modifierFood, selectedModifiers }));
+    setIsModifierDialogOpen(false);
+    setModifierFood(null);
+    setModifierQuantities({});
+  };
+
   return (
     <div className="space-y-3 sm:space-y-4">
-      <p className="text-xs sm:text-sm text-muted-foreground">
-        Optional food add-ons. Select items to include with your booking.
-      </p>
+     
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 scrollbar-dark">
         {foods.map((food, index) => {
           const qty = getQuantity(food.id);
@@ -33,7 +71,7 @@ export function Step2FoodSelection() {
                 qty === 0 ? (
                   <Button
                     type="button"
-                    onClick={() => dispatch(addFood({ food }))}
+                    onClick={() => handleAddClick(food)}
                     className="mt-2 sm:mt-3 w-full min-h-10 sm:h-11 rounded-lg sm:rounded-[10px] bg-primary-1 text-black font-semibold text-xs sm:text-sm hover:bg-primary-1-hover cursor-pointer touch-manipulation"
                     aria-label={`Add ${food.title} to cart`}
                   >
@@ -46,7 +84,7 @@ export function Step2FoodSelection() {
                       variant="outline"
                       size="icon"
                       aria-label={`Decrease quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-gray-200 hover:bg-gray-800 cursor-pointer touch-manipulation"
+                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-primary/90 hover:bg-gray-800 cursor-pointer touch-manipulation"
                       onClick={() => {
                         if (qty <= 1) dispatch(removeFood(food.id));
                         else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
@@ -55,7 +93,7 @@ export function Step2FoodSelection() {
                       <Minus className="w-4 h-4" />
                     </Button>
                     <span
-                      className="text-sm font-medium text-gray-100 tabular-nums"
+                      className="text-sm font-medium text-primary/90 tabular-nums"
                       aria-live="polite"
                     >
                       {qty} in cart
@@ -65,7 +103,7 @@ export function Step2FoodSelection() {
                       size="icon"
                       aria-label={`Increase quantity of ${food.title}`}
                       className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] bg-primary-1 text-black hover:bg-primary-1-hover font-semibold cursor-pointer touch-manipulation"
-                      onClick={() => dispatch(addFood({ food }))}
+                      onClick={() => handleAddClick(food)}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -76,6 +114,22 @@ export function Step2FoodSelection() {
           );
         })}
       </div>
+
+      <FoodModifierDialog
+        open={isModifierDialogOpen}
+        onOpenChange={(open) => {
+          setIsModifierDialogOpen(open);
+          if (!open) {
+            setModifierFood(null);
+              setModifierQuantities({});
+          }
+        }}
+        food={modifierFood}
+          modifierQuantities={modifierQuantities}
+          onIncrementModifier={handleIncrementModifier}
+          onDecrementModifier={handleDecrementModifier}
+        onConfirm={handleConfirmModifiers}
+      />
     </div>
   );
 }

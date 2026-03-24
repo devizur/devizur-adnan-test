@@ -227,7 +227,7 @@ export function BookingCalendar({
                         ? "bg-primary-1 text-black"
                         : isToday
                           ? "border border-primary-1/60 text-white"
-                          : "text-gray-200 hover:bg-[#333]"
+                          : "text-primary/90 hover:bg-[#333]"
                     )}
                   >
                     {cell.getDate()}

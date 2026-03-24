@@ -35,7 +35,7 @@ const SHIFT = [
   { id: 3, label: "Evening", apiKey: "Night" as const },
 ] as const;
 
-export function Step1AvailabilitySelection() {
+export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
@@ -118,7 +118,7 @@ export function Step1AvailabilitySelection() {
     return (available[0]?.value ?? 1) as 1 | 2 | 3;
   };
 
-  /** Activity has dynamic options from API (attributeCombinations) */
+ 
   const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
     const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
       .attributeCombinations;
@@ -242,8 +242,13 @@ export function Step1AvailabilitySelection() {
                   <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
                     <h4 className="font-medium text-xs sm:text-base text-white truncate">{activity.title}</h4>
                     <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 line-clamp-1 sm:line-clamp-2">
-                      {activity.timeSlots?.slice(0, 3).join(", ") || "6:00 am, 6:30 am, 7:00 am"}
-                      {activity.timeSlots && activity.timeSlots.length > 3 ? ", ..." : ""}
+                      {activity.timeSlots && activity.timeSlots.length > 0
+                        ? activity.timeSlots.join(", ")
+                        : combinations.length > 0
+                          ? combinations
+                              .map((c) => `${c.attributeCombinationName} $${c.fixedPrice}`)
+                              .join(", ")
+                          : "--"}
                     </p>
                   </div>
                 </button>

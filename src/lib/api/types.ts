@@ -37,6 +37,7 @@ export interface ProductAdvancedItem {
     minPrice: number;
     maxPrice: number;
   }>;
+  rating?: string | number;
 }
 
 // Attribute combination (from API) – used for dynamic activity options (e.g. "1 Game Adult", "2 Games Kids")

@@ -5,6 +5,8 @@ import "./globals.css";
 import { getBrandConfig } from "@/lib/brand-config";
 import ColorComponent from "@/components/color/color";
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -123,6 +125,7 @@ export default function RootLayout({
                 <BookingCartProvider>
                   <BrandGuard currentBrand={brandKey} />
                   <Navbar />
+                  <SpeedInsights/>
                   <main className="flex-1">
                     {children}
                   </main>

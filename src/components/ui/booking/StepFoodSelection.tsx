@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { useFoods } from "@/lib/api/hooks";
 import type { Food } from "@/lib/api/types";
 import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
+import type { SelectedFoodModifier } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
 import FoodCard from "@/components/ui/reused/FoodCard";
 import { Button } from "@/components/ui/button";
@@ -16,37 +17,43 @@ export function StepFoodSelection() {
   const { data: foods = [] } = useFoods();
 
   const [modifierFood, setModifierFood] = React.useState<Food | null>(null);
-  const [selectedTargetProductIds, setSelectedTargetProductIds] = React.useState<number[]>([]);
+  const [modifierQuantities, setModifierQuantities] = React.useState<Record<number, number>>({});
   const [isModifierDialogOpen, setIsModifierDialogOpen] = React.useState(false);
 
   const getQuantity = (foodId: number) =>
     selectedFoods.find((i) => i.food.id === foodId)?.quantity ?? 0;
 
-  const handleToggleTarget = (productId: number) => {
-    setSelectedTargetProductIds((prev) =>
-      prev.includes(productId)
-        ? prev.filter((x) => x !== productId)
-        : [...prev, productId]
-    );
+  const handleIncrementModifier = (modifierId: number) => {
+    setModifierQuantities((prev) => ({ ...prev, [modifierId]: (prev[modifierId] ?? 0) + 1 }));
+  };
+
+  const handleDecrementModifier = (modifierId: number) => {
+    setModifierQuantities((prev) => {
+      const next = { ...prev };
+      const qty = (next[modifierId] ?? 0) - 1;
+      if (qty <= 0) delete next[modifierId];
+      else next[modifierId] = qty;
+      return next;
+    });
   };
 
   const handleAddClick = (food: Food) => {
     setModifierFood(food);
-    setSelectedTargetProductIds([]);
+    setModifierQuantities({});
     setIsModifierDialogOpen(true);
   };
 
-  const handleConfirmModifiers = () => {
+  const handleConfirmModifiers = (selectedModifiers: SelectedFoodModifier[]) => {
     if (!modifierFood) return;
     console.log("[StepFoodSelection] Selected modifiers for food:", {
       foodId: modifierFood.id,
-      selectedTargetProductIds,
+      selectedModifiers,
     });
 
-    dispatch(addFood({ food: modifierFood }));
+    dispatch(addFood({ food: modifierFood, selectedModifiers }));
     setIsModifierDialogOpen(false);
     setModifierFood(null);
-    setSelectedTargetProductIds([]);
+    setModifierQuantities({});
   };
 
   return (
@@ -116,12 +123,13 @@ export function StepFoodSelection() {
           setIsModifierDialogOpen(open);
           if (!open) {
             setModifierFood(null);
-            setSelectedTargetProductIds([]);
+              setModifierQuantities({});
           }
         }}
         food={modifierFood}
-        selectedTargetProductIds={selectedTargetProductIds}
-        onToggleTarget={handleToggleTarget}
+          modifierQuantities={modifierQuantities}
+          onIncrementModifier={handleIncrementModifier}
+          onDecrementModifier={handleDecrementModifier}
         onConfirm={handleConfirmModifiers}
       />
     </div>

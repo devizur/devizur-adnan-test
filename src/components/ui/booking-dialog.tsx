@@ -21,7 +21,7 @@ import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, set
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
 
-const REMAINING_TIME = 60 * 5; // 5 minutes
+const REMAINING_TIME = 60 * 10; // 10 minutes
 const STEPS_ACTIVITY_FIRST = [
   { id: 1, label: "Availability & Selection" },
   { id: 2, label: "Food Selection" },
@@ -215,14 +215,14 @@ export function BookingDialog({
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
         className={cn(
-          "flex flex-col bg-[#161616] p-0 gap-0 text-white overflow-hidden",
+          "flex flex-col bg-[#161616] p-0 gap-0 text-primary overflow-hidden",
           "max-sm:inset-0 max-sm:top-0 max-sm:left-0 max-sm:right-0 max-sm:bottom-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:h-full max-sm:min-w-0 max-sm:max-w-none max-sm:min-h-dvh max-sm:max-h-dvh max-sm:rounded-none max-sm:border-0",
-          "sm:min-w-[90%] sm:max-w-4xl sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-800/80"
+          "sm:min-w-[90%] sm:max-w-4xl sm:h-[90vh] sm:rounded-2xl sm:border sm:border-secondary"
         )}
       >
-        <AlertDialogHeader className="px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-3 sm:pb-5 border-b border-gray-800/80 shrink-0">
+        <AlertDialogHeader className="px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-3 sm:pb-5 border-b border-secondary shrink-0">
           <div className="flex items-center justify-between gap-4 w-full min-w-0">
-            <AlertDialogTitle className="text-base sm:text-lg font-semibold text-white whitespace-nowrap shrink-0">
+            <AlertDialogTitle className="text-base sm:text-lg font-semibold text-primary whitespace-nowrap shrink-0">
               Create booking
             </AlertDialogTitle>
 
@@ -241,7 +241,7 @@ export function BookingDialog({
                       <span
                         className={cn(
                           "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold shrink-0",
-                          step === s.id && "bg-primary-1 text-black",
+                          step === s.id && "bg-primary-1 text-primary",
                           step > s.id && "bg-gray-700 text-gray-300",
                           step < s.id && "bg-gray-800 text-gray-500"
                         )}
@@ -251,7 +251,7 @@ export function BookingDialog({
                       <span className="whitespace-nowrap">{s.label}</span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <span className="text-gray-700 px-1 shrink-0 text-xs">›</span>
+                      <span className="text-secondary px-1 shrink-0 text-xs">›</span>
                     )}
                   </React.Fragment>
                 ))}
@@ -303,13 +303,13 @@ export function BookingDialog({
 
         <AlertDialogFooter
           className={cn(
-            "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-gray-800/80 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
+            "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-secondary-2 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
           )}
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
             <AlertDialogCancel
               onClick={handleClose}
-              className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+              className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
             >
               Cancel
             </AlertDialogCancel>
@@ -318,7 +318,7 @@ export function BookingDialog({
                 type="button"
                 variant="outline"
                 onClick={handleBack}
-                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
               >
                 Back
               </Button>
@@ -342,7 +342,7 @@ export function BookingDialog({
                   variant="outline"
                   onClick={handleSkip}
                   aria-label="Skip food selection"
-                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-gray-800/80 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                 >
                   Skip
                 </Button>

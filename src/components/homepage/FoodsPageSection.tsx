@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { BookingDialog } from "@/components/ui/booking-dialog";
 import { FoodModifierDialog } from "@/components/ui/booking/FoodModifierDialog";
 import { useCart } from "@/contexts/CartContext";
+import type { SelectedFoodModifier } from "@/store/bookingSlice";
 
 const PAGE_SIZE = 9;
 
@@ -23,36 +24,44 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
 
     const [modifierFood, setModifierFood] = useState<Food | null>(null);
     const [modifierDialogOpen, setModifierDialogOpen] = useState(false);
-    const [selectedModifierIds, setSelectedModifierIds] = useState<number[]>([]);
+    const [modifierQuantities, setModifierQuantities] = useState<Record<number, number>>({});
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
     const [bookingInitialFood, setBookingInitialFood] = useState<Food | null>(null);
 
-    const handleToggleModifier = useCallback((modifierId: number) => {
-        setSelectedModifierIds((prev) =>
-            prev.includes(modifierId) ? prev.filter((id) => id !== modifierId) : [...prev, modifierId]
-        );
+    const handleIncrementModifier = useCallback((modifierId: number) => {
+        setModifierQuantities((prev) => ({ ...prev, [modifierId]: (prev[modifierId] ?? 0) + 1 }));
+    }, []);
+
+    const handleDecrementModifier = useCallback((modifierId: number) => {
+        setModifierQuantities((prev) => {
+            const next = { ...prev };
+            const qty = (next[modifierId] ?? 0) - 1;
+            if (qty <= 0) delete next[modifierId];
+            else next[modifierId] = qty;
+            return next;
+        });
     }, []);
 
     const handleBookNowClick = useCallback((food: Food) => {
         setModifierFood(food);
-        setSelectedModifierIds([]);
+        setModifierQuantities({});
         setModifierDialogOpen(true);
     }, []);
 
-    const handleModifierConfirm = useCallback(() => {
+    const handleModifierConfirm = useCallback((selectedModifiers: SelectedFoodModifier[]) => {
         const f = modifierFood;
         if (!f) return;
         console.log("[FoodsPage] modifiers confirmed for food:", {
             foodId: f.id,
             productId: f.productId,
-            selectedModifierIds,
+            selectedModifiers,
         });
         setModifierDialogOpen(false);
         setModifierFood(null);
-        setSelectedModifierIds([]);
+        setModifierQuantities({});
         setBookingInitialFood(f);
         setBookingDialogOpen(true);
-    }, [modifierFood, selectedModifierIds]);
+    }, [modifierFood]);
 
     // Frontend pagination: slice full list by current page
     const paginatedFoods = useMemo(() => {
@@ -145,12 +154,13 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
                     setModifierDialogOpen(open);
                     if (!open) {
                         setModifierFood(null);
-                        setSelectedModifierIds([]);
+                        setModifierQuantities({});
                     }
                 }}
                 food={modifierFood}
-                selectedTargetProductIds={selectedModifierIds}
-                onToggleTarget={handleToggleModifier}
+                modifierQuantities={modifierQuantities}
+                onIncrementModifier={handleIncrementModifier}
+                onDecrementModifier={handleDecrementModifier}
                 onConfirm={handleModifierConfirm}
             />
 

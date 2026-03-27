@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { setHolderDetails } from "@/store/bookingSlice";
 
-interface Step3HolderDetailsProps {
+interface StepHolderDetailsProps {
   onSubmit?: (e: React.FormEvent) => void;
 }
 
@@ -52,7 +52,7 @@ function Field({
   );
 }
 
-export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
+export function StepHolderDetails({ onSubmit }: StepHolderDetailsProps) {
   const dispatch = useAppDispatch();
   const { holderDetails } = useAppSelector((state) => state.booking);
 
@@ -72,7 +72,7 @@ export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
           name="firstName"
           label="First name"
           required
-          placeholder="e.g. John"
+          placeholder="e.g. rio"
           value={holderDetails.firstName}
           onChange={handleChange}
         />
@@ -80,7 +80,7 @@ export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
           id="lastName"
           name="lastName"
           label="Last name"
-          placeholder="e.g. Smith"
+          placeholder="e.g. redwood"
           value={holderDetails.lastName}
           onChange={handleChange}
         />
@@ -90,7 +90,7 @@ export function Step3HolderDetails({ onSubmit }: Step3HolderDetailsProps) {
           label="Email"
           required
           type="email"
-          placeholder="john@example.com"
+          placeholder="rio@example.com"
           value={holderDetails.email}
           onChange={handleChange}
         />

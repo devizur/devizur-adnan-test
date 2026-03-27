@@ -16,7 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
-import { Step3HolderDetails } from "@/components/ui/booking/Step3HolderDetails";
+import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
@@ -288,13 +288,13 @@ export function BookingDialog({
             <>
               {step === 1 && <StepFoodSelection />}
               {step === 2 && <StepAvailabilitySelection />}
-              {step === 3 && <Step3HolderDetails onSubmit={handleAddBooking} />}
+              {step === 3 && <StepHolderDetails onSubmit={handleAddBooking} />}
             </>
           ) : (
             <>
               {step === 1 && <StepAvailabilitySelection />}
               {step === 2 && <StepFoodSelection />}
-              {step === 3 && <Step3HolderDetails onSubmit={handleAddBooking} />}
+              {step === 3 && <StepHolderDetails onSubmit={handleAddBooking} />}
             </>
           )}
         </div>

@@ -256,13 +256,13 @@ export function BookingDialog({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex   items-center gap-3 shrink-0  ">
               <span
-                className="flex items-center gap-1.5 text-xs font-medium text-primary-1 whitespace-nowrap"
+                className="flex   w-34 items-center gap-1.5 text-xs font-medium text-primary-1 whitespace-nowrap "
                 title={`${formattedRemaining} left`}
               >
                 <Clock className="w-3.5 h-3.5 shrink-0" />
-                {formattedRemaining}<span className="hidden sm:inline"> left</span>
+               Time remaining {formattedRemaining}<span className="hidden sm:inline">  </span>
               </span>
               <button
                 type="button"

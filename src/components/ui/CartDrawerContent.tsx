@@ -17,10 +17,13 @@ function holderLabel(entry: CartEntry): string {
 
 interface CartDrawerContentProps {
   onPaymentSuccess?: () => void;
+  /** When set (e.g. cart popup), close control calls this instead of DrawerClose */
+  onClose?: () => void;
 }
 
 export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
   onPaymentSuccess,
+  onClose,
 }) => {
   const {
     entries,
@@ -51,14 +54,25 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
 
   return (
     <>
-      <div className="p-6 border-b border-accent/20 ">
+      <div className="shrink-0 p-6 border-b border-accent/20">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold text-primary">Checkout</h2>
-          <DrawerClose asChild>
-            <div>
-              <IoMdClose className="text-2xl cursor-pointer font-bold text-primary" />
-            </div>
-          </DrawerClose>
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg text-primary hover:bg-white/5 transition-colors cursor-pointer"
+              aria-label="Close cart"
+            >
+              <IoMdClose className="text-2xl font-bold text-primary" />
+            </button>
+          ) : (
+            <DrawerClose asChild>
+              <div>
+                <IoMdClose className="text-2xl cursor-pointer font-bold text-primary" />
+              </div>
+            </DrawerClose>
+          )}
         </div>
         <p className="text-sm text-gray-400">
           Items, bookings, and table reservations—all in one place. Cart is saved
@@ -66,7 +80,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6 scrollbar-dark">
         {entries.length === 0 ? (
           <Card className="p-6 bg-secondary border border-accent/10">
             <p className="text-gray-400 text-sm">
@@ -120,22 +134,9 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() =>
-                            updateEntry(entry.id, (prev) => ({
-                              ...prev,
-                              activities: prev.activities.map((a) =>
-                                a.activity.id === activity.id
-                                  ? {
-                                      ...a,
-                                      gameNo: Math.max(1, a.gameNo - 1) as 1 | 2 | 3,
-                                    }
-                                  : a
-                              ),
-                            }))
-                          }
-                          disabled={gameNo <= 1}
+                          disabled
                           className="w-8 h-8 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all disabled:opacity-40 disabled:pointer-events-none"
-                          aria-label="Decrease games"
+                          aria-label="Decrease games disabled"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -249,20 +250,9 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() =>
-                            updateEntry(entry.id, (prev) => {
-                              const next = prev.foods
-                                .map((f) =>
-                                  f.food.id === food.id
-                                    ? { ...f, quantity: Math.max(0, f.quantity - 1) }
-                                    : f
-                                )
-                                .filter((f) => f.quantity > 0);
-                              return { ...prev, foods: next };
-                            })
-                          }
-                          className="w-8 h-8 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all"
-                          aria-label="Decrease quantity"
+                          disabled
+                          className="w-8 h-8 rounded border border-primary-1/30 bg-secondary-2 text-primary-1 flex items-center justify-center hover:bg-primary-1/10 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                          aria-label="Decrease quantity disabled"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>

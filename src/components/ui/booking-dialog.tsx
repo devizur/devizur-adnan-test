@@ -20,7 +20,8 @@ import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
 import { StepPayment } from "@/components/ui/booking/StepPayment";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
-import { X, Clock } from "lucide-react";
+import { X, Clock, ShoppingBag } from "lucide-react";
+import { CartPopup } from "@/components/ui/CartPopup";
 
 const REMAINING_TIME = 60 * 10; // 10 minutes
 const STEPS_ACTIVITY_FIRST = [
@@ -62,6 +63,7 @@ export function BookingDialog({
   const dispatch = useAppDispatch();
   const cart = useCart();
   const { clearCart } = cart;
+  const totalItems = cart.getTotalItems();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
     useAppSelector((state) => state.booking);
@@ -84,6 +86,7 @@ export function BookingDialog({
   );
 
   const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
+  const [isCartOpen, setIsCartOpen] = React.useState(false);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const minutes = Math.floor(remainingSeconds / 60);
@@ -195,7 +198,6 @@ export function BookingDialog({
   const handleClose = () => {
     setIsOpen(false);
     dispatch(resetBooking());
-    clearCart();
   };
 
   const isStep1Availability = isFoodFirst ? step === 2 : step === 1;
@@ -211,6 +213,27 @@ export function BookingDialog({
     dispatch(nextStep());
   };
 
+  const handleOpenCartPopup = () => {
+    const hasCurrentBookingItems =
+      selectedActivities.length > 0 || selectedPackages.length > 0 || selectedFoods.length > 0;
+
+    // If cart is empty but booking has selected items, seed the cart from current step state.
+    if (cart.getTotalItems() === 0 && hasCurrentBookingItems) {
+      cart.addEntry({
+        holderDetails,
+        persons,
+        date,
+        timeSlot,
+        timeOfDay,
+        activities: selectedActivities,
+        packages: selectedPackages,
+        foods: selectedFoods,
+      });
+    }
+
+    setIsCartOpen(true);
+  };
+
   const handleBack = () => {
     if (step === 4) {
       clearCart();
@@ -221,7 +244,6 @@ export function BookingDialog({
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       dispatch(resetBooking());
-      clearCart();
     }
     setIsOpen(open);
   };
@@ -348,6 +370,15 @@ export function BookingDialog({
               )}
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleOpenCartPopup}
+                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Cart {totalItems > 0 ? `(${totalItems})` : ""}
+              </Button>
               {step === 1 && (
                 <Button
                   type="button"
@@ -391,6 +422,7 @@ export function BookingDialog({
             </div>
           </AlertDialogFooter>
         )}
+        <CartPopup open={isCartOpen} onOpenChange={setIsCartOpen} />
       </AlertDialogContent>
     </AlertDialog>
   );

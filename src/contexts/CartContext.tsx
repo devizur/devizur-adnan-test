@@ -14,7 +14,7 @@ import type { HolderDetails, BookingPersons } from "@/store/bookingSlice";
 
 const CART_STORAGE_KEY = "booking_cart";
 
-/** Single cart entry = one booking with holder details + products (activities, packages, foods). */
+/** Checkout entry = one booking with holder details + products (activities, packages, foods). Only one at a time. */
 export interface CartEntry {
   id: string;
   /** Booking holder contact/details – kept in relation to this entry's products */
@@ -44,9 +44,9 @@ export interface CartPackageItem {
 }
 
 interface CartContextType {
-  /** All cart entries (each = one booking with holder + products). Persisted to localStorage. */
+  /** At most one checkout booking (holder + products). Persisted to localStorage. */
   entries: CartEntry[];
-  /** Add one complete booking to the cart (holder + activities + packages + foods). */
+  /** Set the single checkout booking (replaces any previous entry). */
   addEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
   /** Remove one booking from the cart. */
   removeEntry: (id: string) => void;
@@ -109,7 +109,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       addedAt: Date.now(),
     };
-    setEntries((prev) => [...prev, newEntry]);
+    setEntries([newEntry]);
   }, []);
 
   const removeEntry = useCallback((id: string) => {

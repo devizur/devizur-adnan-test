@@ -33,9 +33,9 @@ export interface HolderDetails {
 export type BookingFlowMode = "activityFirst" | "foodFirst";
 
 export interface BookingState {
-  /** When foodFirst: step 1=Food, 2=Availability, 3=Holder. Else step 1=Availability, 2=Food, 3=Holder */
+  /** When foodFirst: step 1=Food, 2=Availability, 3=Holder, 4=Payment. Else step 1=Availability, 2=Food, 3=Holder, 4=Payment */
   flowMode: BookingFlowMode;
-  /** Current step (1–3); meaning depends on flowMode */
+  /** Current step (1–4); meaning depends on flowMode */
   step: number;
   /** Step 1: name for availability check */
   availabilityName: string;
@@ -98,10 +98,10 @@ const bookingSlice = createSlice({
       state.flowMode = action.payload;
     },
     setStep: (state, action: PayloadAction<number>) => {
-      state.step = Math.max(1, Math.min(3, action.payload));
+      state.step = Math.max(1, Math.min(4, action.payload));
     },
     nextStep: (state) => {
-      if (state.step < 3) state.step += 1;
+      if (state.step < 4) state.step += 1;
     },
     prevStep: (state) => {
       if (state.step > 1) state.step -= 1;

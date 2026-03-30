@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
+import { StepPayment } from "@/components/ui/booking/StepPayment";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock } from "lucide-react";
@@ -26,12 +27,14 @@ const STEPS_ACTIVITY_FIRST = [
   { id: 1, label: "Availability & Selection" },
   { id: 2, label: "Food Selection" },
   { id: 3, label: "Booking Holder Details" },
+  { id: 4, label: "Payment" },
 ] as const;
 
 const STEPS_FOOD_FIRST = [
   { id: 1, label: "Food Selection" },
   { id: 2, label: "Availability & Selection" },
   { id: 3, label: "Booking Holder Details" },
+  { id: 4, label: "Payment" },
 ] as const;
 
 interface BookingDialogProps {
@@ -58,6 +61,7 @@ export function BookingDialog({
 }: BookingDialogProps) {
   const dispatch = useAppDispatch();
   const cart = useCart();
+  const { clearCart } = cart;
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
     useAppSelector((state) => state.booking);
@@ -91,6 +95,7 @@ export function BookingDialog({
   React.useEffect(() => {
     if (!isOpen) return;
     console.log("[BookingDialog] shopId:", shopId);
+    clearCart();
     dispatch(resetBooking());
     if (initialActivity) {
       const combos = (initialActivity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
@@ -117,7 +122,7 @@ export function BookingDialog({
         dispatch(setStep(1));
       }
     }
-  }, [isOpen, shopId]);  
+  }, [isOpen, shopId, clearCart, dispatch]);
   React.useEffect(() => {
     if (!isOpen) {
       if (timerRef.current) {
@@ -158,13 +163,14 @@ export function BookingDialog({
     if (remainingSeconds === 0) {
       setIsOpen(false);
       dispatch(resetBooking());
+      clearCart();
     }
-  }, [remainingSeconds, isOpen, dispatch]);
+  }, [remainingSeconds, isOpen, dispatch, clearCart, setIsOpen]);
 
   const canProceedStep1 = timeSlot && (persons.adults + persons.kids) > 0;
   const hasSelectionStep1 = selectedActivities.length > 0 || selectedPackages.length > 0;
 
-  const handleAddBooking = (e?: React.FormEvent) => {
+  const handleHolderSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     cart.addEntry({
       holderDetails,
@@ -176,14 +182,20 @@ export function BookingDialog({
       packages: selectedPackages,
       foods: selectedFoods,
     });
+    dispatch(nextStep());
+  };
+
+  const handlePaymentFlowComplete = () => {
     onConfirm?.();
     dispatch(resetBooking());
+    clearCart();
     setIsOpen(false);
   };
 
   const handleClose = () => {
     setIsOpen(false);
     dispatch(resetBooking());
+    clearCart();
   };
 
   const isStep1Availability = isFoodFirst ? step === 2 : step === 1;
@@ -200,11 +212,17 @@ export function BookingDialog({
   };
 
   const handleBack = () => {
+    if (step === 4) {
+      clearCart();
+    }
     dispatch(prevStep());
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) dispatch(resetBooking());
+    if (!open) {
+      dispatch(resetBooking());
+      clearCart();
+    }
     setIsOpen(open);
   };
 
@@ -288,62 +306,49 @@ export function BookingDialog({
             <>
               {step === 1 && <StepFoodSelection />}
               {step === 2 && <StepAvailabilitySelection />}
-              {step === 3 && <StepHolderDetails onSubmit={handleAddBooking} />}
+              {step === 3 && <StepHolderDetails onSubmit={handleHolderSubmit} />}
+              {step === 4 && (
+                <StepPayment onBack={handleBack} onFlowComplete={handlePaymentFlowComplete} />
+              )}
             </>
           ) : (
             <>
               {step === 1 && <StepAvailabilitySelection />}
               {step === 2 && <StepFoodSelection />}
-              {step === 3 && <StepHolderDetails onSubmit={handleAddBooking} />}
+              {step === 3 && <StepHolderDetails onSubmit={handleHolderSubmit} />}
+              {step === 4 && (
+                <StepPayment onBack={handleBack} onFlowComplete={handlePaymentFlowComplete} />
+              )}
             </>
           )}
         </div>
 
-        <AlertDialogFooter
-          className={cn(
-            "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-secondary-2 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
-          )}
-        >
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <AlertDialogCancel
-              onClick={handleClose}
-              className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
-            >
-              Cancel
-            </AlertDialogCancel>
-            {step > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
-              >
-                Back
-              </Button>
+        {step !== 4 && (
+          <AlertDialogFooter
+            className={cn(
+              "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-secondary-2 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
             )}
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {step === 1 && (
-              <Button
-                type="button"
-                disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
-                onClick={handleNext}
-                className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+          >
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <AlertDialogCancel
+                onClick={handleClose}
+                className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
               >
-                Next
-              </Button>
-            )}
-            {step === 2 && (
-              <>
+                Cancel
+              </AlertDialogCancel>
+              {step > 1 && (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleSkip}
-                  aria-label="Skip food selection"
-                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                  onClick={handleBack}
+                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                 >
-                  Skip
+                  Back
                 </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {step === 1 && (
                 <Button
                   type="button"
                   disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
@@ -352,19 +357,40 @@ export function BookingDialog({
                 >
                   Next
                 </Button>
-              </>
-            )}
-            {step === 3 && (
-              <Button
-                type="submit"
-                form="bookingForm"
-                className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
-              >
-                Add to booking
-              </Button>
-            )}
-          </div>
-        </AlertDialogFooter>
+              )}
+              {step === 2 && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSkip}
+                    aria-label="Skip food selection"
+                    className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                  >
+                    Skip
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
+                    onClick={handleNext}
+                    className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                  >
+                    Next
+                  </Button>
+                </>
+              )}
+              {step === 3 && (
+                <Button
+                  type="submit"
+                  form="bookingForm"
+                  className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                >
+                  Continue to payment
+                </Button>
+              )}
+            </div>
+          </AlertDialogFooter>
+        )}
       </AlertDialogContent>
     </AlertDialog>
   );

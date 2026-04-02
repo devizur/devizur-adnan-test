@@ -5,7 +5,6 @@ import { useCart } from "@/contexts/CartContext";
 import type { CartEntry } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PaymentDialog } from "@/components/ui/payment-dialog";
 import { DrawerClose } from "@/components/ui/drawer";
 import { formatPrice, parsePrice } from "@/lib/utils";
 
@@ -16,13 +15,11 @@ function holderLabel(entry: CartEntry): string {
 }
 
 interface CartDrawerContentProps {
-  onPaymentSuccess?: () => void;
   /** When set (e.g. cart popup), close control calls this instead of DrawerClose */
   onClose?: () => void;
 }
 
 export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
-  onPaymentSuccess,
   onClose,
 }) => {
   const {
@@ -330,11 +327,6 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
               </div>
 
               <div className="space-y-3 mt-4 bg-secondary-2">
-                <PaymentDialog onPaymentSuccess={onPaymentSuccess}>
-                  <Button className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary">
-                    Add Payment
-                  </Button>
-                </PaymentDialog>
                 <Button
                   variant="outline"
                   className="w-full cursor-pointer py-4 rounded-[10px] text-[15px] bg-primary-1/10 hover:bg-primary-2 text-primary-1 border border-primary-1"
@@ -345,7 +337,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
               </div>
             </Card>
             <p className="text-xs text-gray-400 pt-1">
-              Cart is stored in your browser. After payment, the cart is cleared.
+              Cart is stored in your browser until you clear it or complete checkout in booking.
             </p>
           </>
         )}

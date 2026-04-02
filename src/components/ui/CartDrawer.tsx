@@ -39,7 +39,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
     >
       <DrawerContent className="max-h-[90vh] lg:min-w-150 bg-secondary-2 border-secondary-2 md:h-full md:max-h-none flex flex-col">
         <DrawerTitle className="sr-only">Checkout</DrawerTitle>
-        <CartDrawerContent onPaymentSuccess={onClose} />
+        <CartDrawerContent />
       </DrawerContent>
     </Drawer>
   );

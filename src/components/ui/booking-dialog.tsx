@@ -377,7 +377,7 @@ export function BookingDialog({
                 className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Cart {totalItems > 0 ? `(${totalItems})` : ""}
+                Cart 
               </Button>
               {step === 1 && (
                 <Button

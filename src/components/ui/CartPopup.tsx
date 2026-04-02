@@ -34,10 +34,7 @@ export function CartPopup({ open, onOpenChange }: CartPopupProps) {
           <AlertDialogTitle>Shopping cart</AlertDialogTitle>
         </AlertDialogHeader>
         <div className="flex flex-col min-h-0 flex-1 max-h-[min(90vh,720px)]">
-          <CartDrawerContent
-            onClose={handleClose}
-            onPaymentSuccess={handleClose}
-          />
+          <CartDrawerContent onClose={handleClose} />
         </div>
       </AlertDialogContent>
     </AlertDialog>

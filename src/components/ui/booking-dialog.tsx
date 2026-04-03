@@ -329,36 +329,32 @@ export function BookingDialog({
               {step === 1 && <StepFoodSelection />}
               {step === 2 && <StepAvailabilitySelection />}
               {step === 3 && <StepHolderDetails onSubmit={handleHolderSubmit} />}
-              {step === 4 && (
-                <StepPayment onBack={handleBack} onFlowComplete={handlePaymentFlowComplete} />
-              )}
+              {step === 4 && <StepPayment onFlowComplete={handlePaymentFlowComplete} />}
             </>
           ) : (
             <>
               {step === 1 && <StepAvailabilitySelection />}
               {step === 2 && <StepFoodSelection />}
               {step === 3 && <StepHolderDetails onSubmit={handleHolderSubmit} />}
-              {step === 4 && (
-                <StepPayment onBack={handleBack} onFlowComplete={handlePaymentFlowComplete} />
-              )}
+              {step === 4 && <StepPayment onFlowComplete={handlePaymentFlowComplete} />}
             </>
           )}
         </div>
 
-        {step !== 4 && (
-          <AlertDialogFooter
-            className={cn(
-              "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-secondary-2 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
-            )}
-          >
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <AlertDialogCancel
-                onClick={handleClose}
-                className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
-              >
-                Cancel
-              </AlertDialogCancel>
-              {step > 1 && (
+        <AlertDialogFooter
+          className={cn(
+            "px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-secondary-2 flex-row justify-between gap-2 sm:gap-3 flex-wrap bg-[#161616] shrink-0"
+          )}
+        >
+          {step === 4 ? (
+            <>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <AlertDialogCancel
+                  onClick={handleClose}
+                  className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                >
+                  Cancel
+                </AlertDialogCancel>
                 <Button
                   type="button"
                   variant="outline"
@@ -367,39 +363,50 @@ export function BookingDialog({
                 >
                   Back
                 </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleOpenCartPopup}
-                className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Cart 
-              </Button>
-              {step === 1 && (
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Button
                   type="button"
-                  disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
-                  onClick={handleNext}
-                  className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                  variant="outline"
+                  onClick={handleOpenCartPopup}
+                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                 >
-                  Next
+                  <ShoppingBag className="w-4 h-4" />
+                  Cart
                 </Button>
-              )}
-              {step === 2 && (
-                <>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <AlertDialogCancel
+                  onClick={handleClose}
+                  className="m-0 min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                >
+                  Cancel
+                </AlertDialogCancel>
+                {step > 1 && (
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleSkip}
-                    aria-label="Skip food selection"
-                    className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                    onClick={handleBack}
+                    className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
                   >
-                    Skip
+                    Back
                   </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleOpenCartPopup}
+                  className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-300 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Cart
+                </Button>
+                {step === 1 && (
                   <Button
                     type="button"
                     disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
@@ -408,20 +415,41 @@ export function BookingDialog({
                   >
                     Next
                   </Button>
-                </>
-              )}
-              {step === 3 && (
-                <Button
-                  type="submit"
-                  form="bookingForm"
-                  className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
-                >
-                  Continue to payment
-                </Button>
-              )}
-            </div>
-          </AlertDialogFooter>
-        )}
+                )}
+                {step === 2 && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSkip}
+                      aria-label="Skip food selection"
+                      className="min-h-10 sm:min-h-11 px-3 sm:px-4 py-2 text-sm border border-gray-700 text-gray-400 bg-transparent hover:bg-secondary-2 hover:border-primary-1/40 hover:text-white rounded-xl cursor-pointer transition-colors focus-visible:ring-primary-1/50"
+                    >
+                      Skip
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
+                      onClick={handleNext}
+                      className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] disabled:opacity-50 font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                    >
+                      Next
+                    </Button>
+                  </>
+                )}
+                {step === 3 && (
+                  <Button
+                    type="submit"
+                    form="bookingForm"
+                    className="min-h-10 sm:min-h-11 py-2 px-4 sm:px-5 text-sm bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl cursor-pointer transition-all focus-visible:ring-primary-1/50"
+                  >
+                    Continue to payment
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </AlertDialogFooter>
         <CartPopup open={isCartOpen} onOpenChange={setIsCartOpen} />
       </AlertDialogContent>
     </AlertDialog>

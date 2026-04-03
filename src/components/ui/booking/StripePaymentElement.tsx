@@ -7,13 +7,82 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import type { Stripe, StripeElementsOptions } from "@stripe/stripe-js";
+import type { Appearance, Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { createPaymentIntent, getStripePublishableKey } from "@/lib/stripeCheckout";
 import { cn } from "@/lib/utils";
 import { segmentedPrimaryCtaClass } from "@/components/ui/booking/booking-segmented-styles";
 
 export type StripePaymentSuccessMeta = { stripePaymentIntentId?: string };
+
+/** Stripe Elements look aligned with booking holder / segmented inputs */
+const bookingPaymentAppearance: Appearance = {
+  theme: "night",
+  labels: "above",
+  variables: {
+    colorPrimary: "#facc15",
+    colorBackground: "#1e1e1e",
+    colorText: "#f4f4f5",
+    colorTextSecondary: "#a1a1aa",
+    colorTextPlaceholder: "#71717a",
+    colorDanger: "#fca5a5",
+    borderRadius: "6px",
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    fontSizeBase: "15px",
+    fontSizeSm: "13px",
+    spacingUnit: "6px",
+    gridRowSpacing: "14px",
+    focusBoxShadow: "0 0 0 2px rgba(250, 204, 21, 0.28)",
+    focusOutline: "0",
+  },
+  rules: {
+    ".Input": {
+      backgroundColor: "#1a1a1a",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
+      borderRadius: "6px",
+      paddingTop: "11px",
+      paddingBottom: "11px",
+      paddingLeft: "12px",
+      paddingRight: "12px",
+      boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
+    },
+    ".Input:focus": {
+      border: "1px solid rgba(250, 204, 21, 0.45)",
+      boxShadow: "0 0 0 2px rgba(250, 204, 21, 0.15)",
+    },
+    ".Input--invalid": {
+      border: "1px solid rgba(248, 113, 113, 0.45)",
+      boxShadow: "none",
+    },
+    ".Label": {
+      fontWeight: "600",
+      fontSize: "10px",
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      color: "#71717a",
+      marginBottom: "6px",
+    },
+    ".Tab": {
+      borderRadius: "6px",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
+      backgroundColor: "rgba(0, 0, 0, 0.2)",
+    },
+    ".Tab:hover": {
+      borderColor: "rgba(255, 255, 255, 0.12)",
+    },
+    ".Tab--selected": {
+      borderColor: "rgba(250, 204, 21, 0.45)",
+      backgroundColor: "rgba(250, 204, 21, 0.1)",
+      boxShadow: "0 0 0 1px rgba(250, 204, 21, 0.12)",
+    },
+    ".Block": {
+      backgroundColor: "transparent",
+      borderColor: "rgba(255, 255, 255, 0.06)",
+      borderRadius: "8px",
+      padding: "12px",
+    },
+  },
+};
 
 interface StripePaymentFormInnerProps {
   totalLabel: string;
@@ -60,8 +129,13 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
-      <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e]/80 p-2 sm:p-3">
-        <PaymentElement />
+      <div className="rounded-xl border border-white/[0.08] bg-[#141414]/55 p-3 shadow-sm shadow-black/15 ring-1 ring-white/[0.04] sm:p-4">
+        <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-2.5 sm:p-3">
+          <PaymentElement options={{ layout: "tabs" }} />
+        </div>
+        <p className="mt-2.5 text-[10px] leading-relaxed text-zinc-600">
+          Secured by Stripe — card data never touches our servers.
+        </p>
       </div>
       {message ? (
         <p role="alert" className="text-xs leading-snug text-red-300 sm:text-sm">
@@ -203,17 +277,7 @@ export function StripePaymentElementBlock({
 
   const options: StripeElementsOptions = {
     clientSecret,
-    appearance: {
-      theme: "night",
-      variables: {
-        colorPrimary: "#facc15",
-        colorBackground: "#1e1e1e",
-        colorText: "#e4e4e7",
-        colorDanger: "#f87171",
-        borderRadius: "8px",
-        fontFamily: "ui-sans-serif, system-ui, sans-serif",
-      },
-    },
+    appearance: bookingPaymentAppearance,
   };
 
   return (

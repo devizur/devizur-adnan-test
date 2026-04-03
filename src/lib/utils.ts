@@ -21,8 +21,11 @@ export function formatPrice(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-/** Demo image used everywhere for catalog cards */
-export const DemoImageUrl = "https://picsum.photos/400/200";
+/**
+ * Lorem Picsum demo imagery. Plain width/height returns a random photo per request;
+ * for stable-but-varied images per product, use `/seed/{id}/800/600` (see productServices).
+ */
+export const DemoImageUrl = "https://picsum.photos/800/600";
 
 /** Format "09:30" → "9:30 am", "14:00" → "2:00 pm" */
 export function formatTimeForDisplay(raw: string): string {

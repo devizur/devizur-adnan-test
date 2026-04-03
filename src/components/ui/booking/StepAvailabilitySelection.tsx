@@ -231,7 +231,10 @@ export function StepAvailabilitySelection() {
                 >
                   <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
                     <img
-                      src={activity.image || "https://picsum.photos/400/200"}
+                      src={
+                        activity.image ||
+                        `https://picsum.photos/seed/a-${activity.id}/800/600`
+                      }
                       alt={(activity as any).title || "Activity image"}
                       className={cn(
                         "w-full h-full object-cover transition-transform duration-300 ease-out",
@@ -395,7 +398,7 @@ export function StepAvailabilitySelection() {
                       >
                         <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
                           <img
-                            src={pkg.image || "https://picsum.photos/400/200"}
+                            src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
                             alt={pkg.title || "Package image"}
                             className={cn(
                               "w-full h-full object-cover transition-transform duration-300 ease-out",

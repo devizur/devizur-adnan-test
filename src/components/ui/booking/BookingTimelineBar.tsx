@@ -176,15 +176,37 @@ export function BookingTimelineBar({
 
   const LoadingState = () => (
     <div className={cn(thinShell, "py-1", className)}>
-      <div className="flex h-3.5 rounded border border-zinc-700/45 overflow-hidden min-w-0">
-        <div className="flex-[3] rounded-l bg-zinc-700/45 animate-pulse" />
-        <div className="flex-[2] bg-zinc-700/35 animate-pulse" />
-        <div className="flex-[2] rounded-r bg-zinc-700/35 animate-pulse" />
+      {/* Match loaded layout: Start | marker row (min-h-[14px]) | Finish */}
+      <div className="relative flex items-start gap-1.5 mb-0.5 min-w-0">
+        <span className="text-[8px] text-zinc-500 uppercase tracking-wider shrink-0 leading-none pt-0.5">
+          Start
+        </span>
+        <div
+          className="flex-1 min-h-[14px] min-w-0 overflow-hidden rounded-sm bg-zinc-800/35 ring-1 ring-zinc-700/30 animate-pulse"
+          aria-hidden
+        />
+        <span className="text-[8px] text-primary-1/45 uppercase tracking-wider shrink-0 leading-none pt-0.5">
+          Finish
+        </span>
       </div>
-      <div className="flex mt-0.5 gap-0.5 overflow-hidden min-w-0">
-        <div className="flex-[3] h-1 rounded-sm bg-zinc-700/35 animate-pulse" />
-        <div className="flex-[2] h-1 rounded-sm bg-zinc-700/25 animate-pulse" />
-        <div className="flex-[2] h-1 rounded-sm bg-zinc-700/35 animate-pulse" />
+
+      <div className="flex h-3.5 rounded border border-zinc-700/45 overflow-hidden min-w-0">
+        <div className="flex-[3] rounded-l-sm bg-zinc-700/45 animate-pulse" />
+        <div className="flex-[2] bg-zinc-700/35 animate-pulse" />
+        <div className="flex-[2] rounded-r-sm bg-zinc-700/45 animate-pulse" />
+      </div>
+
+      {/* Same flex basis as bar + ~text-[8px] line height */}
+      <div className="flex mt-0.5 min-h-[12px] items-center overflow-hidden min-w-0 leading-none">
+        <div className="flex-[3] min-w-0 pr-0.5">
+          <div className="h-2.5 max-w-full rounded-sm bg-zinc-700/40 animate-pulse" />
+        </div>
+        <div className="flex-[2] min-w-0 px-0.5">
+          <div className="h-2.5 max-w-full rounded-sm bg-zinc-700/30 animate-pulse" />
+        </div>
+        <div className="flex-[2] min-w-0 pl-0.5">
+          <div className="h-2.5 max-w-full rounded-sm bg-zinc-700/40 animate-pulse" />
+        </div>
       </div>
     </div>
   );

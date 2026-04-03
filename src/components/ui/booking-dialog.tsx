@@ -76,7 +76,7 @@ export function BookingDialog({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const cart = useCart();
-  const { clearCart } = cart;
+  const { clearCart, syncBookingEntry } = cart;
   const totalItems = cart.getTotalItems();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
@@ -140,6 +140,41 @@ export function BookingDialog({
       }
     }
   }, [isOpen, shopId, clearCart, dispatch]);
+
+  /** Keep cart in sync once visit details + line items exist (activities / packages / food). */
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const hasSchedule =
+      Boolean(date && timeSlot.trim()) && (persons.adults + persons.kids) > 0;
+    const hasLineItems =
+      selectedActivities.length > 0 ||
+      selectedPackages.length > 0 ||
+      selectedFoods.length > 0;
+    if (!hasSchedule || !hasLineItems) return;
+
+    syncBookingEntry({
+      holderDetails,
+      persons,
+      date,
+      timeSlot,
+      timeOfDay,
+      activities: selectedActivities.map(({ activity, gameNo }) => ({ activity, gameNo })),
+      packages: selectedPackages,
+      foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
+    });
+  }, [
+    isOpen,
+    date,
+    timeSlot,
+    timeOfDay,
+    persons,
+    holderDetails,
+    selectedActivities,
+    selectedPackages,
+    selectedFoods,
+    syncBookingEntry,
+  ]);
+
   React.useEffect(() => {
     if (!isOpen) {
       if (timerRef.current) {
@@ -189,15 +224,15 @@ export function BookingDialog({
 
   const handleHolderSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    cart.addEntry({
+    syncBookingEntry({
       holderDetails,
       persons,
       date,
       timeSlot,
       timeOfDay,
-      activities: selectedActivities,
+      activities: selectedActivities.map(({ activity, gameNo }) => ({ activity, gameNo })),
       packages: selectedPackages,
-      foods: selectedFoods,
+      foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
     });
     dispatch(nextStep());
   };
@@ -229,23 +264,24 @@ export function BookingDialog({
   };
 
   const handleOpenCartPopup = () => {
-    const hasCurrentBookingItems =
-      selectedActivities.length > 0 || selectedPackages.length > 0 || selectedFoods.length > 0;
-
-    // If cart is empty but booking has selected items, seed the cart from current step state.
-    if (cart.getTotalItems() === 0 && hasCurrentBookingItems) {
-      cart.addEntry({
+    const hasSchedule =
+      Boolean(date && timeSlot.trim()) && (persons.adults + persons.kids) > 0;
+    const hasLineItems =
+      selectedActivities.length > 0 ||
+      selectedPackages.length > 0 ||
+      selectedFoods.length > 0;
+    if (cart.getTotalItems() === 0 && hasSchedule && hasLineItems) {
+      syncBookingEntry({
         holderDetails,
         persons,
         date,
         timeSlot,
         timeOfDay,
-        activities: selectedActivities,
+        activities: selectedActivities.map(({ activity, gameNo }) => ({ activity, gameNo })),
         packages: selectedPackages,
-        foods: selectedFoods,
+        foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
       });
     }
-
     setIsCartOpen(true);
   };
 

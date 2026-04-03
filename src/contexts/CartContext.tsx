@@ -48,6 +48,11 @@ interface CartContextType {
   entries: CartEntry[];
   /** Set the single checkout booking (replaces any previous entry). */
   addEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
+  /**
+   * Update the lone booking entry in place (same id), or create one if empty.
+   * Use while the booking dialog is open so cart stays aligned with Redux selection.
+   */
+  syncBookingEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
   /** Remove one booking from the cart. */
   removeEntry: (id: string) => void;
   /** Update one entry (e.g. change food quantity, remove an item). */
@@ -112,6 +117,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setEntries([newEntry]);
   }, []);
 
+  const syncBookingEntry = useCallback((data: Omit<CartEntry, "id" | "addedAt">) => {
+    setEntries((prev) => {
+      if (prev.length === 0) {
+        const id = `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        return [{ ...data, id, addedAt: Date.now() }];
+      }
+      const current = prev[0]!;
+      return [{ ...current, ...data, id: current.id, addedAt: current.addedAt }];
+    });
+  }, []);
+
   const removeEntry = useCallback((id: string) => {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   }, []);
@@ -158,6 +174,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       entries,
       addEntry,
+      syncBookingEntry,
       removeEntry,
       updateEntry,
       clearCart,
@@ -170,6 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [
       entries,
       addEntry,
+      syncBookingEntry,
       removeEntry,
       updateEntry,
       clearCart,

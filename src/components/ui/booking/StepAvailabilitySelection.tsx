@@ -183,7 +183,7 @@ export function StepAvailabilitySelection() {
   return (
     <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
       {/* Left panel - Activity List */}
-      <div className="w-full md:w-[232px] lg:w-[min(260px,26%)] shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.06] bg-[#141414]">
+      <div className="w-full md:w-[300px] lg:w-[min(400px,38%)] shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.06] bg-[#141414]">
         <div className="px-3 sm:px-4 py-2.5 border-b border-white/[0.06] shrink-0 bg-[#121212]/80">
           <h3 className="text-xs font-semibold text-white tracking-tight">
             Activities & packages
@@ -223,13 +223,13 @@ export function StepAvailabilitySelection() {
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
-                    "w-[168px] sm:w-[188px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
+                    "w-[210px] sm:w-[240px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
                     selected
                       ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
                       : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
                   )}
                 >
-                  <div className="relative h-12 sm:h-[3.25rem] overflow-hidden shrink-0">
+                  <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
                     <img
                       src={activity.image || "https://picsum.photos/400/200"}
                       alt={(activity as any).title || "Activity image"}
@@ -387,13 +387,13 @@ export function StepAvailabilitySelection() {
                         aria-pressed={selected}
                         aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
                         className={cn(
-                          "w-[168px] sm:w-[188px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
+                          "w-[210px] sm:w-[240px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
                           selected
                             ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
                             : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
                         )}
                       >
-                        <div className="relative h-12 sm:h-[3.25rem] overflow-hidden shrink-0">
+                        <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
                           <img
                             src={pkg.image || "https://picsum.photos/400/200"}
                             alt={pkg.title || "Package image"}

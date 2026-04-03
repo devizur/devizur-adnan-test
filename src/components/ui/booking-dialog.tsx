@@ -280,47 +280,49 @@ export function BookingDialog({
             "sm:shadow-[0_0_0_1px_rgba(250,204,21,0.1),0_28px_90px_-24px_rgba(0,0,0,0.75)]"
           )}
         >
-        <AlertDialogHeader className="relative shrink-0 place-items-stretch overflow-hidden border-b border-zinc-800/90 bg-linear-to-br from-[#1c1c1c] via-[#181818] to-[#141414] px-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] text-left sm:px-6 sm:pb-5 sm:pt-6">
+        <AlertDialogHeader className="relative shrink-0 place-items-stretch overflow-hidden border-b border-white/[0.06] bg-[#161616] px-3 pb-2.5 pt-[max(0.5rem,env(safe-area-inset-top))] text-left sm:px-4 sm:pb-3 sm:pt-3.5">
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary-1 via-primary-1/65 to-primary-1/15"
+            className="pointer-events-none absolute inset-y-2 left-0 w-px rounded-full bg-linear-to-b from-primary-1/90 via-primary-1/45 to-primary-1/10 sm:inset-y-1.5"
             aria-hidden
           />
-          <div className="w-full space-y-3 pl-3 sm:space-y-4 sm:pl-4">
-            <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-10 flex shrink-0 items-center gap-2 sm:right-6 sm:top-6 sm:gap-2.5">
+          <div className="w-full space-y-2 pl-2.5 sm:space-y-2 sm:pl-3">
+            <div className="absolute right-3 top-[max(0.5rem,env(safe-area-inset-top,0px))] z-10 flex shrink-0 items-center gap-1.5 sm:right-4 sm:top-3.5">
               <div
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary-1/35 bg-primary-1/10 px-2.5 py-1.5 text-xs font-semibold text-primary-1 tabular-nums shadow-sm shadow-black/20"
+                className="inline-flex items-center gap-1 rounded-md border border-primary-1/30 bg-primary-1/[0.08] px-2 py-1 text-[10px] font-semibold text-primary-1 tabular-nums shadow-sm shadow-black/15"
                 title={`${formattedRemaining} remaining`}
               >
-                <Clock className="size-3.5 shrink-0 opacity-90" aria-hidden />
-                <span className="hidden sm:inline">Time </span>
+                <Clock className="size-3 shrink-0 opacity-90" aria-hidden />
+                <span className="hidden sm:inline text-primary-1/80">Time </span>
                 <span>{formattedRemaining}</span>
               </div>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex size-9 min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-700/80 bg-zinc-900/40 text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-800/80 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/40 sm:size-10 sm:min-h-10 sm:min-w-10"
+                className="flex size-8 min-h-8 min-w-8 items-center justify-center rounded-md border border-white/[0.08] bg-[#1c1c1c] text-zinc-400 shadow-sm shadow-black/10 transition-colors hover:border-white/[0.12] hover:bg-[#252525] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
                 aria-label="Close dialog"
               >
-                <X className="size-4" />
+                <X className="size-3.5" />
               </button>
             </div>
-            <div className="min-w-0 pr-29 sm:pr-40">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-1/90">
+            <div className="min-w-0 pr-[5.5rem] sm:pr-[6.75rem]">
+              <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-primary-1/85">
                 Booking flow
               </p>
-              <AlertDialogTitle className="text-lg font-bold tracking-tight text-primary sm:text-xl">
+              <AlertDialogTitle className="text-base font-semibold leading-tight tracking-tight text-zinc-100 sm:text-[1.0625rem]">
                 Create booking
               </AlertDialogTitle>
             </div>
 
-            <div className="space-y-2 lg:hidden">
-              <div className="flex justify-between gap-2 text-[11px] text-zinc-500">
-                <span>
+            <div className="space-y-1.5 lg:hidden">
+              <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
+                <span className="tabular-nums">
                   Step {step} of {STEPS.length}
                 </span>
-                <span className="max-w-[55%] truncate text-right font-medium text-zinc-300">{STEPS[step - 1]?.label}</span>
+                <span className="max-w-[58%] truncate text-right font-medium text-zinc-400">
+                  {STEPS[step - 1]?.label}
+                </span>
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-zinc-800">
+              <div className="h-0.5 overflow-hidden rounded-full bg-zinc-800/90">
                 <div
                   className="h-full rounded-full bg-primary-1 transition-[width] duration-300 ease-out"
                   style={{ width: `${(step / STEPS.length) * 100}%` }}
@@ -329,21 +331,21 @@ export function BookingDialog({
             </div>
 
             <div className="hidden min-w-0 lg:flex lg:justify-start">
-              <div className="scrollbar-dark flex max-w-full items-center gap-1 overflow-x-auto py-0.5">
+              <div className="scrollbar-dark flex max-w-full items-center gap-0.5 overflow-x-auto py-0.5">
                 {STEPS.map((s, i) => (
                   <React.Fragment key={`${isFoodFirst ? "f" : "a"}-${s.id}`}>
                     <div
                       className={cn(
-                        "flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-all",
+                        "flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition-all",
                         step === s.id &&
-                          "border-primary-1/40 bg-primary-1/12 text-primary-1 shadow-[0_0_20px_-8px_rgba(250,204,21,0.35)]",
-                        step > s.id && "border-transparent text-zinc-400",
+                          "border-primary-1/35 bg-primary-1/[0.1] text-primary-1 shadow-sm shadow-primary-1/10",
+                        step > s.id && "border-transparent text-zinc-500",
                         step < s.id && "border-transparent text-zinc-600"
                       )}
                     >
                       <span
                         className={cn(
-                          "flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                          "flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold leading-none",
                           step === s.id && "bg-primary-1 text-zinc-900",
                           step > s.id && "bg-zinc-600 text-zinc-200",
                           step < s.id && "bg-zinc-800 text-zinc-500"
@@ -351,10 +353,10 @@ export function BookingDialog({
                       >
                         {step > s.id ? "✓" : s.id}
                       </span>
-                      <span className="whitespace-nowrap">{s.label}</span>
+                      <span className="max-w-[9.5rem] truncate whitespace-nowrap">{s.label}</span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <span className="shrink-0 px-0.5 text-xs text-zinc-600" aria-hidden>
+                      <span className="shrink-0 px-0.5 text-[10px] text-zinc-600" aria-hidden>
                         ›
                       </span>
                     )}
@@ -368,8 +370,8 @@ export function BookingDialog({
         <div
           className={cn(
             "min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-dark bg-[#121212]/80",
-            (isFoodFirst ? step === 2 : step === 1) ? "flex flex-col overflow-hidden" : "",
-            (isFoodFirst ? step === 2 : step === 1) ? "" : "px-4 py-4 sm:px-6 sm:py-5"
+            step <= 2 ? "flex flex-col overflow-hidden" : "",
+            step <= 2 ? "" : "px-4 py-4 sm:px-6 sm:py-5"
           )}
           style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >

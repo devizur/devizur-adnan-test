@@ -528,60 +528,35 @@ export function StepAvailabilitySelection() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 scrollbar-dark">
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1 sm:gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                  Start time
-                </p>
-                <p className="text-sm font-medium text-zinc-200 mt-1">
-                  {!slotsParams
-                    ? "Load times to see openings"
-                    : slotsLoading
-                      ? "Fetching slots…"
-                      : slots.length === 0
-                        ? "Nothing open in this period"
-                        : !timeSlot
-                          ? `${slots.length} opening${slots.length !== 1 ? "s" : ""} — pick one`
-                          : `${timeSlot} selected`}
-                </p>
-              </div>
-              {!slotsParams && (
-                <p className="text-xs text-zinc-500 max-w-md sm:text-right">
-                  Add an activity or package, guests, and a date first.
-                </p>
-              )}
-            </div>
-
-            {!slotsParams ? (
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4 scrollbar-dark">
+          {!slotsParams ? (
               <div
-                className="rounded-2xl border border-dashed border-white/[0.1] bg-[#141414]/40 px-6 py-10 sm:py-12 text-center"
+                className="rounded-xl border border-dashed border-white/[0.1] bg-[#141414]/40 px-4 py-6 sm:py-7 text-center"
                 role="status"
               >
-                <CalendarClock className="mx-auto h-10 w-10 text-zinc-600 mb-3" aria-hidden />
-                <p className="text-sm font-medium text-zinc-300">Ready when you are</p>
-                <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto leading-relaxed">
+                <CalendarClock className="mx-auto h-7 w-7 text-zinc-600 mb-2" aria-hidden />
+                <p className="text-xs font-medium text-zinc-300">Ready when you are</p>
+                <p className="text-[10px] text-zinc-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
                   Select what you would like to book, set guest counts, choose a date, then use{" "}
                   <span className="text-zinc-400 font-medium">Check availability</span> to load start times.
                 </p>
               </div>
             ) : (
               <div
-                className="rounded-2xl border border-white/[0.08] bg-[#141414]/60 p-3 sm:p-4"
+                className="rounded-xl border border-white/[0.08] bg-[#141414]/60 p-2 sm:p-2.5"
                 role="group"
                 aria-label="Select start time"
               >
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-1 sm:gap-1.5">
                   {slotsLoading ? (
-                    <div className="col-span-full py-12 flex flex-col items-center justify-center gap-3 text-zinc-400 text-sm">
-                      <Loader2 className="h-8 w-8 text-primary-1 animate-spin" aria-hidden />
+                    <div className="col-span-full py-8 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
+                      <Loader2 className="h-6 w-6 text-primary-1 animate-spin" aria-hidden />
                       <span>Loading available times…</span>
                     </div>
                   ) : slots.length === 0 ? (
-                    <div className="col-span-full py-10 flex flex-col items-center justify-center gap-2 text-zinc-400 text-sm text-center px-4">
+                    <div className="col-span-full py-7 flex flex-col items-center justify-center gap-1 text-zinc-400 text-xs text-center px-3">
                       <span className="font-medium text-zinc-300">No slots in this window</span>
-                      <span className="text-xs text-zinc-500 max-w-xs leading-relaxed">
+                      <span className="text-[10px] text-zinc-500 max-w-xs leading-relaxed">
                         Try another session period or pick a different date.
                       </span>
                     </div>
@@ -594,19 +569,19 @@ export function StepAvailabilitySelection() {
                         onClick={() => dispatch(setTimeSlot(s.startTime))}
                         aria-pressed={timeSlot === s.startTime}
                         className={cn(
-                          "relative min-h-[4.25rem] sm:min-h-[4.75rem] py-2.5 px-2 rounded-xl border text-sm transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]",
+                          "relative min-h-[2.625rem] sm:min-h-11 py-1 px-1 rounded-md border text-[11px] sm:text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0 leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414]",
                           s.available <= 0 && "opacity-45 cursor-not-allowed",
                           timeSlot === s.startTime
-                            ? "bg-primary-1 text-secondary border-primary-1 shadow-md shadow-black/25 cursor-pointer"
+                            ? "bg-primary-1 text-secondary border-primary-1 shadow-sm shadow-black/20 cursor-pointer font-semibold"
                             : s.available > 0
-                              ? "bg-[#1e1e1e] text-zinc-200 border-white/[0.08] hover:bg-[#252525] hover:border-white/[0.12] cursor-pointer"
+                              ? "bg-[#1e1e1e] text-zinc-200 border-white/[0.08] hover:bg-[#252525] hover:border-white/[0.12] cursor-pointer font-medium"
                               : "bg-[#1a1a1a] text-zinc-600 border-white/[0.06]"
                         )}
                       >
-                        <span className="font-semibold tabular-nums">{s.startTime}</span>
+                        <span className="tabular-nums leading-none">{s.startTime}</span>
                         <span
                           className={cn(
-                            "text-[10px] font-medium",
+                            "text-[8px] sm:text-[9px] font-medium mt-0.5 leading-none",
                             timeSlot === s.startTime ? "text-secondary/80" : "text-zinc-500"
                           )}
                         >
@@ -618,7 +593,6 @@ export function StepAvailabilitySelection() {
                 </div>
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>

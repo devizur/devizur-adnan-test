@@ -119,11 +119,11 @@ export function BookingCalendar({
   }
 
   return (
-    <div className={cn("relative flex items-center justify-center gap-2", className)}>
+    <div className={cn("relative flex w-full max-w-full items-center justify-center gap-1 sm:gap-2", className)}>
       <button
         type="button"
         onClick={() => setDisplayDate(-1)}
-        className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+        className="flex min-h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-h-11 sm:min-w-11 sm:rounded-xl sm:p-2.5"
         aria-label="Previous date"
       >
         <ChevronLeft className="w-5 h-5" />
@@ -131,7 +131,7 @@ export function BookingCalendar({
       <button
         type="button"
         onClick={() => setIsCalendarOpen((open) => !open)}
-        className="text-sm font-medium text-white min-w-[220px] text-center py-2.5 px-4 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
+        className="min-w-0 flex-1 cursor-pointer rounded-lg border border-zinc-700/70 bg-zinc-900/50 px-2 py-2 text-center text-[11px] font-medium leading-tight text-white shadow-sm shadow-black/10 transition-colors hover:border-zinc-600 hover:bg-zinc-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-w-[220px] sm:flex-none sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
         aria-label="Open date picker"
         aria-expanded={isCalendarOpen}
       >
@@ -140,14 +140,14 @@ export function BookingCalendar({
       <button
         type="button"
         onClick={() => setDisplayDate(1)}
-        className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
+        className="flex min-h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-h-11 sm:min-w-11 sm:rounded-xl sm:p-2.5"
         aria-label="Next date"
       >
         <ChevronRight className="w-5 h-5" />
       </button>
       {isCalendarOpen && (
-        <div className="absolute top-full mt-2 z-30 w-full max-w-xs rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-xl">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        <div className="absolute top-full z-30 mt-2 w-full max-w-xs rounded-2xl border border-zinc-700/70 bg-zinc-900 shadow-xl shadow-black/40">
+          <div className="flex items-center justify-between border-b border-zinc-700/60 px-4 py-2">
             <button
               type="button"
               onClick={() => goToCalendarMonth(-1)}
@@ -178,7 +178,7 @@ export function BookingCalendar({
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="px-4 pt-2 pb-3 text-xs text-gray-400">
+          <div className="px-4 pb-3 pt-2 text-xs text-zinc-500">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
                 <div key={d} className="h-7 flex items-center justify-center tracking-[0.08em]">

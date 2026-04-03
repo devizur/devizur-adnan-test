@@ -273,40 +273,40 @@ export function BookingDialog({
             className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary-1 via-primary-1/65 to-primary-1/15"
             aria-hidden
           />
-          <div className=" flex flex-col  space-y-3 sm:space-y-4 pl-3 sm:pl-4 w-full">
-           <div className="flex flex-row-reverse justify-between   "> <div className="  right-0 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-10 flex shrink-0 items-center gap-2 sm:top-6 sm:gap-2.5">
-             <div
-                 className="inline-flex items-center gap-1.5 rounded-full border border-primary-1/35 bg-primary-1/10 px-2.5 py-1.5 text-xs font-semibold text-primary-1 tabular-nums shadow-sm shadow-black/20"
-                 title={`${formattedRemaining} remaining`}
-             >
-               <Clock className="size-3.5 shrink-0 opacity-90" aria-hidden />
-               <span className="hidden sm:inline">Time </span>
-               <span>{formattedRemaining}</span>
-             </div>
-             <button
-                 type="button"
-                 onClick={handleClose}
-                 className="flex size-9 min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-700/80 bg-zinc-900/40 text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-800/80 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/40 sm:size-10 sm:min-h-10 sm:min-w-10"
-                 aria-label="Close dialog"
-             >
-               <X className="size-4" />
-             </button>
-           </div>
-             <div className="min-w-0 pr-29 sm:pr-40">
-               <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-1/90">
-                 Booking flow
-               </p>
-               <AlertDialogTitle className="text-lg font-bold tracking-tight text-primary sm:text-xl">
-                 Create booking
-               </AlertDialogTitle>
-             </div></div>
+          <div className="w-full space-y-3 pl-3 sm:space-y-4 sm:pl-4">
+            <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-10 flex shrink-0 items-center gap-2 sm:right-6 sm:top-6 sm:gap-2.5">
+              <div
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary-1/35 bg-primary-1/10 px-2.5 py-1.5 text-xs font-semibold text-primary-1 tabular-nums shadow-sm shadow-black/20"
+                title={`${formattedRemaining} remaining`}
+              >
+                <Clock className="size-3.5 shrink-0 opacity-90" aria-hidden />
+                <span className="hidden sm:inline">Time </span>
+                <span>{formattedRemaining}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex size-9 min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-700/80 bg-zinc-900/40 text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-800/80 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/40 sm:size-10 sm:min-h-10 sm:min-w-10"
+                aria-label="Close dialog"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="min-w-0 pr-29 sm:pr-40">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-1/90">
+                Booking flow
+              </p>
+              <AlertDialogTitle className="text-lg font-bold tracking-tight text-primary sm:text-xl">
+                Create booking
+              </AlertDialogTitle>
+            </div>
 
-            <div className=" space-y-2 lg:hidden">
+            <div className="space-y-2 lg:hidden">
               <div className="flex justify-between gap-2 text-[11px] text-zinc-500">
                 <span>
                   Step {step} of {STEPS.length}
                 </span>
-                <span className="truncate text-right font-medium text-zinc-300">{STEPS[step - 1]?.label}</span>
+                <span className="max-w-[55%] truncate text-right font-medium text-zinc-300">{STEPS[step - 1]?.label}</span>
               </div>
               <div className="h-1 overflow-hidden rounded-full bg-zinc-800">
                 <div
@@ -408,7 +408,7 @@ export function BookingDialog({
                   onClick={handleOpenCartPopup}
                   className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
                 >
-                  <ShoppingBag className="w-4 h-4" />
+                  <ShoppingBag className="size-4 shrink-0" />
                   Cart
                 </Button>
               </div>
@@ -440,7 +440,7 @@ export function BookingDialog({
                   onClick={handleOpenCartPopup}
                   className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
                 >
-                  <ShoppingBag className="w-4 h-4" />
+                  <ShoppingBag className="size-4 shrink-0" />
                   Cart
                 </Button>
                 {step === 1 && (

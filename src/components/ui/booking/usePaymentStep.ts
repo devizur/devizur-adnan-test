@@ -2,36 +2,20 @@
 
 import * as React from "react";
 import { useCart } from "@/contexts/CartContext";
-import { formatPrice, parsePrice } from "@/lib/utils";
+import { parsePrice } from "@/lib/utils";
 
 export const CREDIT_CARD_FEE_RATE = 0.03;
 
-export function resetPaymentFormFields(
-  setCardNumber: (v: string) => void,
-  setNameOnCard: (v: string) => void,
-  setExpiryMM: (v: string) => void,
-  setExpiryYY: (v: string) => void,
-  setCvv: (v: string) => void,
-  setPaymentAmountInput: (v: string) => void
-) {
-  setCardNumber("");
-  setNameOnCard("");
-  setExpiryMM("");
-  setExpiryYY("");
-  setCvv("");
-  setPaymentAmountInput("");
+export interface UsePaymentStepOptions {
+  /** Passed to Stripe PaymentIntent metadata (string values only). */
+  checkoutMetadata?: Record<string, string>;
 }
 
-export function usePaymentStep(onPaymentSuccess?: () => void) {
-  const { foodItems, activityItems, packageItems, clearCart, getTotalItems } = useCart();
+export function usePaymentStep(options?: UsePaymentStepOptions) {
+  const { foodItems, activityItems, packageItems, getTotalItems, clearCart } = useCart();
 
-  const [cardNumber, setCardNumber] = React.useState("");
-  const [nameOnCard, setNameOnCard] = React.useState("");
-  const [expiryMM, setExpiryMM] = React.useState("");
-  const [expiryYY, setExpiryYY] = React.useState("");
-  const [cvv, setCvv] = React.useState("");
-  const [paymentAmountInput, setPaymentAmountInput] = React.useState("");
   const [showSuccess, setShowSuccess] = React.useState(false);
+  const [paymentIntentResetKey, setPaymentIntentResetKey] = React.useState(0);
 
   const foodSubtotal = foodItems.reduce(
     (sum, item) => sum + parsePrice(item.food.price) * item.quantity,
@@ -50,56 +34,33 @@ export function usePaymentStep(onPaymentSuccess?: () => void) {
   const discount = 0;
   const totalBeforeFees = subtotal + serviceFee - discount;
 
-  const defaultPaymentAmount = totalBeforeFees;
-  const paymentAmountRaw = paymentAmountInput
-    ? parseFloat(paymentAmountInput.replace(/[^0-9.]/g, ""))
-    : defaultPaymentAmount;
-  const paymentAmount =
-    Number.isNaN(paymentAmountRaw) || paymentAmountRaw <= 0 ? defaultPaymentAmount : paymentAmountRaw;
+  const creditCardFee = Math.round(totalBeforeFees * CREDIT_CARD_FEE_RATE * 100) / 100;
+  const totalPaymentAmount = totalBeforeFees + creditCardFee;
+  const amountTotalCents = Math.max(50, Math.round(totalPaymentAmount * 100));
 
-  const creditCardFee = Math.round(paymentAmount * CREDIT_CARD_FEE_RATE * 100) / 100;
-  const totalPaymentAmount = paymentAmount + creditCardFee;
+  const checkoutMetadata = options?.checkoutMetadata;
 
   const resetForm = React.useCallback(() => {
-    resetPaymentFormFields(
-      setCardNumber,
-      setNameOnCard,
-      setExpiryMM,
-      setExpiryYY,
-      setCvv,
-      setPaymentAmountInput
-    );
+    setPaymentIntentResetKey((k) => k + 1);
   }, []);
 
-  const handleTakePayment = React.useCallback(() => {
+  const completePaymentSuccess = React.useCallback(() => {
     clearCart();
     resetForm();
-    onPaymentSuccess?.();
     setShowSuccess(true);
-  }, [clearCart, resetForm, onPaymentSuccess]);
+  }, [clearCart, resetForm]);
 
   const handleCloseSuccess = React.useCallback(() => {
     setShowSuccess(false);
   }, []);
 
   const isCartEmpty = getTotalItems() === 0;
-  const cannotTakePayment = isCartEmpty || totalBeforeFees <= 0;
 
-  const api = {
-    cardNumber,
-    setCardNumber,
-    nameOnCard,
-    setNameOnCard,
-    expiryMM,
-    setExpiryMM,
-    expiryYY,
-    setExpiryYY,
-    cvv,
-    setCvv,
-    paymentAmountInput,
-    setPaymentAmountInput,
+  return {
     showSuccess,
-    setShowSuccess,
+    handleCloseSuccess,
+    completePaymentSuccess,
+    paymentIntentResetKey,
     foodSubtotal,
     activitySubtotal,
     packageSubtotal,
@@ -107,17 +68,13 @@ export function usePaymentStep(onPaymentSuccess?: () => void) {
     serviceFee,
     discount,
     totalBeforeFees,
-    defaultPaymentAmount,
     creditCardFee,
     totalPaymentAmount,
+    amountTotalCents,
     isCartEmpty,
-    cannotTakePayment,
-    handleTakePayment,
-    handleCloseSuccess,
+    checkoutMetadata,
     resetForm,
   };
-
-  return api;
 }
 
 export type PaymentStepState = ReturnType<typeof usePaymentStep>;

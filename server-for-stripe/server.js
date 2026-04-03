@@ -99,38 +99,84 @@ app.get("/", (req, res) => {
     res.json({ message: "Stripe backend running" });
 });
 
+function sanitizeMetadata(input) {
+    if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+    const out = {};
+    for (const [k, v] of Object.entries(input)) {
+        if (v === undefined || v === null) continue;
+        const key = String(k).slice(0, 40);
+        out[key] = String(v).slice(0, 500);
+    }
+    return out;
+}
+
 app.post("/create-checkout-session", async (req, res) => {
     try {
-        const { quantity = 1 } = req.body || {};
+        const body = req.body || {};
+        const amountTotalCents = body.amountTotalCents;
+        const meta = sanitizeMetadata(body.metadata);
+        const baseMetadata = {
+            source: "online-booking-system",
+            ...meta
+        };
 
-        if (!Number.isInteger(quantity) || quantity < 1) {
-            return res.status(400).json({ error: "Quantity must be a positive integer" });
-        }
+        let line_items;
 
-        // In production:
-        // never trust product name, price, currency, or total from frontend
-        // calculate them on the server or load them from your DB
-        const session = await stripe.checkout.sessions.create({
-            mode: "payment",
-            line_items: [
+        if (amountTotalCents !== undefined && amountTotalCents !== null) {
+            if (typeof amountTotalCents !== "number" || !Number.isInteger(amountTotalCents)) {
+                return res.status(400).json({ error: "amountTotalCents must be an integer (USD cents)" });
+            }
+            if (amountTotalCents < 50) {
+                return res.status(400).json({ error: "amountTotalCents must be at least 50 ($0.50 USD)" });
+            }
+            if (amountTotalCents > 99999999) {
+                return res.status(400).json({ error: "amountTotalCents exceeds maximum allowed" });
+            }
+            const title =
+                typeof body.description === "string" && body.description.trim()
+                    ? body.description.trim().slice(0, 200)
+                    : "Booking payment";
+            line_items = [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: title,
+                            description: "Venue booking (total includes fees shown in app)"
+                        },
+                        unit_amount: amountTotalCents
+                    },
+                    quantity: 1
+                }
+            ];
+        } else {
+            const { quantity = 1 } = body;
+            if (!Number.isInteger(quantity) || quantity < 1) {
+                return res.status(400).json({
+                    error: "Send amountTotalCents (integer, USD cents) or quantity for the demo line item"
+                });
+            }
+            line_items = [
                 {
                     price_data: {
                         currency: "usd",
                         product_data: {
                             name: "Premium Plan",
-                            description: "One-time purchase"
+                            description: "One-time purchase (demo)"
                         },
                         unit_amount: 2000
                     },
                     quantity
                 }
-            ],
+            ];
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            mode: "payment",
+            line_items,
             success_url: `${clientUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${clientUrl}/cancel`,
-            metadata: {
-                orderType: "one-time",
-                source: "react-node-demo"
-            }
+            metadata: baseMetadata
         });
 
         return res.status(200).json({
@@ -138,6 +184,50 @@ app.post("/create-checkout-session", async (req, res) => {
         });
     } catch (err) {
         console.error("Create checkout session error:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+/** In-app card payments (Payment Element) — amount validated server-side. */
+app.post("/create-payment-intent", async (req, res) => {
+    try {
+        const body = req.body || {};
+        const amountTotalCents = body.amountTotalCents;
+
+        if (typeof amountTotalCents !== "number" || !Number.isInteger(amountTotalCents)) {
+            return res.status(400).json({ error: "amountTotalCents must be an integer (USD cents)" });
+        }
+        if (amountTotalCents < 50) {
+            return res.status(400).json({ error: "amountTotalCents must be at least 50 ($0.50 USD)" });
+        }
+        if (amountTotalCents > 99999999) {
+            return res.status(400).json({ error: "amountTotalCents exceeds maximum allowed" });
+        }
+
+        const meta = sanitizeMetadata(body.metadata);
+        const description =
+            typeof body.description === "string" && body.description.trim()
+                ? body.description.trim().slice(0, 200)
+                : "Booking payment";
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountTotalCents,
+            currency: "usd",
+            automatic_payment_methods: { enabled: true },
+            metadata: {
+                source: "online-booking-system",
+                ...meta
+            },
+            description
+        });
+
+        if (!paymentIntent.client_secret) {
+            return res.status(500).json({ error: "Payment intent has no client secret" });
+        }
+
+        return res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    } catch (err) {
+        console.error("Create payment intent error:", err.message);
         return res.status(500).json({ error: err.message });
     }
 });

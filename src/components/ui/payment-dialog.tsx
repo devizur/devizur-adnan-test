@@ -10,33 +10,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { PaymentStepForm } from "@/components/ui/booking/PaymentStepForm";
 import { PaymentSuccessModal } from "@/components/ui/booking/PaymentSuccessModal";
 import { usePaymentStep } from "@/components/ui/booking/usePaymentStep";
-import { formatPrice } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export function PaymentDialog({
   children,
-  onPaymentSuccess,
+  onPaymentSuccess: _onPaymentSuccess,
 }: {
   children: React.ReactNode;
+  /** Called when the user closes the success modal after paying. */
   onPaymentSuccess?: () => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const payment = usePaymentStep(() => {
-    setIsOpen(false);
-    onPaymentSuccess?.();
-  });
-
-  const { totalBeforeFees, setPaymentAmountInput } = payment;
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-    setPaymentAmountInput(formatPrice(totalBeforeFees));
-  }, [isOpen, totalBeforeFees, setPaymentAmountInput]);
+  const payment = usePaymentStep();
 
   const handlePaymentDialogOpenChange = (open: boolean) => {
     if (!open) {
@@ -75,15 +64,6 @@ export function PaymentDialog({
             >
               Cancel
             </AlertDialogCancel>
-            <Button
-              type="button"
-              onClick={payment.handleTakePayment}
-              disabled={payment.cannotTakePayment}
-              aria-label={`Pay ${formatPrice(payment.totalPaymentAmount)}`}
-              className="min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 hover:shadow-[0_0_20px_rgba(255,236,0,0.35)] font-medium rounded-xl px-5 cursor-pointer transition-all focus-visible:ring-primary-1/50 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-            >
-              Pay {formatPrice(payment.totalPaymentAmount)}
-            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -93,6 +73,8 @@ export function PaymentDialog({
         onOpenChange={(open) => !open && payment.handleCloseSuccess()}
         onDone={() => {
           payment.handleCloseSuccess();
+          setIsOpen(false);
+          _onPaymentSuccess?.();
         }}
       />
     </>

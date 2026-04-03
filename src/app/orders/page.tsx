@@ -4,9 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { fetchOrdersFromBackend } from "@/lib/ordersApi";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
 
@@ -163,7 +164,7 @@ export default function OrdersPage() {
           setOrders((prev) => prev.filter((o) => o.id !== orderId));
         }}
       />
-      <div className="container mx-auto px-4 sm:px-6 space-y-8">
+      <div className={cn(PAGE_CONTENT_CLASS, "space-y-8")}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button

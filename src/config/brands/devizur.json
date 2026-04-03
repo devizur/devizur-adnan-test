@@ -96,12 +96,14 @@
         },
         "contact": {
             "title": "Reserve Your Experience",
-            "subtitle": "Join us at Devizur for an unforgettable evening.",
+            "subtitle": "Join us at Devizur for an unforgettable evening. Send a message or reach us using the details below.",
             "location": "456 Artisan Way, Gourmet Plaza, NYC",
             "hours": {
                 "week": "5pm - 11pm",
                 "weekend": "4pm - Midnight"
-            }
+            },
+            "email": "hello@devizur.com",
+            "phone": "+1 (212) 555-0142"
         },
         "footer": {
             "footerText": "Copyright © 2026 All rights reserved by Devizur"

@@ -1,5 +1,7 @@
 "use client";
 import { getBrandConfig } from "@/lib/brand-config";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -24,7 +26,7 @@ export function Footer() {
 
     return (
         <footer className="bg-secondary-2 text-accent py-4">
-            <div className="container   mx-auto">
+            <div className={cn(PAGE_CONTENT_CLASS)}>
                 <div className="flex flex-col  justify-center items-center gap-4 text-sm ">
                     <p>{config.content.footer.footerText}</p>
                    

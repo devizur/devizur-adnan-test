@@ -1,13 +1,15 @@
 "use client";
 
 import { useBookingDapperStatuses } from "@/lib/api/hooks";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 
 export default function TestBookingDapperPage() {
     const { data, isLoading, error, refetch } = useBookingDapperStatuses();
 
     if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8 mt-32">
+            <div className={cn(PAGE_CONTENT_CLASS, "py-8 mt-32")}>
                 <h1 className="text-2xl font-semibold mb-4 text-primary">Test: Booking Dapper Statuses</h1>
                 <p className="text-muted-foreground">Loading...</p>
             </div>
@@ -16,7 +18,7 @@ export default function TestBookingDapperPage() {
 
     if (error) {
         return (
-            <div className="container mx-auto px-4 py-8 mt-32">
+            <div className={cn(PAGE_CONTENT_CLASS, "py-8 mt-32")}>
                 <h1 className="text-2xl font-semibold mb-4 text-primary">Test: Booking Dapper Statuses</h1>
                 <p className="text-destructive mb-2">Error: {error.message}</p>
                 <button
@@ -33,7 +35,7 @@ export default function TestBookingDapperPage() {
     const statuses = data ?? [];
 
     return (
-        <div className="container mx-auto px-4 py-8 mt-32">
+        <div className={cn(PAGE_CONTENT_CLASS, "py-8 mt-32")}>
             <h1 className="text-2xl font-semibold mb-2 text-primary">Test: Booking Dapper Statuses</h1>
             <p className="text-primary mb-6">
                 GET /api/Booking/bookingDapperStatuses (via bookingFlowUrlHttp)

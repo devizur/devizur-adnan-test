@@ -12,7 +12,7 @@ export default function Home() {
   const { home } = config.content;
 
   return (
-    <div className="min-w-0 overflow-x-hidden">
+    <div className="min-w-0 overflow-x-hidden bg-background">
       <HeroSection
         alignment="center"
         badgeText={home.heroTag}

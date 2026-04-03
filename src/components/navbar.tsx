@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import { ShopSelectorButton } from "@/components/ui/ShopSelectorButton";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
@@ -60,8 +61,9 @@ export function Navbar() {
     if (pathname === "/brands" || isNotFound) return null;
 
     return (
-        <div className="w-full   flex justify-center">
-            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4  ">
+        <>
+            <nav className="absolute top-0 left-0 right-0 z-50">
+                <div className={cn(PAGE_CONTENT_CLASS, "flex h-24 items-center justify-between")}>
                 <Link href="/" >
                     <div className="">
                         {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
@@ -125,6 +127,7 @@ export function Navbar() {
                     >
                         {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
+                </div>
                 </div>
             </nav>
 
@@ -203,6 +206,6 @@ export function Navbar() {
                             : navContent.bookings}</button>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

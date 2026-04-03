@@ -13,6 +13,7 @@ import {
 import { PaymentStepForm } from "@/components/ui/booking/PaymentStepForm";
 import { PaymentSuccessModal } from "@/components/ui/booking/PaymentSuccessModal";
 import { usePaymentStep } from "@/components/ui/booking/usePaymentStep";
+import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 
 export function PaymentDialog({
@@ -23,6 +24,7 @@ export function PaymentDialog({
   /** Called when the user closes the success modal after paying. */
   onPaymentSuccess?: () => void;
 }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = React.useState(false);
 
   const payment = usePaymentStep();
@@ -75,6 +77,7 @@ export function PaymentDialog({
           payment.handleCloseSuccess();
           setIsOpen(false);
           _onPaymentSuccess?.();
+          router.push("/orders");
         }}
       />
     </>

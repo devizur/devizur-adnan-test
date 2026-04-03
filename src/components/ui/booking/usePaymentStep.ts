@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useCart } from "@/contexts/CartContext";
+import { appendPaidOrder } from "@/lib/paidOrdersStorage";
 import { parsePrice } from "@/lib/utils";
 
 export const CREDIT_CARD_FEE_RATE = 0.03;
@@ -12,7 +13,7 @@ export interface UsePaymentStepOptions {
 }
 
 export function usePaymentStep(options?: UsePaymentStepOptions) {
-  const { foodItems, activityItems, packageItems, getTotalItems, clearCart } = useCart();
+  const { entries, foodItems, activityItems, packageItems, getTotalItems, clearCart } = useCart();
 
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [paymentIntentResetKey, setPaymentIntentResetKey] = React.useState(0);
@@ -45,10 +46,13 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
   }, []);
 
   const completePaymentSuccess = React.useCallback(() => {
+    if (entries.length > 0) {
+      appendPaidOrder(entries, totalPaymentAmount);
+    }
     clearCart();
     resetForm();
     setShowSuccess(true);
-  }, [clearCart, resetForm]);
+  }, [entries, totalPaymentAmount, clearCart, resetForm]);
 
   const handleCloseSuccess = React.useCallback(() => {
     setShowSuccess(false);

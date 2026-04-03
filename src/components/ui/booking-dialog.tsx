@@ -21,6 +21,7 @@ import { StepPayment } from "@/components/ui/booking/StepPayment";
 import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
 
 const REMAINING_TIME = 60 * 10; // 10 minutes
@@ -60,6 +61,7 @@ export function BookingDialog({
   open: openControlled,
   onOpenChange: onOpenChangeControlled,
 }: BookingDialogProps) {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const cart = useCart();
   const { clearCart } = cart;
@@ -193,6 +195,7 @@ export function BookingDialog({
     dispatch(resetBooking());
     clearCart();
     setIsOpen(false);
+    router.push("/orders");
   };
 
   const handleClose = () => {

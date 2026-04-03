@@ -157,7 +157,7 @@ export function BookingTimelineBar({
     alignCenter?: boolean;
     showSpinner?: boolean;
   }> = ({ children, alignCenter = true, showSpinner = false }) => (
-    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm overflow-hidden min-w-0", className)}>
+    <div className={cn("min-w-0 overflow-hidden rounded-xl border border-zinc-700/60 bg-zinc-900/40 px-2 py-1 shadow-sm shadow-black/20", className)}>
       <div
         className={cn(
           "h-[calc(18px+20px+8px+2px)] text-gray-400 text-[10px]",
@@ -173,7 +173,7 @@ export function BookingTimelineBar({
   );
 
   const LoadingState = () => (
-    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-4 rounded-sm overflow-hidden min-w-0", className)}>
+    <div className={cn("min-w-0 overflow-hidden rounded-xl border border-zinc-700/60 bg-zinc-900/40 px-2 py-4 shadow-sm shadow-black/20", className)}>
     
       {/* Bar skeleton – matches: h-5 rounded-md border */}
       <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
@@ -207,7 +207,7 @@ export function BookingTimelineBar({
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
   return (
-    <div className={cn("  bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm   overflow-hidden min-w-0", className)}>
+    <div className={cn("min-w-0 overflow-hidden rounded-xl border border-zinc-700/60 bg-zinc-900/40 px-2 py-1 shadow-sm shadow-black/20", className)}>
       {/* Top row: Start | time markers | Finish */}
       <div className="relative flex items-start gap-2 mb-0.5 min-w-0">
         <span className="text-[9px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>

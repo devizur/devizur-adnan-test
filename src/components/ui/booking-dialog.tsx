@@ -39,6 +39,18 @@ const STEPS_FOOD_FIRST = [
   { id: 4, label: "Payment" },
 ] as const;
 
+const bookingFooterBar =
+  "shrink-0 flex flex-row flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-white/[0.06] bg-[#141414]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-2.5";
+
+const bookingFooterBtnSecondary =
+  "m-0 h-8 min-h-8 gap-1.5 rounded-md border border-white/[0.08] bg-[#1c1c1c] px-2.5 text-xs font-medium text-zinc-300 shadow-sm shadow-black/15 transition-colors hover:border-white/[0.12] hover:bg-[#252525] hover:text-white focus-visible:ring-2 focus-visible:ring-primary-1/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] [&_svg]:size-3.5";
+
+const bookingFooterBtnPrimary =
+  "h-8 min-h-8 rounded-md border border-zinc-700/60 bg-primary-1 px-3 text-xs font-semibold text-secondary shadow-sm shadow-black/20 transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/45 disabled:opacity-45 disabled:hover:brightness-100";
+
+const bookingFooterBtnMuted =
+  "h-8 min-h-8 gap-1.5 rounded-md border border-white/[0.06] bg-transparent px-2.5 text-xs font-medium text-zinc-500 transition-colors hover:border-white/[0.1] hover:bg-white/[0.04] hover:text-zinc-300 focus-visible:ring-2 focus-visible:ring-primary-1/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] [&_svg]:size-3.5";
+
 interface BookingDialogProps {
   children: React.ReactNode;
 
@@ -378,17 +390,13 @@ export function BookingDialog({
           )}
         </div>
 
-        <AlertDialogFooter
-          className={cn(
-            "shrink-0 flex-row flex-wrap justify-between gap-2 border-t border-zinc-800/90 bg-[#161616]/95 px-4 py-3 backdrop-blur-sm sm:gap-3 sm:px-6 sm:py-4 sm:pb-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-          )}
-        >
+        <AlertDialogFooter className={cn(bookingFooterBar)}>
           {step === 4 ? (
             <>
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <AlertDialogCancel
                   onClick={handleClose}
-                  className="m-0 min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                  className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
                 >
                   Cancel
                 </AlertDialogCancel>
@@ -396,29 +404,35 @@ export function BookingDialog({
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                  className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
                 >
                   Back
                 </Button>
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleOpenCartPopup}
-                  className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                  className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
+                  aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}
                 >
-                  <ShoppingBag className="size-4 shrink-0" />
-                  Cart
+                  <ShoppingBag className="shrink-0" aria-hidden />
+                  <span>Cart</span>
+                  {totalItems > 0 ? (
+                    <span className="min-w-[1.125rem] rounded bg-primary-1/20 px-1 text-[10px] font-semibold tabular-nums text-primary-1">
+                      {totalItems}
+                    </span>
+                  ) : null}
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <AlertDialogCancel
                   onClick={handleClose}
-                  className="m-0 min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                  className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
                 >
                   Cancel
                 </AlertDialogCancel>
@@ -427,28 +441,34 @@ export function BookingDialog({
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                    className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
                   >
                     Back
                   </Button>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-1.5 sm:ml-auto">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleOpenCartPopup}
-                  className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/30 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-primary-1/35 hover:bg-zinc-800/60 hover:text-white focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                  className={cn(bookingFooterBtnSecondary, "cursor-pointer")}
+                  aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}
                 >
-                  <ShoppingBag className="size-4 shrink-0" />
-                  Cart
+                  <ShoppingBag className="shrink-0" aria-hidden />
+                  <span>Cart</span>
+                  {totalItems > 0 ? (
+                    <span className="min-w-[1.125rem] rounded bg-primary-1/20 px-1 text-[10px] font-semibold tabular-nums text-primary-1">
+                      {totalItems}
+                    </span>
+                  ) : null}
                 </Button>
                 {step === 1 && (
                   <Button
                     type="button"
                     disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                     onClick={handleNext}
-                    className="min-h-10 cursor-pointer rounded-xl bg-primary-1 px-4 py-2 text-sm font-semibold text-black shadow-sm shadow-primary-1/15 transition-all hover:bg-primary-1-hover hover:shadow-[0_0_24px_rgba(255,236,0,0.28)] disabled:opacity-50 focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-5"
+                    className={cn(bookingFooterBtnPrimary, "cursor-pointer")}
                   >
                     Next
                   </Button>
@@ -460,7 +480,7 @@ export function BookingDialog({
                       variant="outline"
                       onClick={handleSkip}
                       aria-label="Skip food selection"
-                      className="min-h-10 cursor-pointer rounded-xl border border-zinc-700/90 bg-zinc-900/20 px-3 py-2 text-sm text-zinc-500 transition-colors hover:border-zinc-600 hover:bg-zinc-800/50 hover:text-zinc-200 focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-4"
+                      className={cn(bookingFooterBtnMuted, "cursor-pointer")}
                     >
                       Skip
                     </Button>
@@ -468,7 +488,7 @@ export function BookingDialog({
                       type="button"
                       disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
                       onClick={handleNext}
-                      className="min-h-10 cursor-pointer rounded-xl bg-primary-1 px-4 py-2 text-sm font-semibold text-black shadow-sm shadow-primary-1/15 transition-all hover:bg-primary-1-hover hover:shadow-[0_0_24px_rgba(255,236,0,0.28)] disabled:opacity-50 focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-5"
+                      className={cn(bookingFooterBtnPrimary, "cursor-pointer")}
                     >
                       Next
                     </Button>
@@ -478,9 +498,10 @@ export function BookingDialog({
                   <Button
                     type="submit"
                     form="bookingForm"
-                    className="min-h-10 cursor-pointer rounded-xl bg-primary-1 px-4 py-2 text-sm font-semibold text-black shadow-sm shadow-primary-1/15 transition-all hover:bg-primary-1-hover hover:shadow-[0_0_24px_rgba(255,236,0,0.28)] focus-visible:ring-primary-1/50 sm:min-h-11 sm:px-5"
+                    className={cn(bookingFooterBtnPrimary, "cursor-pointer")}
                   >
-                    Continue to payment
+                    <span className="sm:hidden">Continue</span>
+                    <span className="hidden sm:inline">Continue to payment</span>
                   </Button>
                 )}
               </div>

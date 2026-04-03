@@ -89,7 +89,7 @@ app.post(
 app.use(
     cors({
         origin: clientUrl,
-        methods: ["GET", "POST"],
+        methods: ["GET", "POST", "DELETE"],
         allowedHeaders: ["Content-Type"]
     })
 );
@@ -99,7 +99,13 @@ app.use(express.json());
 app.get("/", (req, res) => {
     res.json({
         message: "Stripe backend running",
-        endpoints: ["POST /create-checkout-session", "POST /create-payment-intent", "POST /save-order", "GET /orders"]
+        endpoints: [
+            "POST /create-checkout-session",
+            "POST /create-payment-intent",
+            "POST /save-order",
+            "GET /orders",
+            "DELETE /orders/:orderId"
+        ]
     });
 });
 
@@ -330,6 +336,54 @@ app.get("/orders", async (req, res) => {
     } catch (err) {
         console.error("GET /orders error:", err.message);
         return res.status(500).json({ error: err.message || "Failed to list orders" });
+    }
+});
+
+/** Delete one order JSON file by id (matches save-order filename or scans files). */
+app.delete("/orders/:orderId", async (req, res) => {
+    try {
+        const rawId = req.params.orderId;
+        const orderId =
+            typeof rawId === "string" && rawId.trim() ? decodeURIComponent(rawId.trim()) : "";
+        if (!orderId) {
+            return res.status(400).json({ error: "orderId is required" });
+        }
+
+        await fs.mkdir(ORDERS_DIR, { recursive: true });
+        const primaryPath = path.join(ORDERS_DIR, safeOrderFilename(orderId));
+
+        try {
+            await fs.unlink(primaryPath);
+            console.log("[DELETE /orders] removed", primaryPath);
+            return res.json({ ok: true, file: path.basename(primaryPath) });
+        } catch (e) {
+            if (e.code !== "ENOENT") {
+                console.error("DELETE /orders unlink primary:", e.message);
+                return res.status(500).json({ error: e.message || "Failed to delete order file" });
+            }
+        }
+
+        const names = await fs.readdir(ORDERS_DIR);
+        for (const name of names) {
+            if (!name.endsWith(".json")) continue;
+            const full = path.join(ORDERS_DIR, name);
+            try {
+                const raw = await fs.readFile(full, "utf8");
+                const obj = JSON.parse(raw);
+                if (obj && typeof obj === "object" && obj.id === orderId) {
+                    await fs.unlink(full);
+                    console.log("[DELETE /orders] removed (scan)", full);
+                    return res.json({ ok: true, file: name });
+                }
+            } catch (e) {
+                console.warn("[DELETE /orders] skip", name, e.message);
+            }
+        }
+
+        return res.status(404).json({ error: "Order not found" });
+    } catch (err) {
+        console.error("DELETE /orders error:", err.message);
+        return res.status(500).json({ error: err.message || "Failed to delete order" });
     }
 });
 

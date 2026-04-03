@@ -27,6 +27,17 @@ export function loadPaidOrders(): PaidOrderRecord[] {
   }
 }
 
+/** Remove one paid order from browser storage (keeps list in sync after server delete or offline cancel). */
+export function removePaidOrderById(orderId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const list = loadPaidOrders().filter((o) => o.id !== orderId);
+    localStorage.setItem(PAID_ORDERS_KEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+
 export interface AppendPaidOrderExtras {
   stripePaymentIntentId?: string;
 }

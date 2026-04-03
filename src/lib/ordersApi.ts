@@ -21,3 +21,23 @@ export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
 
   return raw.filter(isOrderShape);
 }
+
+/**
+ * Remove one order from the Express server (deletes matching JSON under data/orders/).
+ * 404 means no file on server — caller may still remove local copy.
+ */
+export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: true; notFound?: boolean }> {
+  const res = await fetch(`${getStripeBackendBaseUrl()}/orders/${encodeURIComponent(orderId)}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+  if (res.status === 404) {
+    return { ok: true, notFound: true };
+  }
+  if (!res.ok) {
+    throw new Error(data.error || `Could not cancel order (${res.status})`);
+  }
+  return { ok: true };
+}

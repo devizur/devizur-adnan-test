@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
+import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import { fetchOrdersFromBackend } from "@/lib/ordersApi";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
@@ -33,7 +34,7 @@ function orderPaidDisplay(order: PaidOrderRecord): string {
   return "—";
 }
 
-function OrderCard({ order }: { order: PaidOrderRecord }) {
+function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelClick: () => void }) {
   const entry = order.entries[0];
   if (!entry) return null;
 
@@ -102,9 +103,19 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
         ))}
       </div>
 
-      <div className="flex justify-between items-center border-t border-zinc-800 pt-4">
-        <span className="text-sm font-medium text-zinc-400">Total</span>
-        <span className="text-lg font-semibold text-white">{formatPrice(order.totalAmount)}</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-4">
+        <div className="flex items-baseline gap-3">
+          <span className="text-sm font-medium text-zinc-400">Total</span>
+          <span className="text-lg font-semibold text-white">{formatPrice(order.totalAmount)}</span>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="border-red-900/40 text-red-400 hover:bg-red-950/25 hover:text-red-300 rounded-xl h-9"
+          onClick={onCancelClick}
+        >
+          Cancel order
+        </Button>
       </div>
     </article>
   );
@@ -117,6 +128,7 @@ export default function OrdersPage() {
   const [source, setSource] = React.useState<OrdersSource>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [cancelTarget, setCancelTarget] = React.useState<PaidOrderRecord | null>(null);
 
   const loadOrders = React.useCallback(async () => {
     setLoading(true);
@@ -140,8 +152,18 @@ export default function OrdersPage() {
   }, [loadOrders]);
 
   return (
-    <div className="min-h-screen bg-[#121212] pt-8 pb-20 text-white mt-24 sm:mt-32">
-      <div className="container mx-auto px-4 lg:px-8 max-w-3xl space-y-8">
+    <div className="min-w-0 pt-24 sm:pt-32 pb-16 sm:pb-20 text-primary">
+      <CancelOrderConfirmDialog
+        order={cancelTarget}
+        open={cancelTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setCancelTarget(null);
+        }}
+        onRemoved={(orderId) => {
+          setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        }}
+      />
+      <div className="container mx-auto px-4 sm:px-6 space-y-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button
@@ -188,7 +210,7 @@ export default function OrdersPage() {
                 </div>
               </div>
               <div className="space-y-2.5">
-                <h1 className="text-3xl sm:text-[2.125rem] font-bold text-white tracking-tight leading-[1.15]">
+                <h1 className="text-3xl sm:text-[2.125rem] font-bold text-primary tracking-tight leading-[1.15]">
                   Order list
                 </h1>
                 <p className="text-zinc-400 text-sm sm:text-[15px] leading-relaxed max-w-xl">
@@ -226,7 +248,7 @@ export default function OrdersPage() {
           <ul className="space-y-6">
             {orders.map((order) => (
               <li key={order.id}>
-                <OrderCard order={order} />
+                <OrderCard order={order} onCancelClick={() => setCancelTarget(order)} />
               </li>
             ))}
           </ul>

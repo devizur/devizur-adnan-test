@@ -125,6 +125,8 @@ export type BookingDapperStatusesResponse = ApiResponse<BookingDapperStatus[]>;
 
 // retrieveTimeSlots response
 export interface RetrieveTimeSlotsData {
+  bookingReferenceId?: string;
+  /** Legacy key; prefer bookingReferenceId when present */
   bookingId?: string;
   selectedDate?: string;
   timeSlots?: Record<string, string[]>;
@@ -135,8 +137,8 @@ export type RetrieveTimeSlotsResponse = ApiResponse<RetrieveTimeSlotsData>;
 // availabilityApi.getSlots result
 export interface AvailabilitySlotsResult {
   timeSlots: Record<string, string[]>;
-  periodsWithSlots: ("Morning" | "Afternoon" | "Night")[];
-  bookingId?: string;
+  periodsWithSlots: ("Morning" | "Afternoon" | "Evening")[];
+  bookingReferenceId?: string;
 }
 
 // generateBookingItemSteps single step
@@ -148,8 +150,10 @@ export interface GenerateBookingItemStep {
   itemDuration: string;
 }
 
-/** generateBookingItemSteps can return bookingId for use in subsequent calls */
+/** generateBookingItemSteps can return bookingReferenceId for use in subsequent calls */
 export interface GenerateBookingItemStepsResponseData extends ApiResponse<GenerateBookingItemStep[]> {
+  bookingReferenceId?: string;
+  /** Legacy key; prefer bookingReferenceId when present */
   bookingId?: string;
 }
 

@@ -116,7 +116,7 @@ export function StepHolderDetails({ onSubmit }: StepHolderDetailsProps) {
             value={holderDetails.address}
             onChange={handleChange}
             rows={3}
-            className="min-h-[88px] rounded-xl border border-gray-700 bg-[#1e1e1e] text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-primary-1/30 focus-visible:border-primary-1 transition-colors resize-y"
+            className="min-h-22 rounded-xl border border-gray-700 bg-[#1e1e1e] text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-primary-1/30 focus-visible:border-primary-1 transition-colors resize-y"
           />
         </div>
         <Field

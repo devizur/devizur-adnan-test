@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useGenerateBookingItemSteps } from "@/lib/api/hooks";
 import { displayTimeToApiSlot } from "@/lib/utils";
 import { useAppDispatch } from "@/store";
-import { setBookingId } from "@/store/bookingSlice";
+import { setBookingReferenceId } from "@/store/bookingSlice";
 import type { Activity, Package } from "@/lib/api/types";
 
 /** Parse duration string like "60 mins" to minutes. */
@@ -58,8 +58,8 @@ const SEGMENT_COLORS = [
 ];
 
 export interface BookingTimelineBarProps {
-  /** Booking ID from retrieveTimeSlots (optional – API called with "" if missing) */
-  bookingId: string | undefined;
+  /** Booking reference from retrieveTimeSlots (optional – API called with "" if missing) */
+  bookingReferenceId: string | undefined;
   /** Must be true before generateBookingItemSteps is called (i.e. retrieveTimeSlots has returned) */
   slotsResponseReceived?: boolean;
   /** Display time slot e.g. "9:00 am" */
@@ -73,7 +73,7 @@ export interface BookingTimelineBarProps {
 }
 
 export function BookingTimelineBar({
-  bookingId,
+  bookingReferenceId,
   timeSlot,
   selectedDate,
   slotsResponseReceived = false,
@@ -86,7 +86,7 @@ export function BookingTimelineBar({
   const selectedSlotApi = displayTimeToApiSlot(effectiveTimeSlot);
 
   const { data, isLoading } = useGenerateBookingItemSteps(
-    bookingId ?? "",
+    bookingReferenceId ?? "",
     selectedSlotApi,
     selectedDate,
     slotsResponseReceived
@@ -94,8 +94,8 @@ export function BookingTimelineBar({
   const steps = data?.steps ?? [];
 
   React.useEffect(() => {
-    if (data?.bookingId) dispatch(setBookingId(data.bookingId));
-  }, [data?.bookingId, dispatch]);
+    if (data?.bookingReferenceId) dispatch(setBookingReferenceId(data.bookingReferenceId));
+  }, [data?.bookingReferenceId, dispatch]);
 
   const fallbackSegments = React.useMemo(() => {
     const items: { name: string; durationMins: number }[] = [];

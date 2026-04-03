@@ -7,7 +7,7 @@ import {
   setDate,
   setTimeOfDay,
   setTimeSlot,
-  setBookingId,
+  setBookingReferenceId,
   addActivity,
   removeActivity,
   setActivityGameNo,
@@ -32,13 +32,13 @@ const OPTIONS = [
 const SHIFT = [
   { id: 1, label: "Morning", apiKey: "Morning" as const },
   { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
-  { id: 3, label: "Evening", apiKey: "Night" as const },
+  { id: 3, label: "Evening", apiKey: "Evening" as const },
 ] as const;
 
 export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
   const shopId = useAppSelector((state) => state.shop.shopId);
-  const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
+  const { date, timeOfDay, timeSlot, bookingReferenceId: reduxBookingReferenceId, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
@@ -162,8 +162,9 @@ export function StepAvailabilitySelection() {
   }, [date, dispatch]);
 
   React.useEffect(() => {
-    if (effectiveSlotsData?.bookingId) dispatch(setBookingId(effectiveSlotsData.bookingId));
-  }, [effectiveSlotsData?.bookingId, dispatch]);
+    if (effectiveSlotsData?.bookingReferenceId)
+      dispatch(setBookingReferenceId(effectiveSlotsData.bookingReferenceId));
+  }, [effectiveSlotsData?.bookingReferenceId, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -426,7 +427,7 @@ export function StepAvailabilitySelection() {
           
 
           <BookingTimelineBar
-            bookingId={reduxBookingId || effectiveSlotsData?.bookingId}
+            bookingReferenceId={reduxBookingReferenceId || effectiveSlotsData?.bookingReferenceId}
             timeSlot={timeSlot}
             selectedDate={date ?? undefined}
             slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}

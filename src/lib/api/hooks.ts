@@ -40,8 +40,8 @@ export const queryKeys = {
     },
     booking: {
         dapperStatuses: () => ["booking", "dapperStatuses"] as const,
-        itemSteps: (bookingId: string, selectedSlot: string, selectedDate: string) =>
-            ["booking", "itemSteps", bookingId, selectedSlot, selectedDate] as const,
+        itemSteps: (bookingReferenceId: string, selectedSlot: string, selectedDate: string) =>
+            ["booking", "itemSteps", bookingReferenceId, selectedSlot, selectedDate] as const,
     },
 };
 
@@ -142,20 +142,20 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
 
 // Booking hooks – generateBookingItemSteps (timeline bar). Only runs after retrieveTimeSlots has returned.
 export function useGenerateBookingItemSteps(
-    bookingId: string | undefined,
+    bookingReferenceId: string | undefined,
     selectedSlot: string | undefined,
     selectedDate: string | undefined,
     slotsResponseReceived: boolean
-): UseQueryResult<{ steps: GenerateBookingItemStep[]; bookingId?: string }, Error> {
+): UseQueryResult<{ steps: GenerateBookingItemStep[]; bookingReferenceId?: string }, Error> {
     return useQuery({
         queryKey: queryKeys.booking.itemSteps(
-            bookingId ?? "",
+            bookingReferenceId ?? "",
             selectedSlot ?? "",
             selectedDate ?? ""
         ),
         queryFn: () =>
             bookingApi.generateBookingItemSteps({
-                bookingId: bookingId ?? "",
+                bookingReferenceId: bookingReferenceId ?? "",
                 selectedSlot: selectedSlot ?? "",
                 selectedDate: selectedDate ?? "",
             }),

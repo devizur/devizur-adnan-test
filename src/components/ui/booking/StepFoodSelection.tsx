@@ -84,7 +84,7 @@ export function StepFoodSelection() {
                       variant="outline"
                       size="icon"
                       aria-label={`Decrease quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-primary/90 hover:bg-gray-800 cursor-pointer touch-manipulation"
+                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-xl border border-gray-700 bg-transparent text-primary/90 hover:bg-gray-800 cursor-pointer touch-manipulation"
                       onClick={() => {
                         if (qty <= 1) dispatch(removeFood(food.id));
                         else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
@@ -102,7 +102,7 @@ export function StepFoodSelection() {
                       type="button"
                       size="icon"
                       aria-label={`Increase quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] bg-primary-1 text-black hover:bg-primary-1-hover font-semibold cursor-pointer touch-manipulation"
+                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-xl bg-primary-1 text-black hover:bg-primary-1-hover font-semibold cursor-pointer touch-manipulation"
                       onClick={() => handleAddClick(food)}
                     >
                       <Plus className="w-4 h-4" />

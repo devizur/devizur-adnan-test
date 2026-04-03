@@ -97,7 +97,10 @@ app.use(
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.json({ message: "Stripe backend running" });
+    res.json({
+        message: "Stripe backend running",
+        endpoints: ["POST /create-checkout-session", "POST /create-payment-intent", "POST /save-order", "GET /orders"]
+    });
 });
 
 function sanitizeMetadata(input) {
@@ -293,6 +296,40 @@ app.post("/save-order", async (req, res) => {
     } catch (err) {
         console.error("save-order error:", err.message);
         return res.status(500).json({ error: err.message || "Failed to save order" });
+    }
+});
+
+/** List all orders saved as JSON under data/orders/ (newest paidAt first). */
+app.get("/orders", async (req, res) => {
+    try {
+        await fs.mkdir(ORDERS_DIR, { recursive: true });
+        const names = await fs.readdir(ORDERS_DIR);
+        const jsonFiles = names.filter((n) => n.endsWith(".json"));
+        const orders = [];
+
+        for (const name of jsonFiles) {
+            try {
+                const raw = await fs.readFile(path.join(ORDERS_DIR, name), "utf8");
+                const obj = JSON.parse(raw);
+                if (
+                    obj &&
+                    typeof obj === "object" &&
+                    !Array.isArray(obj) &&
+                    typeof obj.id === "string" &&
+                    Array.isArray(obj.entries)
+                ) {
+                    orders.push(obj);
+                }
+            } catch (e) {
+                console.warn("[GET /orders] skip file", name, e.message);
+            }
+        }
+
+        orders.sort((a, b) => (Number(b.paidAt) || 0) - (Number(a.paidAt) || 0));
+        return res.json({ orders });
+    } catch (err) {
+        console.error("GET /orders error:", err.message);
+        return res.status(500).json({ error: err.message || "Failed to list orders" });
     }
 });
 

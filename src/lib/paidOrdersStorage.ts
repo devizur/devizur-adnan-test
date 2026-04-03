@@ -10,6 +10,8 @@ export interface PaidOrderRecord {
   entries: CartEntry[];
   /** Set when payment completes via Stripe Payment Element. */
   stripePaymentIntentId?: string;
+  /** Added by the server when the order file is written. */
+  serverReceivedAt?: string;
 }
 
 export function loadPaidOrders(): PaidOrderRecord[] {

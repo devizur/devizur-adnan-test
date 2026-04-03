@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
+import { fetchOrdersFromBackend } from "@/lib/ordersApi";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
 
 function shiftLabel(timeOfDay: 1 | 2 | 3): string {
@@ -19,6 +20,17 @@ function formatPaidAt(ts: number): string {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function orderPaidDisplay(order: PaidOrderRecord): string {
+  if (typeof order.paidAt === "number" && !Number.isNaN(order.paidAt)) {
+    return formatPaidAt(order.paidAt);
+  }
+  if (order.serverReceivedAt) {
+    const d = Date.parse(order.serverReceivedAt);
+    if (!Number.isNaN(d)) return formatPaidAt(d);
+  }
+  return "—";
 }
 
 function OrderCard({ order }: { order: PaidOrderRecord }) {
@@ -35,7 +47,10 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
         <div>
           <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Order</p>
           <p className="text-sm font-mono text-zinc-300">{order.id}</p>
-          <p className="text-xs text-zinc-500 mt-1">Paid {formatPaidAt(order.paidAt)}</p>
+          <p className="text-xs text-zinc-500 mt-1">Paid {orderPaidDisplay(order)}</p>
+          {order.serverReceivedAt ? (
+            <p className="text-[10px] text-zinc-600 mt-0.5">Server saved {order.serverReceivedAt}</p>
+          ) : null}
           {order.stripePaymentIntentId ? (
             <p className="text-[10px] text-zinc-600 mt-1 font-mono truncate max-w-full" title={order.stripePaymentIntentId}>
               {order.stripePaymentIntentId}
@@ -95,18 +110,34 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
   );
 }
 
+type OrdersSource = "backend" | "local" | null;
+
 export default function OrdersPage() {
   const [orders, setOrders] = React.useState<PaidOrderRecord[]>([]);
-  const [mounted, setMounted] = React.useState(false);
+  const [source, setSource] = React.useState<OrdersSource>(null);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  const loadOrders = React.useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const list = await fetchOrdersFromBackend();
+      setOrders(list);
+      setSource("backend");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Server unavailable";
+      setLoadError(msg);
+      setOrders(loadPaidOrders());
+      setSource("local");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
-    setMounted(true);
-    setOrders(loadPaidOrders());
-  }, []);
-
-  const refresh = React.useCallback(() => {
-    setOrders(loadPaidOrders());
-  }, []);
+    void loadOrders();
+  }, [loadOrders]);
 
   return (
     <div className="min-h-screen bg-[#121212] pt-8 pb-20 text-white mt-24 sm:mt-32">
@@ -127,7 +158,7 @@ export default function OrdersPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={refresh}
+              onClick={() => void loadOrders()}
               className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:border-zinc-600 shrink-0 rounded-xl h-10"
             >
               Refresh
@@ -161,16 +192,27 @@ export default function OrdersPage() {
                   Order list
                 </h1>
                 <p className="text-zinc-400 text-sm sm:text-[15px] leading-relaxed max-w-xl">
-                  Every order you pay for in checkout shows up here. Data stays on this device until you link an
-                  account.
+                  {source === "backend"
+                    ? "Orders are loaded from your checkout server (JSON files on the API)."
+                    : source === "local"
+                      ? "Could not reach the orders API — showing orders stored in this browser only. Start the Stripe server and refresh."
+                      : "Loading order list…"}
                 </p>
+                {source === "backend" ? (
+                  <p className="text-[11px] text-emerald-500/90 font-medium">Live · backend JSON</p>
+                ) : null}
+                {source === "local" && loadError ? (
+                  <p className="text-[11px] text-amber-400/90 font-medium rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 max-w-xl">
+                    {loadError}
+                  </p>
+                ) : null}
               </div>
             </div>
           </header>
         </div>
 
-        {!mounted ? (
-          <p className="text-zinc-500 text-sm">Loading…</p>
+        {loading ? (
+          <p className="text-zinc-500 text-sm">Loading orders…</p>
         ) : orders.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-700 bg-[#1a1a1a]/50 p-10 text-center space-y-4">
             <ShoppingBag className="size-12 text-zinc-600 mx-auto" />

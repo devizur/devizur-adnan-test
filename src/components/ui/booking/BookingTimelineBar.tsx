@@ -200,7 +200,7 @@ export function BookingTimelineBar({
 
   const InitState = () => (
     <StatusCard>
-      <span className="text-center text-zinc-400">
+      <span className="text-center text-sm leading-snug text-zinc-300 sm:text-[0.9375rem]">
         Select activities, guests, and a start time below.
       </span>
     </StatusCard>

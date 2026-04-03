@@ -535,10 +535,12 @@ export function StepAvailabilitySelection() {
                 role="status"
               >
                 <CalendarClock className="mx-auto h-7 w-7 text-zinc-600 mb-2" aria-hidden />
-                <p className="text-xs font-medium text-zinc-300">Ready when you are</p>
-                <p className="text-[10px] text-zinc-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                <p className="text-sm font-medium text-zinc-200 sm:text-[0.9375rem]">
+                  Ready when you are
+                </p>
+                <p className="mt-2 max-w-sm mx-auto text-xs leading-relaxed text-zinc-500 sm:text-[0.8125rem]">
                   Select what you would like to book, set guest counts, choose a date, then use{" "}
-                  <span className="text-zinc-400 font-medium">Check availability</span> to load start times.
+                  <span className="font-medium text-zinc-400">Check availability</span> to load start times.
                 </p>
               </div>
             ) : (

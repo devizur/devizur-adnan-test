@@ -305,9 +305,7 @@ export function BookingDialog({
               </button>
             </div>
             <div className="min-w-0 pr-[5.5rem] sm:pr-[6.75rem]">
-              <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-primary-1/85">
-                Booking flow
-              </p>
+              
               <AlertDialogTitle className="text-base font-semibold leading-tight tracking-tight text-zinc-100 sm:text-[1.0625rem]">
                 Create booking
               </AlertDialogTitle>

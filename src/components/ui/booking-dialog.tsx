@@ -366,11 +366,7 @@ export function BookingDialog({
         </AlertDialogHeader>
 
         <div
-          className={cn(
-            "min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-dark bg-[#121212]/80",
-            step <= 2 ? "flex flex-col overflow-hidden" : "",
-            step <= 2 ? "" : "px-4 py-4 sm:px-6 sm:py-5"
-          )}
+          className="min-h-0 flex-1 flex flex-col overflow-hidden overscroll-y-contain scrollbar-dark bg-[#121212]/80"
           style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
           {isFoodFirst ? (

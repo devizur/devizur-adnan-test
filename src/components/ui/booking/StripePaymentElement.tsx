@@ -9,8 +9,9 @@ import {
 } from "@stripe/react-stripe-js";
 import type { Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { Button } from "@/components/ui/button";
 import { createPaymentIntent, getStripePublishableKey } from "@/lib/stripeCheckout";
+import { cn } from "@/lib/utils";
+import { segmentedPrimaryCtaClass } from "@/components/ui/booking/booking-segmented-styles";
 
 export type StripePaymentSuccessMeta = { stripePaymentIntentId?: string };
 
@@ -58,22 +59,28 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
   };
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-      <div className="rounded-xl border border-gray-800 bg-[#161616] p-3 sm:p-4">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
+      <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e]/80 p-2 sm:p-3">
         <PaymentElement />
       </div>
       {message ? (
-        <p role="alert" className="text-sm text-red-300">
+        <p role="alert" className="text-xs leading-snug text-red-300 sm:text-sm">
           {message}
         </p>
       ) : null}
-      <Button
-        type="submit"
-        disabled={disabled || !stripe || submitting}
-        className="w-full sm:w-auto min-h-11 bg-primary-1 text-black hover:bg-primary-1/90 font-medium rounded-xl"
-      >
-        {submitting ? "Processing…" : `Pay ${totalLabel}`}
-      </Button>
+      <div className="flex justify-stretch sm:justify-end">
+        <button
+          type="submit"
+          disabled={disabled || !stripe || submitting}
+          className={cn(
+            segmentedPrimaryCtaClass,
+            "min-h-10 px-4 text-xs font-semibold rounded-md sm:min-h-10 sm:px-5 sm:text-sm",
+            "w-full cursor-pointer sm:w-auto disabled:cursor-not-allowed disabled:opacity-45"
+          )}
+        >
+          {submitting ? "Processing…" : `Pay ${totalLabel}`}
+        </button>
+      </div>
     </form>
   );
 }
@@ -158,7 +165,7 @@ export function StripePaymentElementBlock({
   const pk = getStripePublishableKey();
   if (!pk) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100 sm:text-sm">
         Add your Stripe publishable key as{" "}
         <code className="text-amber-50/90">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> in{" "}
         <code className="text-amber-50/90">.env.local</code> (same as in{" "}
@@ -173,7 +180,7 @@ export function StripePaymentElementBlock({
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-gray-800 bg-[#1e1e1e] px-4 py-6 text-center text-sm text-gray-400">
+      <div className="rounded-lg border border-white/[0.08] bg-[#1e1e1e] px-3 py-5 text-center text-xs text-zinc-500 sm:text-sm">
         Preparing secure card form…
       </div>
     );
@@ -183,7 +190,7 @@ export function StripePaymentElementBlock({
     return (
       <div
         role="alert"
-        className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+        className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-200 sm:text-sm"
       >
         {error}
       </div>
@@ -200,10 +207,10 @@ export function StripePaymentElementBlock({
       theme: "night",
       variables: {
         colorPrimary: "#facc15",
-        colorBackground: "#161616",
-        colorText: "#e5e5e5",
+        colorBackground: "#1e1e1e",
+        colorText: "#e4e4e7",
         colorDanger: "#f87171",
-        borderRadius: "12px",
+        borderRadius: "8px",
         fontFamily: "ui-sans-serif, system-ui, sans-serif",
       },
     },

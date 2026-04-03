@@ -68,9 +68,7 @@ export function StepFoodSelection() {
         <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
           Food options
         </p>
-        <p className="mt-0.5 text-[11px] leading-snug text-zinc-500 sm:text-xs">
-          Optional add-ons — use Skip in the footer to continue without food.
-        </p>
+        
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 scrollbar-dark sm:px-5 sm:py-4">

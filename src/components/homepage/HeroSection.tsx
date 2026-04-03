@@ -74,14 +74,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           {showBadge && (
             <div className={cn("flex w-full", isCenter ? "justify-center" : "justify-start")}>
               <div className="inline-flex items-center rounded-full bg-primary-1 px-3 py-1.5 shadow-md shadow-primary-1/15 ring-1 ring-primary-1/30 sm:px-3.5 sm:py-1.5">
-                <span className="text-xs font-bold tracking-tight text-black sm:text-sm">{badgeText}</span>
+                <span className="text-[11px] font-bold tracking-tight text-black sm:text-xs">{badgeText}</span>
               </div>
             </div>
           )}
 
           <h1
             className={cn(
-              "text-balance text-3xl font-semibold tracking-tight text-primary sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]",
+              "text-balance text-2xl font-semibold tracking-tight text-primary sm:text-3xl md:text-4xl lg:text-[2.75rem] lg:leading-[1.1]",
               isCenter ? "text-center" : "text-left",
             )}
           >
@@ -90,7 +90,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
           <p
             className={cn(
-              "max-w-2xl text-pretty text-sm leading-relaxed text-primary/80 sm:text-base",
+              "max-w-2xl text-pretty text-[13px] leading-relaxed text-primary/80 sm:text-sm",
               isCenter ? "text-center" : "text-left",
             )}
           >
@@ -110,19 +110,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 value={searchTerm ?? ""}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className={cn(
-                  "h-11 w-full rounded-xl border border-white/10 bg-white/6 py-3 pl-4 pr-11 text-sm text-primary shadow-inner shadow-black/20",
+                  "h-10 w-full rounded-xl border border-white/10 bg-white/6 py-2.5 pl-4 pr-11 text-[13px] text-primary shadow-inner shadow-black/20",
                   "placeholder:text-zinc-500",
                   "transition-all duration-300",
                   "hover:border-white/15 hover:bg-white/8",
                   "focus:border-primary-1/45 focus:bg-white/9 focus:shadow-lg focus:shadow-primary-1/5 focus:outline-none focus:ring-2 focus:ring-primary-1/25",
-                  "sm:h-12 sm:pl-5 sm:pr-12 sm:text-base",
+                  "sm:h-11 sm:pl-5 sm:pr-12 sm:text-sm",
                 )}
               />
               <div
                 className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-primary-1 sm:right-4"
                 aria-hidden
               >
-                <Search className="size-4 opacity-70 sm:size-5" />
+                <Search className="size-4 opacity-70 sm:size-4.5" />
               </div>
             </div>
           )}

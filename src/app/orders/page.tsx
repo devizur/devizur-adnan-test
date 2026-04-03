@@ -36,6 +36,11 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
           <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Order</p>
           <p className="text-sm font-mono text-zinc-300">{order.id}</p>
           <p className="text-xs text-zinc-500 mt-1">Paid {formatPaidAt(order.paidAt)}</p>
+          {order.stripePaymentIntentId ? (
+            <p className="text-[10px] text-zinc-600 mt-1 font-mono truncate max-w-full" title={order.stripePaymentIntentId}>
+              {order.stripePaymentIntentId}
+            </p>
+          ) : null}
         </div>
         <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
           Paid

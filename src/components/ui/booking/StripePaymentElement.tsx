@@ -12,10 +12,12 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { createPaymentIntent, getStripePublishableKey } from "@/lib/stripeCheckout";
 
+export type StripePaymentSuccessMeta = { stripePaymentIntentId?: string };
+
 interface StripePaymentFormInnerProps {
   totalLabel: string;
   disabled: boolean;
-  onPaid: () => void;
+  onPaid: (meta?: StripePaymentSuccessMeta) => void;
 }
 
 function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentFormInnerProps) {
@@ -86,7 +88,7 @@ export interface StripePaymentElementProps {
   disabled: boolean;
   /** Bump to force a new PaymentIntent (e.g. dialog closed). */
   resetKey: number;
-  onPaid: () => void;
+  onPaid: (meta?: StripePaymentSuccessMeta) => void;
 }
 
 export function StripePaymentElementBlock({

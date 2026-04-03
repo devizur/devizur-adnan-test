@@ -8,6 +8,8 @@ export interface PaidOrderRecord {
   paidAt: number;
   totalAmount: number;
   entries: CartEntry[];
+  /** Set when payment completes via Stripe Payment Element. */
+  stripePaymentIntentId?: string;
 }
 
 export function loadPaidOrders(): PaidOrderRecord[] {
@@ -23,9 +25,17 @@ export function loadPaidOrders(): PaidOrderRecord[] {
   }
 }
 
-/** Snapshot current cart as a paid order (call before clearCart). */
-export function appendPaidOrder(entries: CartEntry[], totalAmount: number): void {
-  if (typeof window === "undefined" || entries.length === 0) return;
+export interface AppendPaidOrderExtras {
+  stripePaymentIntentId?: string;
+}
+
+/** Snapshot current cart as a paid order (call before clearCart). Returns the record for syncing to the backend. */
+export function appendPaidOrder(
+  entries: CartEntry[],
+  totalAmount: number,
+  extras?: AppendPaidOrderExtras
+): PaidOrderRecord | null {
+  if (typeof window === "undefined" || entries.length === 0) return null;
   try {
     const list = loadPaidOrders();
     const record: PaidOrderRecord = {
@@ -33,10 +43,14 @@ export function appendPaidOrder(entries: CartEntry[], totalAmount: number): void
       paidAt: Date.now(),
       totalAmount,
       entries: JSON.parse(JSON.stringify(entries)) as CartEntry[],
+      ...(extras?.stripePaymentIntentId
+        ? { stripePaymentIntentId: extras.stripePaymentIntentId }
+        : {}),
     };
     list.unshift(record);
     localStorage.setItem(PAID_ORDERS_KEY, JSON.stringify(list.slice(0, MAX_ORDERS)));
+    return record;
   } catch {
-    // ignore quota / parse errors
+    return null;
   }
 }

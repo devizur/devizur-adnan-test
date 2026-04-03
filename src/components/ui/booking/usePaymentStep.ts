@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useCart } from "@/contexts/CartContext";
 import { appendPaidOrder } from "@/lib/paidOrdersStorage";
+import { saveOrderToBackend } from "@/lib/saveOrderToBackend";
 import { parsePrice } from "@/lib/utils";
 
 export const CREDIT_CARD_FEE_RATE = 0.03;
@@ -45,14 +46,25 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
     setPaymentIntentResetKey((k) => k + 1);
   }, []);
 
-  const completePaymentSuccess = React.useCallback(() => {
-    if (entries.length > 0) {
-      appendPaidOrder(entries, totalPaymentAmount);
-    }
-    clearCart();
-    resetForm();
-    setShowSuccess(true);
-  }, [entries, totalPaymentAmount, clearCart, resetForm]);
+  const completePaymentSuccess = React.useCallback(
+    (paymentMeta?: { stripePaymentIntentId?: string }) => {
+      const record =
+        entries.length > 0
+          ? appendPaidOrder(entries, totalPaymentAmount, {
+              stripePaymentIntentId: paymentMeta?.stripePaymentIntentId,
+            })
+          : null;
+      clearCart();
+      resetForm();
+      setShowSuccess(true);
+      if (record) {
+        void saveOrderToBackend(record).catch((err) => {
+          console.error("[saveOrderToBackend]", err);
+        });
+      }
+    },
+    [entries, totalPaymentAmount, clearCart, resetForm]
+  );
 
   const handleCloseSuccess = React.useCallback(() => {
     setShowSuccess(false);

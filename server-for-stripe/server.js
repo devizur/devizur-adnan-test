@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs/promises");
 const http = require("http");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
@@ -252,6 +253,46 @@ app.get("/checkout-session", async (req, res) => {
     } catch (err) {
         console.error("Retrieve session error:", err.message);
         return res.status(500).json({ error: err.message });
+    }
+});
+
+const ORDERS_DIR = path.join(__dirname, "data", "orders");
+
+function safeOrderFilename(id) {
+    if (typeof id !== "string" || !id.trim()) return `ord_${Date.now()}.json`;
+    const base = id.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 120);
+    return `${base}.json`;
+}
+
+/** Persist full order payload from the frontend as JSON (no DB). */
+app.post("/save-order", async (req, res) => {
+    try {
+        const body = req.body;
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            return res.status(400).json({ error: "Expected a JSON object body" });
+        }
+        if (typeof body.id !== "string" || !body.id.trim()) {
+            return res.status(400).json({ error: "Field id (string) is required" });
+        }
+        if (!Array.isArray(body.entries)) {
+            return res.status(400).json({ error: "Field entries (array) is required" });
+        }
+
+        const payload = {
+            ...body,
+            serverReceivedAt: new Date().toISOString(),
+        };
+
+        await fs.mkdir(ORDERS_DIR, { recursive: true });
+        const fileName = safeOrderFilename(body.id);
+        const filePath = path.join(ORDERS_DIR, fileName);
+        await fs.writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
+        console.log("[save-order] saved", filePath);
+
+        return res.status(201).json({ ok: true, file: fileName });
+    } catch (err) {
+        console.error("save-order error:", err.message);
+        return res.status(500).json({ error: err.message || "Failed to save order" });
     }
 });
 

@@ -17,11 +17,12 @@ import {
 } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
-import { Check } from "lucide-react";
+import { Check, Loader2, CalendarClock, Package } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 import { BookingTimelineBar } from "./BookingTimelineBar";
+import { segmentedPrimaryCtaClass } from "./booking-segmented-styles";
 
 const OPTIONS = [
   { label: "1 Game", value: 1 },
@@ -182,14 +183,17 @@ export function StepAvailabilitySelection() {
   return (
     <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
       {/* Left panel - Activity List */}
-      <div className="w-full md:w-[300px] lg:w-1/3 shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-800/80 bg-[#161616]">
-        <div className="px-3 sm:px-4 py-3 sm:py-3.5 border-b border-gray-800/80 shrink-0">
-          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Choose activities
+      <div className="w-full md:w-[232px] lg:w-[min(260px,26%)] shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.06] bg-[#141414]">
+        <div className="px-3 sm:px-4 py-2.5 border-b border-white/[0.06] shrink-0 bg-[#121212]/80">
+          <h3 className="text-xs font-semibold text-white tracking-tight">
+            Activities & packages
           </h3>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3 md:p-3">
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
+        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-2">
+            Activities
+          </p>
+          <div className="flex gap-2 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-2 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
@@ -219,30 +223,36 @@ export function StepAvailabilitySelection() {
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
-                    "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
+                    "w-[168px] sm:w-[188px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
                     selected
-                      ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
-                      : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
+                      ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
+                      : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
                   )}
                 >
-                  <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
+                  <div className="relative h-12 sm:h-[3.25rem] overflow-hidden shrink-0">
                     <img
                       src={activity.image || "https://picsum.photos/400/200"}
                       alt={(activity as any).title || "Activity image"}
                       className={cn(
-                        "w-full h-full object-cover transition-transform duration-200",
-                        selected ? "brightness-110" : "group-hover:scale-[1.02]"
+                        "w-full h-full object-cover transition-transform duration-300 ease-out",
+                        selected ? "brightness-[1.05]" : "group-hover:scale-[1.03]"
                       )}
                     />
+                    <div
+                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80"
+                      aria-hidden
+                    />
                     {selected && (
-                      <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" strokeWidth={2.5} />
+                      <div className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-1 flex items-center justify-center shadow-md shadow-black/40 ring-1 ring-black/30">
+                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" strokeWidth={2.5} />
                       </div>
                     )}
                   </div>
-                  <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
-                    <h4 className="font-medium text-xs sm:text-base text-white truncate">{activity.title}</h4>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 line-clamp-1 sm:line-clamp-2">
+                  <div className="p-2 flex flex-col justify-center min-h-0 gap-0.5">
+                    <h4 className="font-semibold text-[11px] sm:text-xs text-white leading-snug line-clamp-2">
+                      {activity.title}
+                    </h4>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2 leading-snug">
                       {activity.timeSlots && activity.timeSlots.length > 0
                         ? activity.timeSlots.join(", ")
                         : combinations.length > 0
@@ -289,10 +299,10 @@ export function StepAvailabilitySelection() {
                                     aria-pressed={isOptSelected}
                                     aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
                                     className={cn(
-                                      "min-h-9 sm:min-h-10 py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                                      "min-h-8 py-1.5 px-2 rounded-md text-[10px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]",
                                       isOptSelected
-                                        ? "bg-primary-1 text-secondary"
-                                        : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                                        ? "bg-primary-1 text-secondary shadow-sm"
+                                        : "bg-[#222] text-zinc-400 hover:text-zinc-200 hover:bg-[#2a2a2a] border border-white/[0.08]"
                                     )}
                                   >
                                     {opt.attributeOptionName}
@@ -331,15 +341,21 @@ export function StepAvailabilitySelection() {
                                 : `${opt.label} price unavailable for ${activity.title}`
                             }
                             className={cn(
-                              "flex-1 min-h-9 sm:min-h-10 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+                              "flex-1 min-h-9 py-1.5 px-1 rounded-md text-[10px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col items-center justify-center gap-0.5",
                               gameNo === opt.value
-                                ? "bg-primary-1 text-secondary"
-                                : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                                ? "bg-primary-1 text-secondary shadow-sm"
+                                : "bg-[#222] text-zinc-400 hover:text-zinc-200 hover:bg-[#2a2a2a] border border-white/[0.08]"
                             )}
                           >
                             <span>{opt.label}</span>
-                            <span className="opacity-80">/</span>
-                            <span className="text-[10px] opacity-80">{priceLabel}</span>
+                            <span
+                              className={cn(
+                                "text-[10px] font-normal tabular-nums",
+                                gameNo === opt.value ? "text-secondary/85" : "text-zinc-500"
+                              )}
+                            >
+                              {priceLabel}
+                            </span>
                           </button>
                         );
                       })}
@@ -352,8 +368,13 @@ export function StepAvailabilitySelection() {
 
           {suggestedPackages.length > 0 && (
             <>
-              <p className="text-[11px] text-gray-500 font-medium mt-3 sm:mt-5 mb-1.5 sm:mb-2 uppercase tracking-wider">Packages</p>
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
+              <div className="flex items-center gap-1.5 mt-5 mb-2 pt-4 border-t border-white/[0.06]">
+                <Package className="h-3 w-3 text-zinc-500 shrink-0" aria-hidden />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Packages
+                </p>
+              </div>
+              <div className="flex gap-2 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-2 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
                 {suggestedPackages.map((pkg) => {
                   const selected = isPackageSelected(pkg.id);
                   return (
@@ -366,30 +387,36 @@ export function StepAvailabilitySelection() {
                         aria-pressed={selected}
                         aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
                         className={cn(
-                          "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
+                          "w-[168px] sm:w-[188px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
                           selected
-                            ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
-                            : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
+                            ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
+                            : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
                         )}
                       >
-                        <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
+                        <div className="relative h-12 sm:h-[3.25rem] overflow-hidden shrink-0">
                           <img
                             src={pkg.image || "https://picsum.photos/400/200"}
                             alt={pkg.title || "Package image"}
                             className={cn(
-                              "w-full h-full object-cover transition-transform duration-200",
-                              selected ? "brightness-110" : "group-hover:scale-[1.02]"
+                              "w-full h-full object-cover transition-transform duration-300 ease-out",
+                              selected ? "brightness-[1.05]" : "group-hover:scale-[1.03]"
                             )}
                           />
+                          <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80"
+                            aria-hidden
+                          />
                           {selected && (
-                            <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                              <Check className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" strokeWidth={2.5} />
+                            <div className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-1 flex items-center justify-center shadow-md shadow-black/40 ring-1 ring-black/30">
+                              <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" strokeWidth={2.5} />
                             </div>
                           )}
                         </div>
-                        <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
-                          <h4 className="font-medium text-xs sm:text-base text-white truncate">{pkg.title}</h4>
-                          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">{pkg.price}</p>
+                        <div className="p-2 flex flex-col justify-center min-h-0 gap-0.5">
+                          <h4 className="font-semibold text-[11px] sm:text-xs text-white leading-snug line-clamp-2">
+                            {pkg.title}
+                          </h4>
+                          <p className="text-[10px] text-zinc-500">{pkg.price}</p>
                         </div>
                       </button>
                     </div>
@@ -403,111 +430,192 @@ export function StepAvailabilitySelection() {
 
       {/* Right panel - Date, time & availability */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#161616]">
-        <div className="px-4 sm:px-5 md:px-5 py-3 sm:py-4 border-b border-gray-800/80 flex flex-col gap-3 sm:gap-4 md:gap-4 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-3 md:gap-4">
-            <BookingGuests />
-            <BookingCalendar
-              value={date ?? ""}
-              onChange={(d) => dispatch(setDate(d))}
+        <div className="shrink-0 border-b border-white/[0.06] bg-gradient-to-b from-[#181818] to-[#161616]">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
+             
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 lg:items-start">
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Guests
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <BookingGuests />
+                </div>
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Visit date
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <BookingCalendar
+                    value={date ?? ""}
+                    onChange={(d) => dispatch(setDate(d))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Availability
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <button
+                    type="button"
+                    disabled={!canFetchSlots || slotsLoading}
+                    onClick={() => setSlotsRequested(true)}
+                    aria-label="Load available time slots for your selection"
+                    className={cn(
+                      segmentedPrimaryCtaClass,
+                      canFetchSlots && !slotsLoading
+                        ? "cursor-pointer hover:brightness-110 active:scale-[0.99]"
+                        : "opacity-45 cursor-not-allowed"
+                    )}
+                  >
+                    {slotsLoading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" aria-hidden />
+                        <span>Loading…</span>
+                      </>
+                    ) : (
+                      <span>Check availability</span>
+                    )}
+                  </button>
+                  <div className="mt-1 h-[15px] shrink-0" aria-hidden />
+                </div>
+              </div>
+            </div>
+
+            <BookingTimelineBar
+              bookingReferenceId={reduxBookingReferenceId || effectiveSlotsData?.bookingReferenceId}
+              timeSlot={timeSlot}
+              selectedDate={date ?? undefined}
+              slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
+              selectedActivities={selectedActivities}
+              selectedPackages={selectedPackages}
+              className="rounded-lg border border-white/[0.06] bg-[#141414]/40 px-2 py-1.5 sm:px-2.5"
             />
-            <button
-              type="button"
-              disabled={!canFetchSlots || slotsLoading}
-              onClick={() => setSlotsRequested(true)}
-              className={cn(
-                "min-h-8 py-1.5 px-3 sm:min-h-9 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-medium transition-all duration-200 bg-primary-1 text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                canFetchSlots && !slotsLoading
-                  ? "cursor-pointer hover:brightness-110"
-                  : "opacity-50 cursor-not-allowed"
-              )}
-            >
-              {slotsLoading ? "Loading…" : "Get Time Slots"}
-            </button>
-          </div>
-          
 
-          <BookingTimelineBar
-            bookingReferenceId={reduxBookingReferenceId || effectiveSlotsData?.bookingReferenceId}
-            timeSlot={timeSlot}
-            selectedDate={date ?? undefined}
-            slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
-            selectedActivities={selectedActivities}
-            selectedPackages={selectedPackages}
-          />
-
-
-
-          <div className="flex gap-1.5 sm:gap-2 md:gap-2" role="tablist" aria-label="Time of day">
-            {visibleShifts.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={timeOfDay === tab.id}
-                aria-label={`${tab.apiKey} sessions`}
-                onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
-                className={cn(
-                  "flex-1 min-h-10 sm:min-h-11 md:min-h-11 py-2 sm:py-2.5 rounded-lg sm:rounded-xl md:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                  timeOfDay === tab.id
-                    ? "bg-primary-1 text-secondary"
-                    : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
-                )}
-              >
-                {tab.apiKey}
-              </button>
-            ))}
+            {visibleShifts.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Session period
+                </p>
+                <div
+                  className="flex gap-0.5 p-0.5 rounded-lg bg-[#141414] border border-white/[0.08]"
+                  role="tablist"
+                  aria-label="Time of day"
+                >
+                  {visibleShifts.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={timeOfDay === tab.id}
+                      aria-label={`${tab.apiKey} sessions`}
+                      onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
+                      className={cn(
+                        "flex-1 min-h-7 py-1 px-1 rounded-md text-[10px] sm:text-[11px] font-medium leading-tight transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-inset",
+                        timeOfDay === tab.id
+                          ? "bg-[#2a2a2a] text-white shadow-sm border border-white/[0.06]"
+                          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
+                      )}
+                    >
+                      {tab.apiKey}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 md:px-5 py-3 sm:py-4 md:py-4 space-y-4 sm:space-y-5 scrollbar-dark">
-          <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2 sm:mb-3 md:mb-3">
-              {!slotsParams
-                ? "Start time · Select date, time of day, at least one activity or package, and guests"
-                : slotsLoading
-                  ? "Start time · Loading…"
-                  : slots.length === 0
-                    ? "Start time · No slots available"
-                    : !timeSlot
-                      ? "Start time · Select a time below"
-                      : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
-              }
-            </p>
-            {slotsParams && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-1.5 sm:gap-2 md:gap-2" role="group" aria-label="Select start time">
-                {slotsLoading ? (
-                  <div className="col-span-full py-6 sm:py-8 flex flex-col items-center justify-center gap-2 sm:gap-3 text-gray-400 text-xs sm:text-sm">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
-                    <span>Loading available times…</span>
-                  </div>
-                ) : slots.length === 0 ? (
-                  <div className="col-span-full py-6 sm:py-8 flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-gray-400 text-xs sm:text-sm text-center px-3 sm:px-4">
-                    <span>No time slots available for this period.</span>
-                    <span className="text-[11px] sm:text-xs text-gray-500">Try selecting another time of day or date.</span>
-                  </div>
-                ) : (
-                  slots.map((s) => (
-                    <button
-                      key={s.startTime}
-                      type="button"
-                      disabled={s.available <= 0}
-                      onClick={() => dispatch(setTimeSlot(s.startTime))}
-                      aria-pressed={timeSlot === s.startTime}
-                      className={cn(
-                        "relative min-h-14 sm:min-h-18 md:min-h-18 py-2.5 sm:py-3 md:py-3 px-1.5 sm:px-2 md:px-2 rounded-lg sm:rounded-xl border text-xs sm:text-sm md:text-sm transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                        s.available <= 0 && "opacity-50 cursor-not-allowed",
-                        timeSlot === s.startTime
-                          ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"
-                          : s.available > 0
-                            ? "bg-[#1e1e1e] text-gray-300 border-gray-800 hover:bg-[#252525] hover:border-gray-700 cursor-pointer"
-                            : "bg-[#1e1e1e] text-gray-500 border-gray-800"
-                      )}
-                    >
-                      <span className="font-semibold text-xs sm:text-sm">{s.startTime}</span>
-                      <span className="text-[10px] sm:text-xs opacity-70">{s.available} available</span>
-                    </button>
-                  ))
-                )}
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 scrollbar-dark">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1 sm:gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Start time
+                </p>
+                <p className="text-sm font-medium text-zinc-200 mt-1">
+                  {!slotsParams
+                    ? "Load times to see openings"
+                    : slotsLoading
+                      ? "Fetching slots…"
+                      : slots.length === 0
+                        ? "Nothing open in this period"
+                        : !timeSlot
+                          ? `${slots.length} opening${slots.length !== 1 ? "s" : ""} — pick one`
+                          : `${timeSlot} selected`}
+                </p>
+              </div>
+              {!slotsParams && (
+                <p className="text-xs text-zinc-500 max-w-md sm:text-right">
+                  Add an activity or package, guests, and a date first.
+                </p>
+              )}
+            </div>
+
+            {!slotsParams ? (
+              <div
+                className="rounded-2xl border border-dashed border-white/[0.1] bg-[#141414]/40 px-6 py-10 sm:py-12 text-center"
+                role="status"
+              >
+                <CalendarClock className="mx-auto h-10 w-10 text-zinc-600 mb-3" aria-hidden />
+                <p className="text-sm font-medium text-zinc-300">Ready when you are</p>
+                <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto leading-relaxed">
+                  Select what you would like to book, set guest counts, choose a date, then use{" "}
+                  <span className="text-zinc-400 font-medium">Check availability</span> to load start times.
+                </p>
+              </div>
+            ) : (
+              <div
+                className="rounded-2xl border border-white/[0.08] bg-[#141414]/60 p-3 sm:p-4"
+                role="group"
+                aria-label="Select start time"
+              >
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                  {slotsLoading ? (
+                    <div className="col-span-full py-12 flex flex-col items-center justify-center gap-3 text-zinc-400 text-sm">
+                      <Loader2 className="h-8 w-8 text-primary-1 animate-spin" aria-hidden />
+                      <span>Loading available times…</span>
+                    </div>
+                  ) : slots.length === 0 ? (
+                    <div className="col-span-full py-10 flex flex-col items-center justify-center gap-2 text-zinc-400 text-sm text-center px-4">
+                      <span className="font-medium text-zinc-300">No slots in this window</span>
+                      <span className="text-xs text-zinc-500 max-w-xs leading-relaxed">
+                        Try another session period or pick a different date.
+                      </span>
+                    </div>
+                  ) : (
+                    slots.map((s) => (
+                      <button
+                        key={s.startTime}
+                        type="button"
+                        disabled={s.available <= 0}
+                        onClick={() => dispatch(setTimeSlot(s.startTime))}
+                        aria-pressed={timeSlot === s.startTime}
+                        className={cn(
+                          "relative min-h-[4.25rem] sm:min-h-[4.75rem] py-2.5 px-2 rounded-xl border text-sm transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]",
+                          s.available <= 0 && "opacity-45 cursor-not-allowed",
+                          timeSlot === s.startTime
+                            ? "bg-primary-1 text-secondary border-primary-1 shadow-md shadow-black/25 cursor-pointer"
+                            : s.available > 0
+                              ? "bg-[#1e1e1e] text-zinc-200 border-white/[0.08] hover:bg-[#252525] hover:border-white/[0.12] cursor-pointer"
+                              : "bg-[#1a1a1a] text-zinc-600 border-white/[0.06]"
+                        )}
+                      >
+                        <span className="font-semibold tabular-nums">{s.startTime}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] font-medium",
+                            timeSlot === s.startTime ? "text-secondary/80" : "text-zinc-500"
+                          )}
+                        >
+                          {s.available} left
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>

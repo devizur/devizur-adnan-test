@@ -3,6 +3,11 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  segmentedStripClass,
+  segmentedSideBtnClass,
+  segmentedMainBtnClass,
+} from "./booking-segmented-styles";
 
 function getOrdinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
@@ -16,6 +21,16 @@ export function formatDialogDate(date: Date) {
   const year = date.getFullYear();
   const weekday = date.toLocaleString("en-US", { weekday: "long" });
   return `${weekday}, ${getOrdinal(day)} ${month} ${year}`;
+}
+
+/** Shorter label for compact booking UI (e.g. "Sat, Apr 4, 2026"). */
+export function formatDialogDateShort(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 /** Format date as YYYY-MM-DD in local time (avoids UTC off-by-one when selecting calendar days). */
@@ -119,32 +134,35 @@ export function BookingCalendar({
   }
 
   return (
-    <div className={cn("relative flex w-full max-w-full items-center justify-center gap-1 sm:gap-2", className)}>
-      <button
-        type="button"
-        onClick={() => setDisplayDate(-1)}
-        className="flex min-h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-h-11 sm:min-w-11 sm:rounded-xl sm:p-2.5"
-        aria-label="Previous date"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setIsCalendarOpen((open) => !open)}
-        className="min-w-0 flex-1 cursor-pointer rounded-lg border border-zinc-700/70 bg-zinc-900/50 px-2 py-2 text-center text-[11px] font-medium leading-tight text-white shadow-sm shadow-black/10 transition-colors hover:border-zinc-600 hover:bg-zinc-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-w-[220px] sm:flex-none sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
-        aria-label="Open date picker"
-        aria-expanded={isCalendarOpen}
-      >
-        {formatDialogDate(displayDate)}
-      </button>
-      <button
-        type="button"
-        onClick={() => setDisplayDate(1)}
-        className="flex min-h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212] sm:min-h-11 sm:min-w-11 sm:rounded-xl sm:p-2.5"
-        aria-label="Next date"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+    <div className={cn("relative w-full max-w-full", className)}>
+      <div className={segmentedStripClass}>
+        <button
+          type="button"
+          onClick={() => setDisplayDate(-1)}
+          className={segmentedSideBtnClass}
+          aria-label="Previous date"
+        >
+          <ChevronLeft className="w-4 h-4 shrink-0" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsCalendarOpen((open) => !open)}
+          className={segmentedMainBtnClass}
+          aria-label="Open date picker"
+          aria-expanded={isCalendarOpen}
+        >
+          {formatDialogDateShort(displayDate)}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDisplayDate(1)}
+          className={segmentedSideBtnClass}
+          aria-label="Next date"
+        >
+          <ChevronRight className="w-4 h-4 shrink-0" />
+        </button>
+      </div>
+      <div className="mt-1 h-[15px] shrink-0" aria-hidden />
       {isCalendarOpen && (
         <div className="absolute top-full z-30 mt-2 w-full max-w-xs rounded-2xl border border-zinc-700/70 bg-zinc-900 shadow-xl shadow-black/40">
           <div className="flex items-center justify-between border-b border-zinc-700/60 px-4 py-2">

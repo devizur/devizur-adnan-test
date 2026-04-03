@@ -11,10 +11,25 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
   AlertDialogAction,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { SelectedFoodModifier } from "@/store/bookingSlice";
+import {
+  segmentedSideBtnClass,
+  segmentedStripClass,
+  segmentedNumericValueClass,
+} from "@/components/ui/booking/booking-segmented-styles";
+
+const footerBarClass =
+  "flex shrink-0 flex-row flex-wrap items-center justify-end gap-2 border-t border-white/6 bg-[#141414]/95 px-4 py-2.5 sm:px-5";
+
+const footerBtnSecondaryClass =
+  "m-0 h-8 min-h-8 gap-1.5 rounded-md border border-white/8 bg-[#1c1c1c] px-3 text-xs font-medium text-zinc-300 shadow-sm shadow-black/15 transition-colors hover:border-white/12 hover:bg-[#252525] hover:text-white focus-visible:ring-2 focus-visible:ring-primary-1/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]";
+
+const footerBtnPrimaryClass =
+  "h-8 min-h-8 rounded-md border border-zinc-700/60 bg-primary-1 px-3.5 text-xs font-semibold text-secondary shadow-sm shadow-black/20 transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-1/45";
 
 interface FoodModifierDialogProps {
   open: boolean;
@@ -37,7 +52,6 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
 }) => {
   const productId = food?.productId ?? null;
   const { modifierGroups, isModifiersPending } = useProductModifiers(productId);
-
 
   React.useEffect(() => {
     if (!open) return;
@@ -71,98 +85,123 @@ export const FoodModifierDialog: React.FC<FoodModifierDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="border-secondary" size="default">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-primary">
-            {food ? `Select modifiers for ${food.title}` : "Select modifiers"}
+      <AlertDialogContent
+        size="default"
+        className={cn(
+          "gap-0 overflow-hidden border border-white/8 bg-[#1a1a1a] p-0 text-zinc-100 shadow-2xl shadow-black/40 ring-1 ring-white/4 sm:max-w-md"
+        )}
+      >
+        <AlertDialogHeader className="shrink-0 space-y-1 border-b border-white/6 bg-linear-to-b from-[#181818] to-[#161616] px-4 py-3 text-left sm:px-5 sm:py-3.5">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            Add-ons
+          </p>
+          <AlertDialogTitle className="text-left text-base font-semibold leading-snug text-white sm:text-[17px]">
+            {food ? food.title : "Select modifiers"}
           </AlertDialogTitle>
-          <div className=" text-xs text-primary-1">
-            Choose modifier options for this food. Prices are shown per option.
-          </div>
+          <AlertDialogDescription className="text-left text-xs leading-relaxed text-zinc-500">
+            Adjust quantities per option. Extra charges are shown where they apply.
+          </AlertDialogDescription>
         </AlertDialogHeader>
 
-
-
-        <div className="max-h-72 overflow-y-auto space-y-2 text-sm scrollbar-dark">
+        <div
+          className="max-h-[min(52vh,340px)] min-h-[120px] overflow-y-auto px-4 py-3 scrollbar-dark sm:px-5 sm:py-4"
+          role="region"
+          aria-label="Modifier options"
+        >
           {isModifiersPending && (
-            <p className="text-sm text-muted-foreground py-4 text-center">Loading modifiers…</p>
+            <div className="flex flex-col items-center justify-center gap-2 py-10">
+              <div
+                className="size-6 animate-spin rounded-full border-2 border-zinc-600 border-t-primary-1"
+                aria-hidden
+              />
+              <p className="text-xs text-zinc-500">Loading options…</p>
+            </div>
           )}
+
           {!isModifiersPending &&
             modifierGroups.map((group) => (
-              <div key={group.modifierGroupId} className="space-y-1.5">
-                <div className="text-xs font-semibold text-primary/90">
+              <div
+                key={group.modifierGroupId}
+                className="mb-4 last:mb-0 rounded-xl border border-white/8 bg-[#141414]/55 p-3 shadow-sm shadow-black/15 ring-1 ring-white/4 sm:p-3.5"
+              >
+                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
                   {group.modifierGroupName}
-                </div>
-                <div className="space-y-1">
+                </p>
+                <ul className="space-y-2">
                   {group.options.map((opt: any) => {
                     const qty = modifierQuantities[opt.modifierId] ?? 0;
                     const price =
                       typeof opt.additionalPrice === "number" && !Number.isNaN(opt.additionalPrice)
                         ? opt.additionalPrice
                         : 0;
+                    const label = opt.modifierName || opt.name || `Modifier #${opt.modifierId}`;
 
                     return (
-                      <div
+                      <li
                         key={`${group.modifierGroupId}-${opt.modifierId}`}
-                        className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs sm:text-sm text-left cursor-pointer touch-manipulation transition-colors ${qty > 0
-                            ? "bg-primary-1 text-black border-primary-1  "
-                            : "bg-[#181818] text-primary/90 border-gray-800 hover:bg-[#202020] hover:border-primary-1/40"
-                          }`}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors sm:px-3.5 sm:py-3",
+                          qty > 0
+                            ? "border-primary-1/35 bg-primary-1/8 ring-1 ring-primary-1/25"
+                            : "border-white/6 bg-[#1e1e1e]/90 hover:border-white/10"
+                        )}
                       >
-                        <div className="flex flex-col min-w-0 pr-3">
-                          <span className="font-medium truncate ">
-                            {opt.modifierName || opt.name || `Modifier #${opt.modifierId}`}
-                          </span>
-                          <span className="text-[11px] opacity-80">
-                            {price > 0 ? `+ $${price.toFixed(2)}` : "Included"}
-                          </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-zinc-100">{label}</p>
+                          <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
+                            {price > 0 ? `+ $${price.toFixed(2)} each` : "Included"}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Button
+                        <div
+                          className={cn(segmentedStripClass, "w-[104px] shrink-0 sm:w-[112px]")}
+                          role="group"
+                          aria-label={`Quantity for ${label}`}
+                        >
+                          <button
                             type="button"
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7 rounded-md border border-gray-700 bg-black/20 text-primary/90 hover:bg-black/40"
+                            className={segmentedSideBtnClass}
+                            disabled={qty <= 0}
                             onClick={() => onDecrementModifier(opt.modifierId)}
-                            aria-label={`Decrease ${opt.modifierName || opt.name || "modifier"}`}
+                            aria-label={`Decrease ${label}`}
                           >
-                            <Minus className="w-3.5 h-3.5" />
-                          </Button>
-                          <span className="w-6 text-center font-semibold tabular-nums">{qty}</span>
-                          <Button
+                            <Minus className="size-3.5" strokeWidth={2.25} />
+                          </button>
+                          <span className={segmentedNumericValueClass}>{qty}</span>
+                          <button
                             type="button"
-                            size="icon"
-                            className="h-7 w-7 rounded-md bg-primary-1 text-black hover:bg-primary-1-hover"
+                            className={cn(
+                              segmentedSideBtnClass,
+                              "text-primary-1 hover:text-primary-1 hover:bg-primary-1/10"
+                            )}
                             onClick={() => onIncrementModifier(opt.modifierId)}
-                            aria-label={`Increase ${opt.modifierName || opt.name || "modifier"}`}
+                            aria-label={`Increase ${label}`}
                           >
-                            <Plus className="w-3.5 h-3.5" />
-                          </Button>
+                            <Plus className="size-3.5" strokeWidth={2.25} />
+                          </button>
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </div>
             ))}
 
           {!isModifiersPending && !modifierGroups.length && (
-            <p className="text-sm text-muted-foreground">
-              No modifiers available for this food.
+            <p className="py-6 text-center text-sm text-zinc-500">
+              No add-ons are configured for this item.
             </p>
           )}
         </div>
 
-        <AlertDialogFooter className="mt-4">
-          <AlertDialogCancel size="sm" className="bg-primary text-secondary">
+        <AlertDialogFooter className={footerBarClass}>
+          <AlertDialogCancel size="sm" className={footerBtnSecondaryClass}>
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction className=" text-secondary  " onClick={handleConfirm} size="sm">
-            Confirm &amp; add
+          <AlertDialogAction className={footerBtnPrimaryClass} onClick={handleConfirm} size="sm">
+            Confirm & add
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
-

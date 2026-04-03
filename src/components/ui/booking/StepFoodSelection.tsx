@@ -124,9 +124,7 @@ export function StepFoodSelection() {
                           <Plus className="size-3.5 shrink-0" strokeWidth={2.25} />
                         </button>
                       </div>
-                      <p className="mt-1 text-center text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
-                        In cart
-                      </p>
+                     
                     </div>
                   )
                 }

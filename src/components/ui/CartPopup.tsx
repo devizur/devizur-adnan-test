@@ -25,9 +25,8 @@ export function CartPopup({ open, onOpenChange }: CartPopupProps) {
       <AlertDialogContent
         size="default"
         className={cn(
-          "flex flex-col p-0 gap-0 min-h-0 max-h-[min(90vh,720px)] w-[min(100%-1.5rem,42rem)] sm:max-w-2xl",
-          "bg-[#161616] border border-secondary text-primary shadow-2xl shadow-black/40",
-          "rounded-2xl overflow-hidden"
+          "flex min-h-0 max-h-[min(90vh,720px)] w-[min(100%-1.5rem,42rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl",
+          "rounded-2xl border border-white/10 bg-[#121212] text-primary shadow-2xl shadow-black/50 ring-1 ring-white/5"
         )}
       >
         <AlertDialogHeader className="sr-only">

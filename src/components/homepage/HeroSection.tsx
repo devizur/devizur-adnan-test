@@ -61,13 +61,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       <div
         className={cn(
           PAGE_CONTENT_CLASS,
-          "relative z-10 my-6 flex flex-col sm:my-10 md:my-12",
+          "relative z-10 my-4 flex flex-col sm:my-6 md:my-8",
           isCenter ? "items-center text-center" : "items-start text-left",
         )}
       >
         <div
           className={cn(
-            "flex w-full flex-col gap-4 sm:gap-5",
+            "flex w-full flex-col gap-3 sm:gap-4",
             isCenter ? "items-center" : "items-start",
           )}
         >
@@ -100,7 +100,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           {showSearch && (
             <div
               className={cn(
-                "group relative mt-2 w-full max-w-full lg:max-w-2xl",
+                "group relative mt-1 w-full max-w-full lg:max-w-2xl",
                 isCenter && "mx-auto",
               )}
             >
@@ -129,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      <div className="relative z-10 mt-4 sm:mt-6 md:mt-8">{children}</div>
+      <div className="relative z-10 mt-2 sm:mt-3 md:mt-4">{children}</div>
     </section>
   );
 };

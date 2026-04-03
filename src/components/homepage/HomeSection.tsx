@@ -19,8 +19,8 @@ export function HomePageSection({
     <section
       className={cn(
         PAGE_CONTENT_CLASS,
-        "pb-12 sm:pb-16 md:pb-24 scroll-mt-28",
-        continued && "mt-10 sm:mt-14 md:mt-16",
+        "pb-8 sm:pb-10 md:pb-12 scroll-mt-28",
+        continued && "mt-5 sm:mt-6 md:mt-8",
         className,
       )}
     >
@@ -39,7 +39,7 @@ export function HomeSectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-6 sm:mb-8 max-w-3xl", className)}>
+    <div className={cn("mb-4 sm:mb-5 max-w-3xl", className)}>
       <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-1/90 mb-2">
         {eyebrow}
       </p>
@@ -50,7 +50,7 @@ export function HomeSectionHeading({
 
 export function HomeViewAll({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-center pt-8 sm:pt-10 md:pt-12">
+    <div className="flex justify-center pt-5 sm:pt-6 md:pt-7">
       <Button
         asChild
         variant="outline"

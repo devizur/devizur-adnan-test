@@ -267,14 +267,36 @@ export function BookingDialog({
   }, [isOpen, bookingTimerActive]);
 
   React.useEffect(() => {
-    if (!isOpen) return;
-    if (remainingSeconds === 0) {
-      void tryUnreserveSlot();
-      setIsOpen(false);
+    if (!isOpen || remainingSeconds !== 0) return;
+
+    let cancelled = false;
+    void (async () => {
+      await tryUnreserveSlot();
+      if (cancelled) return;
+      slotReservedRef.current = false;
+      setBookingTimerActive(false);
       dispatch(resetBooking());
       clearCart();
-    }
-  }, [remainingSeconds, isOpen, dispatch, clearCart, setIsOpen, tryUnreserveSlot]);
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
+      toast.info("Your hold expired. This window closed and your cart was cleared.", {
+        duration: 8000,
+      });
+      setIsOpen(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    remainingSeconds,
+    isOpen,
+    dispatch,
+    clearCart,
+    setIsOpen,
+    tryUnreserveSlot,
+    queryClient,
+  ]);
 
   const canProceedStep1 = timeSlot && (persons.adults + persons.kids) > 0;
   const hasSelectionStep1 = selectedActivities.length > 0 || selectedPackages.length > 0;

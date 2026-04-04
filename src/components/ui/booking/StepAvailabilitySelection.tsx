@@ -574,7 +574,7 @@ export function StepAvailabilitySelection() {
                         onClick={() => dispatch(setTimeSlot(s.startTime))}
                         aria-pressed={timeSlot === s.startTime}
                         className={cn(
-                          "relative min-h-[2.625rem] sm:min-h-11 py-1 px-1 rounded-md border text-[11px] sm:text-xs transition-all duration-150 flex flex-col items-center justify-center gap-0 leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414]",
+                          "relative min-h-[2.625rem] sm:min-h-11 py-1 px-1 rounded-md border text-[11px] sm:text-xs transition-all duration-150 flex items-center justify-center leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414]",
                           s.available <= 0 && "opacity-45 cursor-not-allowed",
                           timeSlot === s.startTime
                             ? "bg-primary-1 text-secondary border-primary-1 shadow-sm shadow-black/20 cursor-pointer font-semibold"
@@ -584,14 +584,6 @@ export function StepAvailabilitySelection() {
                         )}
                       >
                         <span className="tabular-nums leading-none">{s.startTime}</span>
-                        <span
-                          className={cn(
-                            "text-[8px] sm:text-[9px] font-medium mt-0.5 leading-none",
-                            timeSlot === s.startTime ? "text-secondary/80" : "text-zinc-500"
-                          )}
-                        >
-                          {s.available} left
-                        </span>
                       </button>
                     ))
                   )}

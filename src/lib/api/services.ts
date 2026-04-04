@@ -134,12 +134,13 @@ export const bookingApi = {
     }
   },
 
-  /** POST /api/Booking/unreserveBooking — release slot when user goes back to change time. */
+  /** POST /api/Booking/unreserveBooking — release slot (id as query param, e.g. ?bookingReferenceId=…). */
   async unreserveBooking(params: { bookingReferenceId: string }): Promise<void> {
     try {
       const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
         "/api/Booking/unreserveBooking",
-        params
+        undefined,
+        { params: { bookingReferenceId: params.bookingReferenceId } }
       );
       const { success, message } = response.data ?? {};
       if (!success) {

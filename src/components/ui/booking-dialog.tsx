@@ -92,6 +92,8 @@ export function BookingDialog({
   const queryClient = useQueryClient();
   const cart = useCart();
   const { clearCart, syncBookingEntry } = cart;
+  /** Cart only reflects the current reserved slot — no sync before reserveBooking succeeds */
+  const [cartSyncedAfterReserve, setCartSyncedAfterReserve] = React.useState(false);
   const totalItems = cart.getTotalItems();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const {
@@ -149,10 +151,12 @@ export function BookingDialog({
       queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
       setBookingTimerActive(false);
       setRemainingSeconds(REMAINING_TIME);
+      clearCart();
+      setCartSyncedAfterReserve(false);
     } catch {
       /* non-blocking: user can still change slot or retry */
     }
-  }, [dispatch, queryClient]);
+  }, [dispatch, queryClient, clearCart]);
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
@@ -193,11 +197,12 @@ export function BookingDialog({
     }
     setBookingTimerActive(false);
     setRemainingSeconds(REMAINING_TIME);
+    setCartSyncedAfterReserve(false);
   }, [isOpen, shopId, clearCart, dispatch]);
 
-  /** Keep cart in sync once visit details + line items exist (activities / packages / food). */
+  /** After reserve: keep cart aligned with Redux (food, holder, etc.) — never before reserve. */
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !cartSyncedAfterReserve) return;
     const hasSchedule =
       Boolean(date && timeSlot.trim()) && (persons.adults + persons.kids) > 0;
     const hasLineItems =
@@ -218,6 +223,7 @@ export function BookingDialog({
     });
   }, [
     isOpen,
+    cartSyncedAfterReserve,
     date,
     timeSlot,
     timeOfDay,
@@ -275,6 +281,7 @@ export function BookingDialog({
       if (cancelled) return;
       slotReservedRef.current = false;
       setBookingTimerActive(false);
+      setCartSyncedAfterReserve(false);
       dispatch(resetBooking());
       clearCart();
       queryClient.invalidateQueries({ queryKey: ["availability"] });
@@ -318,6 +325,7 @@ export function BookingDialog({
 
   const handlePaymentFlowComplete = () => {
     onConfirm?.();
+    setCartSyncedAfterReserve(false);
     dispatch(resetBooking());
     clearCart();
     setIsOpen(false);
@@ -326,6 +334,8 @@ export function BookingDialog({
 
   const handleClose = () => {
     void tryUnreserveSlot();
+    setCartSyncedAfterReserve(false);
+    clearCart();
     setIsOpen(false);
     dispatch(resetBooking());
   };
@@ -351,6 +361,18 @@ export function BookingDialog({
           selectedDate: date,
         });
         slotReservedRef.current = true;
+        clearCart();
+        syncBookingEntry({
+          holderDetails,
+          persons,
+          date,
+          timeSlot,
+          timeOfDay,
+          activities: selectedActivities.map(({ activity, gameNo }) => ({ activity, gameNo })),
+          packages: selectedPackages,
+          foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
+        });
+        setCartSyncedAfterReserve(true);
         setRemainingSeconds(REMAINING_TIME);
         setBookingTimerActive(true);
         dispatch(nextStep());
@@ -378,7 +400,12 @@ export function BookingDialog({
       selectedActivities.length > 0 ||
       selectedPackages.length > 0 ||
       selectedFoods.length > 0;
-    if (cart.getTotalItems() === 0 && hasSchedule && hasLineItems) {
+    if (
+      cartSyncedAfterReserve &&
+      cart.getTotalItems() === 0 &&
+      hasSchedule &&
+      hasLineItems
+    ) {
       syncBookingEntry({
         holderDetails,
         persons,
@@ -407,6 +434,8 @@ export function BookingDialog({
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       void tryUnreserveSlot();
+      setCartSyncedAfterReserve(false);
+      clearCart();
       dispatch(resetBooking());
     }
     setIsOpen(open);

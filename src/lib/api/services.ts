@@ -1,4 +1,5 @@
 import {
+  type ApiResponse,
   SignInResponse,
   RequestOtpRequest,
   RequestOtpResponse,
@@ -101,6 +102,62 @@ export const bookingApi = {
       if (nextRef) returnedRef = nextRef;
     }
     return { steps, bookingReferenceId: returnedRef };
+  },
+
+  /** POST /api/Booking/reserveBooking — lock selected slot after date/time chosen (booking flow). */
+  async reserveBooking(params: {
+    bookingReferenceId: string;
+    selectedSlot: string;
+    selectedDate: string;
+  }): Promise<void> {
+    try {
+      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+        "/api/Booking/reserveBooking",
+        params
+      );
+      const { success, message } = response.data ?? {};
+      if (!success) {
+        throw new Error(
+          typeof message === "string" && message.trim()
+            ? message
+            : "Failed to reserve this time slot"
+        );
+      }
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<unknown>>;
+      if (err.response?.data && typeof err.response.data === "object") {
+        const m = (err.response.data as ApiResponse<unknown>).message;
+        if (typeof m === "string" && m.trim()) throw new Error(m);
+      }
+      if (error instanceof Error && error.message) throw error;
+      throw new Error("Failed to reserve this time slot");
+    }
+  },
+
+  /** POST /api/Booking/unreserveBooking — release slot when user goes back to change time. */
+  async unreserveBooking(params: { bookingReferenceId: string }): Promise<void> {
+    try {
+      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+        "/api/Booking/unreserveBooking",
+        params
+      );
+      const { success, message } = response.data ?? {};
+      if (!success) {
+        throw new Error(
+          typeof message === "string" && message.trim()
+            ? message
+            : "Failed to unreserve time slot"
+        );
+      }
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<unknown>>;
+      if (err.response?.data && typeof err.response.data === "object") {
+        const m = (err.response.data as ApiResponse<unknown>).message;
+        if (typeof m === "string" && m.trim()) throw new Error(m);
+      }
+      if (error instanceof Error && error.message) throw error;
+      throw new Error("Failed to unreserve time slot");
+    }
   },
 
   async getDapperStatuses(): Promise<BookingDapperStatus[]> {

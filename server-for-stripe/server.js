@@ -199,7 +199,7 @@ app.post("/create-checkout-session", async (req, res) => {
 });
 
 /** In-app card payments (Payment Element) — amount validated server-side. */
-app.post("/create-payment-intent", async (req, res) => {
+app.post("/cnreate-payment-itent", async (req, res) => {
     try {
         const body = req.body || {};
         const amountTotalCents = body.amountTotalCents;

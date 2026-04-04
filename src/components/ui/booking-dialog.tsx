@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store";
+import { store } from "@/store/store";
 import { useCart } from "@/contexts/CartContext";
-import { cn } from "@/lib/utils";
+import { cn, displayTimeToApiSlot } from "@/lib/utils";
+import { bookingApi } from "@/lib/api/services";
+import { toast } from "sonner";
 import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
@@ -79,8 +82,19 @@ export function BookingDialog({
   const { clearCart, syncBookingEntry } = cart;
   const totalItems = cart.getTotalItems();
   const shopId = useAppSelector((state) => state.shop.shopId);
-  const { step, flowMode, date, timeSlot, timeOfDay, persons, holderDetails, selectedActivities, selectedPackages, selectedFoods } =
-    useAppSelector((state) => state.booking);
+  const {
+    step,
+    flowMode,
+    date,
+    timeSlot,
+    timeOfDay,
+    persons,
+    holderDetails,
+    selectedActivities,
+    selectedPackages,
+    selectedFoods,
+    bookingReferenceId,
+  } = useAppSelector((state) => state.booking);
 
   const isFoodFirst = flowMode === "foodFirst";
   const STEPS = isFoodFirst ? STEPS_FOOD_FIRST : STEPS_ACTIVITY_FIRST;
@@ -101,7 +115,22 @@ export function BookingDialog({
 
   const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [reserveSubmitting, setReserveSubmitting] = React.useState(false);
+  /** True after successful POST reserveBooking until unreserve or dialog reset */
+  const slotReservedRef = React.useRef(false);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const tryUnreserveSlot = React.useCallback(async () => {
+    if (!slotReservedRef.current) return;
+    const ref = store.getState().booking.bookingReferenceId?.trim();
+    slotReservedRef.current = false;
+    if (!ref) return;
+    try {
+      await bookingApi.unreserveBooking({ bookingReferenceId: ref });
+    } catch {
+      /* non-blocking: user can still change slot or retry */
+    }
+  }, []);
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
@@ -111,6 +140,7 @@ export function BookingDialog({
 
   React.useEffect(() => {
     if (!isOpen) return;
+    slotReservedRef.current = false;
     console.log("[BookingDialog] shopId:", shopId);
     clearCart();
     dispatch(resetBooking());
@@ -213,11 +243,12 @@ export function BookingDialog({
   React.useEffect(() => {
     if (!isOpen) return;
     if (remainingSeconds === 0) {
+      void tryUnreserveSlot();
       setIsOpen(false);
       dispatch(resetBooking());
       clearCart();
     }
-  }, [remainingSeconds, isOpen, dispatch, clearCart, setIsOpen]);
+  }, [remainingSeconds, isOpen, dispatch, clearCart, setIsOpen, tryUnreserveSlot]);
 
   const canProceedStep1 = timeSlot && (persons.adults + persons.kids) > 0;
   const hasSelectionStep1 = selectedActivities.length > 0 || selectedPackages.length > 0;
@@ -246,6 +277,7 @@ export function BookingDialog({
   };
 
   const handleClose = () => {
+    void tryUnreserveSlot();
     setIsOpen(false);
     dispatch(resetBooking());
   };
@@ -253,9 +285,35 @@ export function BookingDialog({
   const isStep1Availability = isFoodFirst ? step === 2 : step === 1;
   const isStep1Food = isFoodFirst ? step === 1 : step === 2;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isStep1Availability && !canProceedStep1) return;
     if (isStep1Availability && !hasSelectionStep1) return;
+
+    if (isStep1Availability) {
+      const ref = bookingReferenceId?.trim();
+      if (!ref) {
+        toast.error('Run "Check availability" first to get a booking reference.');
+        return;
+      }
+      setReserveSubmitting(true);
+      try {
+        await bookingApi.reserveBooking({
+          bookingReferenceId: ref,
+          selectedSlot: displayTimeToApiSlot(timeSlot),
+          selectedDate: date,
+        });
+        slotReservedRef.current = true;
+        dispatch(nextStep());
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Could not reserve this time slot.";
+        toast.error(msg);
+      } finally {
+        setReserveSubmitting(false);
+      }
+      return;
+    }
+
     dispatch(nextStep());
   };
 
@@ -289,11 +347,16 @@ export function BookingDialog({
     if (step === 4) {
       clearCart();
     }
+    // Leaving food step back to availability — release previous slot reservation
+    if (step === 2) {
+      void tryUnreserveSlot();
+    }
     dispatch(prevStep());
   };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
+      void tryUnreserveSlot();
       dispatch(resetBooking());
     }
     setIsOpen(open);
@@ -498,11 +561,14 @@ export function BookingDialog({
                 {step === 1 && (
                   <Button
                     type="button"
-                    disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
-                    onClick={handleNext}
+                    disabled={
+                      isStep1Availability &&
+                      (!canProceedStep1 || !hasSelectionStep1 || reserveSubmitting)
+                    }
+                    onClick={() => void handleNext()}
                     className={cn(bookingFooterBtnPrimary, "cursor-pointer")}
                   >
-                    Next
+                    {isStep1Availability && reserveSubmitting ? "Saving…" : "Next"}
                   </Button>
                 )}
                 {step === 2 && (
@@ -518,11 +584,14 @@ export function BookingDialog({
                     </Button>
                     <Button
                       type="button"
-                      disabled={isStep1Availability && (!canProceedStep1 || !hasSelectionStep1)}
-                      onClick={handleNext}
+                      disabled={
+                        isStep1Availability &&
+                        (!canProceedStep1 || !hasSelectionStep1 || reserveSubmitting)
+                      }
+                      onClick={() => void handleNext()}
                       className={cn(bookingFooterBtnPrimary, "cursor-pointer")}
                     >
-                      Next
+                      {isStep1Availability && reserveSubmitting ? "Saving…" : "Next"}
                     </Button>
                   </>
                 )}

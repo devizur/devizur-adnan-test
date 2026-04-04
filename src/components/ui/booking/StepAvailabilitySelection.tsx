@@ -16,6 +16,7 @@ import {
   removePackage,
 } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
 import { Check, Loader2, CalendarClock, Package } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
@@ -38,6 +39,7 @@ const SHIFT = [
 
 export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const shopId = useAppSelector((state) => state.shop.shopId);
   const { date, timeOfDay, timeSlot, bookingReferenceId: reduxBookingReferenceId, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
@@ -163,9 +165,10 @@ export function StepAvailabilitySelection() {
   }, [date, dispatch]);
 
   React.useEffect(() => {
-    if (effectiveSlotsData?.bookingReferenceId)
-      dispatch(setBookingReferenceId(effectiveSlotsData.bookingReferenceId));
-  }, [effectiveSlotsData?.bookingReferenceId, dispatch]);
+    if (!slotsRequested || !effectiveSlotsData) return;
+    const id = effectiveSlotsData.bookingReferenceId?.trim();
+    if (id) dispatch(setBookingReferenceId(id));
+  }, [slotsRequested, effectiveSlotsData, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -464,7 +467,10 @@ export function StepAvailabilitySelection() {
                   <button
                     type="button"
                     disabled={!canFetchSlots || slotsLoading}
-                    onClick={() => setSlotsRequested(true)}
+                    onClick={() => {
+                      queryClient.invalidateQueries({ queryKey: ["availability"] });
+                      setSlotsRequested(true);
+                    }}
                     aria-label="Load available time slots for your selection"
                     className={cn(
                       segmentedPrimaryCtaClass,

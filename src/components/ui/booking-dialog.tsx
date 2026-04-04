@@ -21,11 +21,22 @@ import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabil
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
 import { StepPayment } from "@/components/ui/booking/StepPayment";
-import { nextStep, prevStep, resetBooking, addActivity, addPackage, addFood, setStep, setFlowMode } from "@/store/bookingSlice";
+import {
+  nextStep,
+  prevStep,
+  resetBooking,
+  addActivity,
+  addPackage,
+  addFood,
+  setStep,
+  setFlowMode,
+  setBookingReferenceId,
+} from "@/store/bookingSlice";
 import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
 import { X, Clock, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
+import { useQueryClient } from "@tanstack/react-query";
 
 const REMAINING_TIME = 60 * 10; // 10 minutes
 const STEPS_ACTIVITY_FIRST = [
@@ -78,6 +89,7 @@ export function BookingDialog({
 }: BookingDialogProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const cart = useCart();
   const { clearCart, syncBookingEntry } = cart;
   const totalItems = cart.getTotalItems();
@@ -123,14 +135,20 @@ export function BookingDialog({
   const tryUnreserveSlot = React.useCallback(async () => {
     if (!slotReservedRef.current) return;
     const ref = store.getState().booking.bookingReferenceId?.trim();
-    slotReservedRef.current = false;
-    if (!ref) return;
+    if (!ref) {
+      slotReservedRef.current = false;
+      return;
+    }
     try {
       await bookingApi.unreserveBooking({ bookingReferenceId: ref });
+      slotReservedRef.current = false;
+      dispatch(setBookingReferenceId(""));
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
     } catch {
       /* non-blocking: user can still change slot or retry */
     }
-  }, []);
+  }, [dispatch, queryClient]);
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;

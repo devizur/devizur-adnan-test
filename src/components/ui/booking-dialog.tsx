@@ -126,6 +126,8 @@ export function BookingDialog({
   );
 
   const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
+  /** Countdown runs only after reserveBooking succeeds; cleared on unreserve / close */
+  const [bookingTimerActive, setBookingTimerActive] = React.useState(false);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const [reserveSubmitting, setReserveSubmitting] = React.useState(false);
   /** True after successful POST reserveBooking until unreserve or dialog reset */
@@ -145,6 +147,8 @@ export function BookingDialog({
       dispatch(setBookingReferenceId(""));
       queryClient.invalidateQueries({ queryKey: ["availability"] });
       queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
+      setBookingTimerActive(false);
+      setRemainingSeconds(REMAINING_TIME);
     } catch {
       /* non-blocking: user can still change slot or retry */
     }
@@ -187,6 +191,8 @@ export function BookingDialog({
         dispatch(setStep(1));
       }
     }
+    setBookingTimerActive(false);
+    setRemainingSeconds(REMAINING_TIME);
   }, [isOpen, shopId, clearCart, dispatch]);
 
   /** Keep cart in sync once visit details + line items exist (activities / packages / food). */
@@ -224,17 +230,19 @@ export function BookingDialog({
   ]);
 
   React.useEffect(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (!isOpen) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      setBookingTimerActive(false);
       setRemainingSeconds(REMAINING_TIME);
       return;
     }
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
+    if (!bookingTimerActive) {
+      return;
     }
 
     timerRef.current = setInterval(() => {
@@ -256,7 +264,7 @@ export function BookingDialog({
         timerRef.current = null;
       }
     };
-  }, [isOpen]);
+  }, [isOpen, bookingTimerActive]);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -321,6 +329,8 @@ export function BookingDialog({
           selectedDate: date,
         });
         slotReservedRef.current = true;
+        setRemainingSeconds(REMAINING_TIME);
+        setBookingTimerActive(true);
         dispatch(nextStep());
       } catch (err) {
         const msg =
@@ -404,14 +414,19 @@ export function BookingDialog({
           />
           <div className="w-full space-y-2 pl-2.5 sm:space-y-2 sm:pl-3">
             <div className="absolute right-3 top-[max(0.5rem,env(safe-area-inset-top,0px))] z-10 flex shrink-0 items-center gap-1.5 sm:right-4 sm:top-3.5">
-              <div
-                className="inline-flex items-center gap-1 rounded-md border border-primary-1/30 bg-primary-1/[0.08] px-2 py-1 text-[10px] font-semibold text-primary-1 tabular-nums shadow-sm shadow-black/15"
-                title={`${formattedRemaining} remaining`}
-              >
-                <Clock className="size-3 shrink-0 opacity-90" aria-hidden />
-                <span className="hidden sm:inline text-primary-1/80">Time </span>
-                <span>{formattedRemaining}</span>
-              </div>
+              {bookingTimerActive ? (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-label={`${formattedRemaining} left to complete checkout`}
+                  title={`Finish checkout within ${formattedRemaining}, or your reserved slot will be released.`}
+                  className="inline-flex items-center gap-1 rounded-md border border-primary-1/30 bg-primary-1/[0.08] px-2 py-1 text-[10px] font-semibold text-primary-1 shadow-sm shadow-black/15"
+                >
+                  <Clock className="size-3 shrink-0 opacity-90" aria-hidden />
+                  <span className="min-w-0 shrink-0 text-primary-1/85">Time left:</span>
+                  <span className="tabular-nums text-primary-1">{formattedRemaining}</span>
+                </div>
+              ) : null}
               <button
                 type="button"
                 onClick={handleClose}
@@ -421,8 +436,12 @@ export function BookingDialog({
                 <X className="size-3.5" />
               </button>
             </div>
-            <div className="min-w-0 pr-[5.5rem] sm:pr-[6.75rem]">
-              
+            <div
+              className={cn(
+                "min-w-0",
+                bookingTimerActive ? "pr-[5.5rem] sm:pr-[6.75rem]" : "pr-11 sm:pr-12"
+              )}
+            >
               <AlertDialogTitle className="text-base font-semibold leading-tight tracking-tight text-zinc-100 sm:text-[1.0625rem]">
                 Create booking
               </AlertDialogTitle>

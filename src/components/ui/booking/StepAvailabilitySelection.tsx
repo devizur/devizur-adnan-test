@@ -18,7 +18,7 @@ import {
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
-import { Check, Loader2, CalendarClock, Package } from "lucide-react";
+import { Check, Loader2, CalendarClock, Package, Ticket } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
@@ -120,9 +120,12 @@ function getActivityCardPricingSubtitle(
   return fallbackAllCombinationsRange(combinations) ?? "--";
 }
 
-/** Shared catalog row cards (activities + packages) */
+/** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
 const catalogCardBtnBase =
-  "group/card w-[min(238px,82vw)] sm:w-[252px] md:w-full text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink";
+  "group/card w-[min(238px,82vw)] sm:w-[252px] shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
+
+const catalogColumnClass =
+  "flex w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px]";
 
 const catalogCardImageShell =
   "relative h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0";
@@ -144,6 +147,9 @@ const catalogCardMetaClass =
 
 const catalogSelectedCheckClass =
   "absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary-1 shadow-lg shadow-black/40 ring-2 ring-black/60";
+
+const packageCardBadgeClass =
+  "pointer-events-none absolute left-2 top-2 z-[1] inline-flex items-center gap-0.5 rounded-md border border-primary-1/40 bg-zinc-950/90 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.12em] text-primary-1 shadow-sm backdrop-blur-sm sm:text-[8px]";
 
 const optionChipBase =
   "min-h-9 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]";
@@ -302,20 +308,37 @@ export function StepAvailabilitySelection() {
   return (
     <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
       {/* Left panel - Activity List */}
-      <div className="w-full md:w-[300px] lg:w-[min(400px,38%)] shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.06] bg-[#141414]">
+      <div className="flex min-h-0 min-w-0 w-full shrink-0 flex-col border-b border-white/[0.06] bg-[#141414] md:min-h-0 md:w-[300px] md:border-b-0 md:border-r lg:w-[min(400px,38%)]">
         <div className="shrink-0 border-b border-white/[0.06] bg-zinc-950/60 px-3 py-3 sm:px-4">
-          <h3 className="text-[11px] font-semibold tracking-tight text-zinc-100 sm:text-xs">
+          <h3 className="whitespace-nowrap text-[11px] font-semibold tracking-tight text-zinc-100 sm:text-xs">
             Activities &amp; packages
           </h3>
-          <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
-            Select items for this visit. Options appear after you add an activity.
-          </p>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-3.5">
-          <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-            Activities
-          </p>
-          <div className="flex gap-2.5 overflow-x-auto md:flex-col md:space-y-3 md:overflow-x-visible scrollbar-dark pb-1 -mx-0.5 px-0.5 md:mx-0 md:px-0 md:pb-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-2.5 sm:p-3.5">
+          <div
+            className={cn(
+              "mb-2.5 flex w-full min-w-0 flex-nowrap items-center text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:tracking-[0.16em]",
+              suggestedPackages.length > 0 ? "justify-between gap-2" : "justify-start gap-x-2 sm:gap-x-3"
+            )}
+          >
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
+              <Ticket
+                className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                aria-hidden
+              />
+              Activities
+            </span>
+            {suggestedPackages.length > 0 ? (
+              <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
+                <Package
+                  className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                  aria-hidden
+                />
+                Packages
+              </span>
+            ) : null}
+          </div>
+          <div className="-mx-0.5 flex min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
@@ -331,7 +354,7 @@ export function StepAvailabilitySelection() {
             );
 
             return (
-              <div key={activity.id} className="relative">
+              <div key={activity.id} className={cn(catalogColumnClass, "relative")}>
                 <button
                   type="button"
                   onClick={() => {
@@ -390,9 +413,6 @@ export function StepAvailabilitySelection() {
                           getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
                         return (
                           <div key={group.attributeId}>
-                            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
-                              {group.attributeName}
-                            </p>
                             <div className="flex flex-wrap gap-1.5">
                               {group.options.map((opt) => {
                                 const isOptSelected = selectedIds.includes(opt.attributeOptionId);
@@ -489,21 +509,16 @@ export function StepAvailabilitySelection() {
               </div>
             );
           })}
-          </div>
-
-          {suggestedPackages.length > 0 && (
-            <>
-              <div className="mb-2.5 mt-6 flex items-center gap-2 border-t border-white/[0.06] pt-5">
-                <Package className="size-3.5 shrink-0 text-zinc-500" aria-hidden />
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Packages
-                </p>
-              </div>
-              <div className="flex gap-2.5 overflow-x-auto md:flex-col md:space-y-3 md:overflow-x-visible scrollbar-dark pb-1 -mx-0.5 px-0.5 md:mx-0 md:px-0 md:pb-0">
-                {suggestedPackages.map((pkg) => {
-                  const selected = isPackageSelected(pkg.id);
-                  return (
-                    <div key={pkg.id} className="relative shrink-0 md:shrink">
+            {suggestedPackages.length > 0 ? (
+              <div
+                className="mx-0.5 w-px shrink-0 self-stretch bg-zinc-700/45"
+                aria-hidden
+              />
+            ) : null}
+            {suggestedPackages.map((pkg) => {
+              const selected = isPackageSelected(pkg.id);
+              return (
+                    <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
                       <button
                         type="button"
                         onClick={() =>
@@ -529,6 +544,10 @@ export function StepAvailabilitySelection() {
                             )}
                           />
                           <div className={catalogCardImgOverlay} aria-hidden />
+                          <span className={packageCardBadgeClass}>
+                            <Package className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
+                            Package
+                          </span>
                           {selected && (
                             <div className={catalogSelectedCheckClass}>
                               <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
@@ -541,11 +560,9 @@ export function StepAvailabilitySelection() {
                         </div>
                       </button>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -37,6 +37,122 @@ const SHIFT = [
   { id: 3, label: "Evening", apiKey: "Evening" as const },
 ] as const;
 
+/** e.g. "1 Game Adult" → 1, "2 Games Kids" → 2 */
+function getGameCountFromCombinationName(name: string): number | null {
+  const m = String(name).trim().match(/^(\d+)\s+Games?\b/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function formatActivityPriceAmount(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
+/** Min–max price for one game tier (adult/kids variants), e.g. "1 game · $15–$200 per person" */
+function summarizeDynamicPricesForGameCount(
+  combinations: AttributeCombinationItem[],
+  gameCount: number
+): string | null {
+  const subset = combinations.filter(
+    (c) => getGameCountFromCombinationName(c.attributeCombinationName) === gameCount
+  );
+  if (subset.length === 0) return null;
+  const prices = subset
+    .map((c) => c.fixedPrice)
+    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
+  if (prices.length === 0) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const tier = gameCount === 1 ? "1 game" : `${gameCount} games`;
+  const range =
+    min === max
+      ? `$${formatActivityPriceAmount(min)}`
+      : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)}`;
+  return `${tier} · ${range} per person`;
+}
+
+function fallbackAllCombinationsRange(combinations: AttributeCombinationItem[]): string | null {
+  const prices = combinations
+    .map((c) => c.fixedPrice)
+    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
+  if (prices.length === 0) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max
+    ? `$${formatActivityPriceAmount(min)} per person`
+    : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)} per person`;
+}
+
+function getActivityCardPricingSubtitle(
+  activity: Activity,
+  combinations: AttributeCombinationItem[],
+  selected: boolean,
+  selectedCombination: AttributeCombinationItem | undefined
+): string {
+  const slots = (activity as Activity & { timeSlots?: string[] }).timeSlots;
+  if (slots && slots.length > 0) {
+    return slots.join(", ");
+  }
+  if (combinations.length === 0) return "--";
+
+  if (selected && selectedCombination) {
+    const n = getGameCountFromCombinationName(selectedCombination.attributeCombinationName);
+    if (n != null) {
+      const line = summarizeDynamicPricesForGameCount(combinations, n);
+      if (line) return line;
+    }
+  }
+
+  const counts = [
+    ...new Set(
+      combinations
+        .map((c) => getGameCountFromCombinationName(c.attributeCombinationName))
+        .filter((x): x is number => x != null)
+    ),
+  ].sort((a, b) => a - b);
+  if (counts.length > 0) {
+    const line = summarizeDynamicPricesForGameCount(combinations, counts[0]!);
+    if (line) return line;
+  }
+
+  return fallbackAllCombinationsRange(combinations) ?? "--";
+}
+
+/** Shared catalog row cards (activities + packages) */
+const catalogCardBtnBase =
+  "group/card w-[min(238px,82vw)] sm:w-[252px] md:w-full text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink";
+
+const catalogCardImageShell =
+  "relative h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0";
+
+const catalogCardImgClass =
+  "h-full w-full object-cover transition-transform duration-500 ease-out will-change-transform";
+
+const catalogCardImgOverlay =
+  "pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent";
+
+const catalogCardBody =
+  "flex min-h-0 flex-col justify-center gap-1 border-t border-white/[0.06] bg-zinc-950/40 px-2.5 py-2.5 sm:px-3 sm:py-3";
+
+const catalogCardTitleClass =
+  "line-clamp-2 text-left text-[12px] sm:text-[13px] font-semibold leading-snug tracking-tight text-zinc-50";
+
+const catalogCardMetaClass =
+  "line-clamp-2 text-left text-[10px] sm:text-[11px] font-medium leading-snug tabular-nums text-zinc-500 transition-colors group-hover/card:text-zinc-400";
+
+const catalogSelectedCheckClass =
+  "absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary-1 shadow-lg shadow-black/40 ring-2 ring-black/60";
+
+const optionChipBase =
+  "min-h-9 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]";
+
+const optionChipIdle =
+  "border-zinc-700/55 bg-zinc-900/60 text-zinc-300 hover:border-zinc-600/70 hover:bg-zinc-800/60 hover:text-zinc-100";
+
+const optionChipActive = "border-primary-1/55 bg-primary-1 text-secondary shadow-md shadow-primary-1/10";
+
 export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
@@ -187,25 +303,35 @@ export function StepAvailabilitySelection() {
     <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
       {/* Left panel - Activity List */}
       <div className="w-full md:w-[300px] lg:w-[min(400px,38%)] shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-white/[0.06] bg-[#141414]">
-        <div className="px-3 sm:px-4 py-2.5 border-b border-white/[0.06] shrink-0 bg-[#121212]/80">
-          <h3 className="text-xs font-semibold text-white tracking-tight">
-            Activities & packages
+        <div className="shrink-0 border-b border-white/[0.06] bg-zinc-950/60 px-3 py-3 sm:px-4">
+          <h3 className="text-[11px] font-semibold tracking-tight text-zinc-100 sm:text-xs">
+            Activities &amp; packages
           </h3>
+          <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
+            Select items for this visit. Options appear after you add an activity.
+          </p>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-3.5">
+          <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
             Activities
           </p>
-          <div className="flex gap-2 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-2 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
+          <div className="flex gap-2.5 overflow-x-auto md:flex-col md:space-y-3 md:overflow-x-visible scrollbar-dark pb-1 -mx-0.5 px-0.5 md:mx-0 md:px-0 md:pb-0">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
             const combinations = getCombinations(activity);
             const hasDynamicOptions = combinations.length > 0;
             const defaultCombo = combinations[0];
+            const selectedCombo = selected ? getSelectedCombination(activity.id) : undefined;
+            const pricingSubtitle = getActivityCardPricingSubtitle(
+              activity,
+              combinations,
+              selected,
+              selectedCombo
+            );
 
             return (
-              <div key={activity.id} className="relative group">
+              <div key={activity.id} className="relative">
                 <button
                   type="button"
                   onClick={() => {
@@ -226,13 +352,14 @@ export function StepAvailabilitySelection() {
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
-                    "w-[210px] sm:w-[240px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
+                    catalogCardBtnBase,
+                    "shadow-md shadow-black/30",
                     selected
-                      ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
-                      : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
+                      ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                      : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
                   )}
                 >
-                  <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
+                  <div className={catalogCardImageShell}>
                     <img
                       src={
                         activity.image ||
@@ -240,43 +367,33 @@ export function StepAvailabilitySelection() {
                       }
                       alt={(activity as any).title || "Activity image"}
                       className={cn(
-                        "w-full h-full object-cover transition-transform duration-300 ease-out",
-                        selected ? "brightness-[1.05]" : "group-hover:scale-[1.03]"
+                        catalogCardImgClass,
+                        selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                       )}
                     />
-                    <div
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80"
-                      aria-hidden
-                    />
+                    <div className={catalogCardImgOverlay} aria-hidden />
                     {selected && (
-                      <div className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-1 flex items-center justify-center shadow-md shadow-black/40 ring-1 ring-black/30">
-                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" strokeWidth={2.5} />
+                      <div className={catalogSelectedCheckClass}>
+                        <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                       </div>
                     )}
                   </div>
-                  <div className="p-2 flex flex-col justify-center min-h-0 gap-0.5">
-                    <h4 className="font-semibold text-[11px] sm:text-xs text-white leading-snug line-clamp-2">
-                      {activity.title}
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2 leading-snug">
-                      {activity.timeSlots && activity.timeSlots.length > 0
-                        ? activity.timeSlots.join(", ")
-                        : combinations.length > 0
-                          ? combinations
-                              .map((c) => `${c.attributeCombinationName} $${c.fixedPrice}`)
-                              .join(", ")
-                          : "--"}
-                    </p>
+                  <div className={catalogCardBody}>
+                    <h4 className={catalogCardTitleClass}>{activity.title}</h4>
+                    <p className={catalogCardMetaClass}>{pricingSubtitle}</p>
                   </div>
                 </button>
                 {selected && hasDynamicOptions && (
-                  <div className="mt-1 sm:mt-2 px-0.5 space-y-1 sm:space-y-2">
+                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
                     {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
                         const selectedIds =
                           getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
                         return (
                           <div key={group.attributeId}>
-                            <div className="flex flex-wrap gap-1 sm:gap-1.5">
+                            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
+                              {group.attributeName}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
                               {group.options.map((opt) => {
                                 const isOptSelected = selectedIds.includes(opt.attributeOptionId);
                                 return (
@@ -305,10 +422,8 @@ export function StepAvailabilitySelection() {
                                     aria-pressed={isOptSelected}
                                     aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
                                     className={cn(
-                                      "min-h-8 py-1.5 px-2 rounded-md text-[10px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]",
-                                      isOptSelected
-                                        ? "bg-primary-1 text-secondary shadow-sm"
-                                        : "bg-[#222] text-zinc-400 hover:text-zinc-200 hover:bg-[#2a2a2a] border border-white/[0.08]"
+                                      optionChipBase,
+                                      isOptSelected ? optionChipActive : optionChipIdle
                                     )}
                                   >
                                     {opt.attributeOptionName}
@@ -322,7 +437,11 @@ export function StepAvailabilitySelection() {
                   </div>
                 )}
                 {selected && !hasDynamicOptions && (
-                  <div className="flex gap-1 sm:gap-1.5 mt-1 sm:mt-2 px-0.5">
+                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
+                      Games
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
                       {getAvailableOptions(activity).map((opt) => {
                         const basePrice = Number((activity as any).fixedPrice);
                         const hasPrice = !Number.isNaN(basePrice) && basePrice > 0;
@@ -347,17 +466,16 @@ export function StepAvailabilitySelection() {
                                 : `${opt.label} price unavailable for ${activity.title}`
                             }
                             className={cn(
-                              "flex-1 min-h-9 py-1.5 px-1 rounded-md text-[10px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col items-center justify-center gap-0.5",
-                              gameNo === opt.value
-                                ? "bg-primary-1 text-secondary shadow-sm"
-                                : "bg-[#222] text-zinc-400 hover:text-zinc-200 hover:bg-[#2a2a2a] border border-white/[0.08]"
+                              optionChipBase,
+                              "min-w-[4.5rem] flex-1 flex flex-col items-center justify-center gap-0.5 py-2",
+                              gameNo === opt.value ? optionChipActive : optionChipIdle
                             )}
                           >
                             <span>{opt.label}</span>
                             <span
                               className={cn(
-                                "text-[10px] font-normal tabular-nums",
-                                gameNo === opt.value ? "text-secondary/85" : "text-zinc-500"
+                                "text-[10px] font-semibold tabular-nums",
+                                gameNo === opt.value ? "text-secondary/90" : "text-zinc-500"
                               )}
                             >
                               {priceLabel}
@@ -365,6 +483,7 @@ export function StepAvailabilitySelection() {
                           </button>
                         );
                       })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -374,17 +493,17 @@ export function StepAvailabilitySelection() {
 
           {suggestedPackages.length > 0 && (
             <>
-              <div className="flex items-center gap-1.5 mt-5 mb-2 pt-4 border-t border-white/[0.06]">
-                <Package className="h-3 w-3 text-zinc-500 shrink-0" aria-hidden />
-                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              <div className="mb-2.5 mt-6 flex items-center gap-2 border-t border-white/[0.06] pt-5">
+                <Package className="size-3.5 shrink-0 text-zinc-500" aria-hidden />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Packages
                 </p>
               </div>
-              <div className="flex gap-2 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-2 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
+              <div className="flex gap-2.5 overflow-x-auto md:flex-col md:space-y-3 md:overflow-x-visible scrollbar-dark pb-1 -mx-0.5 px-0.5 md:mx-0 md:px-0 md:pb-0">
                 {suggestedPackages.map((pkg) => {
                   const selected = isPackageSelected(pkg.id);
                   return (
-                    <div key={pkg.id} className="relative group shrink-0 md:shrink">
+                    <div key={pkg.id} className="relative shrink-0 md:shrink">
                       <button
                         type="button"
                         onClick={() =>
@@ -393,36 +512,32 @@ export function StepAvailabilitySelection() {
                         aria-pressed={selected}
                         aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
                         className={cn(
-                          "w-[210px] sm:w-[240px] md:w-full text-left rounded-lg sm:rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col shrink-0 md:shrink",
+                          catalogCardBtnBase,
+                          "shadow-md shadow-black/30",
                           selected
-                            ? "border-primary-1/50 bg-primary-1/[0.06] ring-1 ring-primary-1/25 shadow-sm shadow-black/20"
-                            : "border-white/[0.08] bg-[#1a1a1a] hover:bg-[#1f1f1f] hover:border-white/[0.12]"
+                            ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                            : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
                         )}
                       >
-                        <div className="relative h-14 sm:h-[3.75rem] overflow-hidden shrink-0">
+                        <div className={catalogCardImageShell}>
                           <img
                             src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
                             alt={pkg.title || "Package image"}
                             className={cn(
-                              "w-full h-full object-cover transition-transform duration-300 ease-out",
-                              selected ? "brightness-[1.05]" : "group-hover:scale-[1.03]"
+                              catalogCardImgClass,
+                              selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                             )}
                           />
-                          <div
-                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80"
-                            aria-hidden
-                          />
+                          <div className={catalogCardImgOverlay} aria-hidden />
                           {selected && (
-                            <div className="absolute top-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-1 flex items-center justify-center shadow-md shadow-black/40 ring-1 ring-black/30">
-                              <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" strokeWidth={2.5} />
+                            <div className={catalogSelectedCheckClass}>
+                              <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                             </div>
                           )}
                         </div>
-                        <div className="p-2 flex flex-col justify-center min-h-0 gap-0.5">
-                          <h4 className="font-semibold text-[11px] sm:text-xs text-white leading-snug line-clamp-2">
-                            {pkg.title}
-                          </h4>
-                          <p className="text-[10px] text-zinc-500">{pkg.price}</p>
+                        <div className={catalogCardBody}>
+                          <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
+                          <p className={catalogCardMetaClass}>{pkg.price}</p>
                         </div>
                       </button>
                     </div>

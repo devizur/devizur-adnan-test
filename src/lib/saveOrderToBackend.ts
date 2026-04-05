@@ -1,9 +1,9 @@
-import { getStripeBackendBaseUrl } from "@/lib/stripeCheckout";
+import { getOrdersSaveBackendBaseUrl } from "@/lib/ordersSaveBackend";
 import type { PaidOrderRecord } from "@/lib/paidOrdersStorage";
 
-/** POST full order JSON to the Express server; each order is written under server-for-stripe/data/orders/. */
+/** POST full order JSON to server-for-save-data; each order is written under data/orders/. */
 export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{ file: string }> {
-  const res = await fetch(`${getStripeBackendBaseUrl()}/save-order`, {
+  const res = await fetch(`${getOrdersSaveBackendBaseUrl()}/save-order`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(order),

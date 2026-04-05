@@ -1,4 +1,4 @@
-import { getStripeBackendBaseUrl } from "@/lib/stripeCheckout";
+import { getOrdersSaveBackendBaseUrl } from "@/lib/ordersSaveBackend";
 import type { PaidOrderRecord } from "@/lib/paidOrdersStorage";
 
 function isOrderShape(o: unknown): o is PaidOrderRecord {
@@ -7,9 +7,9 @@ function isOrderShape(o: unknown): o is PaidOrderRecord {
   return typeof x.id === "string" && Array.isArray(x.entries);
 }
 
-/** GET all orders from the Express server (reads data/orders/*.json). */
+/** GET all orders from the order-save server (reads data/orders/*.json). */
 export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
-  const res = await fetch(`${getStripeBackendBaseUrl()}/orders`, { cache: "no-store" });
+  const res = await fetch(`${getOrdersSaveBackendBaseUrl()}/orders`, { cache: "no-store" });
   const data = (await res.json().catch(() => ({}))) as { orders?: unknown; error?: string };
 
   if (!res.ok) {
@@ -23,11 +23,11 @@ export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
 }
 
 /**
- * Remove one order from the Express server (deletes matching JSON under data/orders/).
+ * Remove one order from the order-save server (deletes matching JSON under data/orders/).
  * 404 means no file on server — caller may still remove local copy.
  */
 export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: true; notFound?: boolean }> {
-  const res = await fetch(`${getStripeBackendBaseUrl()}/orders/${encodeURIComponent(orderId)}`, {
+  const res = await fetch(`${getOrdersSaveBackendBaseUrl()}/orders/${encodeURIComponent(orderId)}`, {
     method: "DELETE",
     cache: "no-store",
   });

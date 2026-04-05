@@ -9,7 +9,11 @@ import {
 } from "@stripe/react-stripe-js";
 import type { Appearance, Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { createPaymentIntent, getStripePublishableKey } from "@/lib/stripeCheckout";
+import {
+  confirmBookingPaymentIntent,
+  createPaymentIntent,
+  fetchStripePublishableKey,
+} from "@/lib/stripeCheckout";
 import { cn } from "@/lib/utils";
 import { segmentedPrimaryCtaClass } from "@/components/ui/booking/booking-segmented-styles";
 
@@ -116,7 +120,27 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
         return;
       }
       if (paymentIntent?.status === "succeeded") {
-        onPaid();
+        const intentId = paymentIntent.id;
+        const pm = paymentIntent.payment_method;
+        const paymentMethodId =
+          typeof pm === "string" ? pm : pm && typeof pm === "object" && "id" in pm ? String((pm as { id: string }).id) : "";
+        if (intentId && paymentMethodId) {
+          try {
+            await confirmBookingPaymentIntent({
+              paymentIntentId: intentId,
+              paymentMethodId,
+            });
+          } catch (confirmErr) {
+            setMessage(
+              confirmErr instanceof Error
+                ? confirmErr.message
+                : "Payment succeeded but server confirmation failed. Contact support if charged."
+            );
+            setSubmitting(false);
+            return;
+          }
+        }
+        onPaid({ stripePaymentIntentId: intentId });
       } else {
         setMessage(`Payment status: ${paymentIntent?.status ?? "unknown"}. Try again or use another method.`);
         setSubmitting(false);
@@ -185,17 +209,32 @@ export function StripePaymentElementBlock({
   const [clientSecret, setClientSecret] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [pkLoading, setPkLoading] = React.useState(true);
+  const [pkError, setPkError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const pk = getStripePublishableKey();
-    if (!pk) {
-      setStripePromise(null);
-      setError("Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.local");
-      setLoading(false);
-      return;
-    }
-    setStripePromise(loadStripe(pk));
-    setError(null);
+    let cancelled = false;
+    setPkLoading(true);
+    setPkError(null);
+    void fetchStripePublishableKey()
+      .then((pk) => {
+        if (!cancelled) {
+          setStripePromise(loadStripe(pk));
+          setPkError(null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setStripePromise(null);
+          setPkError(e instanceof Error ? e.message : "Could not load Stripe configuration");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setPkLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const metadataKey = React.useMemo(() => JSON.stringify(metadata ?? {}), [metadata]);
@@ -236,20 +275,27 @@ export function StripePaymentElementBlock({
     };
   }, [amountTotalCents, description, metadataKey, resetKey, disabled, metadata]);
 
-  const pk = getStripePublishableKey();
-  if (!pk) {
+  if (disabled) {
+    return null;
+  }
+
+  if (pkLoading) {
     return (
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100 sm:text-sm">
-        Add your Stripe publishable key as{" "}
-        <code className="text-amber-50/90">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> in{" "}
-        <code className="text-amber-50/90">.env.local</code> (same as in{" "}
-        <code className="text-amber-50/90">server-for-stripe/.env</code>).
+      <div className="rounded-lg border border-white/[0.08] bg-[#1e1e1e] px-3 py-5 text-center text-xs text-zinc-500 sm:text-sm">
+        Loading payment configuration…
       </div>
     );
   }
 
-  if (disabled) {
-    return null;
+  if (pkError) {
+    return (
+      <div
+        role="alert"
+        className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100 sm:text-sm"
+      >
+        {pkError}
+      </div>
+    );
   }
 
   if (loading) {

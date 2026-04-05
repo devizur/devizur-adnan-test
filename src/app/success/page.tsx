@@ -6,38 +6,16 @@ import { useSearchParams } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getStripeBackendBaseUrl } from "@/lib/stripeCheckout";
-
 function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const paymentIntentId = searchParams.get("payment_intent");
   const { clearCart } = useCart();
-  const [verified, setVerified] = React.useState<{
-    payment_status?: string;
-    amount_total?: number | null;
-    currency?: string;
-  } | null>(null);
 
   React.useEffect(() => {
     if (!sessionId && !paymentIntentId) return;
     clearCart();
   }, [sessionId, paymentIntentId, clearCart]);
-
-  React.useEffect(() => {
-    if (!sessionId) return;
-    let cancelled = false;
-    const base = getStripeBackendBaseUrl();
-    fetch(`${base}/checkout-session?session_id=${encodeURIComponent(sessionId)}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!cancelled && data && typeof data === "object") setVerified(data);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId]);
 
   if (!sessionId && !paymentIntentId) {
     return (
@@ -76,16 +54,7 @@ function SuccessContent() {
       <p className="text-sm text-gray-400 max-w-md leading-relaxed mb-2">
         Thank you. You’ll get a check-in code by SMS. Show it at the counter to complete check-in.
       </p>
-      {verified?.payment_status ? (
-        <p className="text-xs text-gray-500 mb-6">
-          Status: {verified.payment_status}
-          {verified.amount_total != null && verified.currency
-            ? ` · ${(verified.amount_total / 100).toFixed(2)} ${String(verified.currency).toUpperCase()}`
-            : ""}
-        </p>
-      ) : (
-        <p className="text-xs text-gray-600 mb-6">Session {(sessionId ?? "").slice(0, 20)}…</p>
-      )}
+      <p className="text-xs text-gray-600 mb-6">Reference: {(sessionId ?? "").slice(0, 24)}…</p>
       <Button asChild className="bg-primary-1 text-black hover:bg-primary-1/90 rounded-xl min-h-11">
         <Link href="/">Continue</Link>
       </Button>

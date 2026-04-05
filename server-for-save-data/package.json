@@ -1,5 +1,5 @@
 {
-  "name": "stripe-node-backend",
+  "name": "orders-save-server",
   "version": "1.0.0",
   "main": "server.js",
   "type": "commonjs",
@@ -10,7 +10,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "stripe": "^18.3.0"
+    "express": "^4.21.2"
   }
 }

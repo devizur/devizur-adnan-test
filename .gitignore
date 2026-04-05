@@ -9,9 +9,9 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-/server-for-stripe/node_modules
-# Stripe server persisted orders (JSON files)
-/server-for-stripe/data/
+/server-for-save-data/node_modules
+# Order JSON files from server-for-save-data
+/server-for-save-data/data/
 # testing
 /coverage
 

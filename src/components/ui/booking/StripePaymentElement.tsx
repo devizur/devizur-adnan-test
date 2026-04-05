@@ -13,6 +13,7 @@ import {
   confirmBookingPaymentIntent,
   createPaymentIntent,
   fetchStripePublishableKey,
+  isAlreadySucceededPaymentIntentError,
 } from "@/lib/stripeCheckout";
 import { cn } from "@/lib/utils";
 import { segmentedPrimaryCtaClass } from "@/components/ui/booking/booking-segmented-styles";
@@ -123,7 +124,11 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
         const intentId = paymentIntent.id;
         const pm = paymentIntent.payment_method;
         const paymentMethodId =
-          typeof pm === "string" ? pm : pm && typeof pm === "object" && "id" in pm ? String((pm as { id: string }).id) : "";
+          typeof pm === "string"
+            ? pm
+            : pm && typeof pm === "object" && "id" in pm
+              ? String((pm as { id: string }).id)
+              : "";
         if (intentId && paymentMethodId) {
           try {
             await confirmBookingPaymentIntent({
@@ -131,15 +136,18 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
               paymentMethodId,
             });
           } catch (confirmErr) {
-            setMessage(
-              confirmErr instanceof Error
-                ? confirmErr.message
-                : "Payment succeeded but server confirmation failed. Contact support if charged."
-            );
-            setSubmitting(false);
-            return;
+            const msg =
+              confirmErr instanceof Error ? confirmErr.message : String(confirmErr);
+            if (!isAlreadySucceededPaymentIntentError(msg)) {
+              setMessage(
+                msg || "Payment succeeded but server confirmation failed. Contact support if charged."
+              );
+              setSubmitting(false);
+              return;
+            }
           }
         }
+        setSubmitting(false);
         onPaid({ stripePaymentIntentId: intentId });
       } else {
         setMessage(`Payment status: ${paymentIntent?.status ?? "unknown"}. Try again or use another method.`);

@@ -14,11 +14,21 @@ const app = express();
 const port = Number(process.env.PORT) || 5002;
 const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
 
+/** Next may be opened as localhost or 127.0.0.1 — those are different origins for CORS. */
+function isAllowedCorsOrigin(origin) {
+  if (!origin) return true;
+  if (origin === clientUrl) return true;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+}
+
 app.use(
   cors({
-    origin: clientUrl,
-    methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type"],
+    origin: (origin, callback) => {
+      callback(null, isAllowedCorsOrigin(origin));
+    },
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    // axios sends Cache-Control on GET /orders — preflight must allow it
+    allowedHeaders: ["Content-Type", "Cache-Control"],
   })
 );
 app.use(express.json());

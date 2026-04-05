@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useCart } from "@/contexts/CartContext";
 import { appendPaidOrder } from "@/lib/paidOrdersStorage";
-import { saveOrderToBackend } from "@/lib/saveOrderToBackend";
+import { saveOrderToBackend } from "@/lib/api/localHttp";
 import { parsePrice } from "@/lib/utils";
 
 export const CREDIT_CARD_FEE_RATE = 0.03;

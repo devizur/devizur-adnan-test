@@ -66,17 +66,72 @@ function extractPaymentIntentClientSecret(data: unknown): string | undefined {
   return undefined;
 }
 
+function stringFromPayloadField(val: unknown): string | undefined {
+  if (typeof val === "string" && val.trim()) return val.trim();
+  if (val && typeof val === "object" && "message" in val) {
+    const m = (val as { message: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m.trim();
+  }
+  return undefined;
+}
+
+function collectModelStateErrors(errors: unknown): string[] {
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return [];
+  const out: string[] = [];
+  for (const v of Object.values(errors as Record<string, unknown>)) {
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        if (typeof item === "string" && item.trim()) out.push(item.trim());
+      }
+    } else if (typeof v === "string" && v.trim()) {
+      out.push(v.trim());
+    }
+  }
+  return out;
+}
+
+const GENERIC_GATEWAY_PHRASES = [
+  /^a processing error occurred\.?$/i,
+  /^an error occurred while processing your request\.?$/i,
+  /^one or more validation errors occurred\.?$/i,
+];
+
+function isGenericGatewayMessage(s: string): boolean {
+  return GENERIC_GATEWAY_PHRASES.some((re) => re.test(s.trim()));
+}
+
 function paymentGatewayErrorMessage(error: unknown, fallbackPrefix: string): string {
   if (axios.isAxiosError(error)) {
-    const err = error as AxiosError<{ message?: string; error?: string; title?: string }>;
+    const err = error as AxiosError<Record<string, unknown>>;
     const payload = err.response?.data;
-    return (
-      (typeof payload?.message === "string" && payload.message) ||
-      (typeof payload?.error === "string" && payload.error) ||
-      (typeof payload?.title === "string" && payload.title) ||
-      err.message ||
-      `${fallbackPrefix} (${err.response?.status ?? "network"})`
-    );
+    const status = err.response?.status;
+    const traceId =
+      payload && typeof payload === "object" && typeof payload.traceId === "string"
+        ? payload.traceId.trim()
+        : undefined;
+
+    const validationMsgs = payload && typeof payload === "object" ? collectModelStateErrors(payload.errors) : [];
+    if (validationMsgs.length) {
+      return validationMsgs.join(" ");
+    }
+
+    const detail = payload && typeof payload === "object" ? stringFromPayloadField(payload.detail) : undefined;
+    const message = payload && typeof payload === "object" ? stringFromPayloadField(payload.message) : undefined;
+    const errorStr = payload && typeof payload === "object" ? stringFromPayloadField(payload.error) : undefined;
+    const title = payload && typeof payload === "object" ? stringFromPayloadField(payload.title) : undefined;
+
+    const candidates = [detail, message, errorStr, title].filter((s): s is string => Boolean(s));
+    const specific = candidates.find((s) => !isGenericGatewayMessage(s));
+    let text = specific ?? candidates[0] ?? err.message;
+
+    if (text && isGenericGatewayMessage(text)) {
+      const bits: string[] = [];
+      if (typeof status === "number") bits.push(`HTTP ${status}`);
+      if (traceId) bits.push(`ref: ${traceId}`);
+      if (bits.length) text = `${text} (${bits.join(", ")})`;
+    }
+
+    return text?.trim() || `${fallbackPrefix} (${status ?? "network"})`;
   }
   return error instanceof Error ? error.message : fallbackPrefix;
 }
@@ -127,6 +182,19 @@ export async function createPaymentIntent(params: CreateCheckoutSessionParams): 
 export interface ConfirmBookingPaymentIntentBody {
   paymentIntentId: string;
   paymentMethodId: string;
+}
+
+/**
+ * Gateway may surface Stripe's error when the PI was already confirmed via Elements.
+ * In that case payment already succeeded — treat as non-fatal for the booking flow.
+ */
+export function isAlreadySucceededPaymentIntentError(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("already succeeded") ||
+    m.includes("has already been confirmed") ||
+    (m.includes("cannot confirm") && m.includes("paymentintent") && m.includes("already"))
+  );
 }
 
 /**

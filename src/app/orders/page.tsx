@@ -8,7 +8,7 @@ import { cn, formatPrice } from "@/lib/utils";
 import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
-import { fetchOrdersFromBackend } from "@/lib/ordersApi";
+import { fetchOrdersFromBackend } from "@/lib/api/localHttp";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
 
 function shiftLabel(timeOfDay: 1 | 2 | 3): string {

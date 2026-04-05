@@ -306,9 +306,12 @@ export function StepAvailabilitySelection() {
   const isPackageSelected = (id: number) => selectedPackages.some((p) => p.id === id);
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-      {/* Left panel - Activity List */}
-      <div className="flex min-h-0 min-w-0 w-full shrink-0 flex-col border-b border-white/[0.06] bg-[#141414] md:min-h-0 md:w-[300px] md:border-b-0 md:border-r lg:w-[min(400px,38%)]">
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain md:flex-row md:overflow-hidden"
+      style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+    >
+      {/* Left panel - Activity List (capped on mobile so date/time slots stay reachable) */}
+      <div className="flex min-h-0 min-w-0 w-full shrink-0 flex-col border-b border-white/[0.06] bg-[#141414] max-md:max-h-[min(42vh,320px)] md:max-h-none md:w-[300px] md:border-b-0 md:border-r lg:w-[min(400px,38%)]">
         <div className="shrink-0 border-b border-white/[0.06] bg-zinc-950/60 px-3 py-3 sm:px-4">
           <h3 className="whitespace-nowrap text-[11px] font-semibold tracking-tight text-zinc-100 sm:text-xs">
             Activities &amp; packages
@@ -567,7 +570,7 @@ export function StepAvailabilitySelection() {
       </div>
 
       {/* Right panel - Date, time & availability */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#161616]">
+      <div className="flex min-h-0 min-w-0 w-full flex-none flex-col bg-[#161616] max-md:min-h-[min(52dvh,420px)] md:flex-1">
         <div className="shrink-0 border-b border-white/[0.06] bg-gradient-to-b from-[#181818] to-[#161616]">
           <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
              
@@ -669,7 +672,10 @@ export function StepAvailabilitySelection() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4 scrollbar-dark">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 pb-6 scrollbar-dark sm:px-5 sm:py-4 max-md:min-h-[min(36dvh,300px)] max-md:max-h-[min(50dvh,440px)] max-md:flex-none md:max-h-none md:flex-1"
+          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+        >
           {!slotsParams ? (
               <div
                 className="rounded-xl border border-dashed border-white/[0.1] bg-[#141414]/40 px-4 py-6 sm:py-7 text-center"
@@ -690,7 +696,7 @@ export function StepAvailabilitySelection() {
                 role="group"
                 aria-label="Select start time"
               >
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-1 sm:gap-1.5">
+                <div className="grid touch-manipulation grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-1.5 sm:gap-1.5">
                   {slotsLoading ? (
                     <div className="col-span-full py-8 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
                       <Loader2 className="h-6 w-6 text-primary-1 animate-spin" aria-hidden />
@@ -712,7 +718,7 @@ export function StepAvailabilitySelection() {
                         onClick={() => dispatch(setTimeSlot(s.startTime))}
                         aria-pressed={timeSlot === s.startTime}
                         className={cn(
-                          "relative min-h-[2.625rem] sm:min-h-11 py-1 px-1 rounded-md border text-[11px] sm:text-xs transition-all duration-150 flex items-center justify-center leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414]",
+                          "relative min-h-11 min-w-0 py-2 px-1 rounded-md border text-[11px] sm:min-h-11 sm:py-1 sm:text-xs transition-all duration-150 flex items-center justify-center leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414] active:scale-[0.98]",
                           s.available <= 0 && "opacity-45 cursor-not-allowed",
                           timeSlot === s.startTime
                             ? "bg-primary-1 text-secondary border-primary-1 shadow-sm shadow-black/20 cursor-pointer font-semibold"

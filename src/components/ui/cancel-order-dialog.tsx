@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteOrderFromBackend } from "@/lib/ordersApi";
+import { deleteOrderFromBackend } from "@/lib/api/localHttp";
 import { removePaidOrderById, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 
 export function CancelOrderConfirmDialog({

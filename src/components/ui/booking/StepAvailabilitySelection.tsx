@@ -329,9 +329,7 @@ export function StepAvailabilitySelection() {
                 className="hidden size-3 shrink-0 text-zinc-500 sm:block"
                 aria-hidden
               />
-              Activities
-            </span>
-            {suggestedPackages.length > 0 ? (
+             Activities and         {suggestedPackages.length > 0 ? (
               <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
                 <Package
                   className="hidden size-3 shrink-0 text-zinc-500 sm:block"
@@ -339,7 +337,9 @@ export function StepAvailabilitySelection() {
                 />
                 Packages
               </span>
-            ) : null}
+            ) : null}   List
+            </span>
+      
           </div>
           <div className="-mx-0.5 flex flex-row  lg:flex-col min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {

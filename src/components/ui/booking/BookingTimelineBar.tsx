@@ -105,6 +105,35 @@ export interface BookingTimelineBarProps {
 const endpointLabelClass =
   "w-[3.4rem] shrink-0 text-center text-[8px] font-semibold tracking-[0.08em] text-zinc-500 sm:w-[3.6rem]";
 
+type TimelineSegment = {
+  name: string;
+  durationMins: number;
+  durationLabel: string;
+};
+
+type TimelineSegmentWithTimes = TimelineSegment & {
+  segStartMinutes: number;
+  segEndMinutes: number;
+  segStartLabel: string;
+  segEndLabel: string;
+};
+
+function withSegmentTimes(segments: TimelineSegment[], startMinutes: number): TimelineSegmentWithTimes[] {
+  let cursor = startMinutes;
+  return segments.map((seg) => {
+    const segStartMinutes = cursor;
+    const segEndMinutes = segStartMinutes + seg.durationMins;
+    cursor = segEndMinutes;
+    return {
+      ...seg,
+      segStartMinutes,
+      segEndMinutes,
+      segStartLabel: formatMinutesToTime(segStartMinutes),
+      segEndLabel: formatMinutesToTime(segEndMinutes),
+    };
+  });
+}
+
 export function BookingTimelineBar({
   bookingReferenceId,
   timeSlot,
@@ -150,13 +179,25 @@ export function BookingTimelineBar({
   const { startMinutes, totalMins, segments } = React.useMemo(() => {
     const start = parseDisplayTimeToMinutes(effectiveTimeSlot);
     if (steps.length > 0) {
-      const firstStart = parseTimeToMinutes(steps[0]!.startingTime);
-      const lastEnd = parseTimeToMinutes(steps[steps.length - 1]!.endingTime);
+      const parsedSteps = steps.map((s) => {
+        const from = parseTimeToMinutes(s.startingTime);
+        const to = parseTimeToMinutes(s.endingTime);
+        const duration = Math.max(1, to - from);
+        return {
+          name: s.itemName,
+          from,
+          to,
+          durationMins: duration,
+          durationLabel: s.itemDuration || `${duration} mins`,
+        };
+      });
+      const firstStart = parsedSteps[0]?.from ?? start;
+      const lastEnd = parsedSteps[parsedSteps.length - 1]?.to ?? firstStart + 1;
       const total = Math.max(1, lastEnd - firstStart);
-      const segs = steps.map((s) => ({
-        name: s.itemName,
-        durationMins: Math.max(1, parseTimeToMinutes(s.endingTime) - parseTimeToMinutes(s.startingTime)),
-        durationLabel: s.itemDuration || `${Math.max(1, parseTimeToMinutes(s.endingTime) - parseTimeToMinutes(s.startingTime))} mins`,
+      const segs: TimelineSegment[] = parsedSteps.map((s) => ({
+        name: s.name,
+        durationMins: s.durationMins,
+        durationLabel: s.durationLabel,
       }));
       return { startMinutes: firstStart, totalMins: total, segments: segs };
     }
@@ -165,7 +206,7 @@ export function BookingTimelineBar({
       return {
         startMinutes: start,
         totalMins: total,
-        segments: fallbackSegments.map((s) => ({
+        segments: fallbackSegments.map((s): TimelineSegment => ({
           ...s,
           durationLabel: `${s.durationMins} mins`,
         })),
@@ -173,6 +214,11 @@ export function BookingTimelineBar({
     }
     return { startMinutes: start, totalMins: 60, segments: [] };
   }, [steps, fallbackSegments, effectiveTimeSlot, slotsResponseReceived]);
+
+  const segmentsWithTimes = React.useMemo(
+    () => withSegmentTimes(segments as TimelineSegment[], startMinutes),
+    [segments, startMinutes]
+  );
 
   const timeMarkers = React.useMemo(() => {
     const markerSet = new Set<number>();
@@ -182,6 +228,12 @@ export function BookingTimelineBar({
     markerSet.add(startMinutes);
     markerSet.add(end);
 
+    // Show times at item boundaries so short/mixed schedules still expose key times.
+    for (const seg of segmentsWithTimes) {
+      markerSet.add(seg.segStartMinutes);
+      markerSet.add(seg.segEndMinutes);
+    }
+
     let t = Math.ceil(startMinutes / interval) * interval;
     while (t < end) {
       markerSet.add(t);
@@ -189,11 +241,16 @@ export function BookingTimelineBar({
     }
 
     return Array.from(markerSet).sort((a, b) => a - b);
-  }, [startMinutes, totalMins]);
+  }, [startMinutes, totalMins, segmentsWithTimes]);
 
   const hasSegments = segments.length > 0;
   const isFetching = slotsResponseReceived && !!selectedDate && !!effectiveTimeSlot;
   const canShowContent = selectedDate && hasSegments;
+  const endMinutes = startMinutes + totalMins;
+  const interiorTimeMarkers = timeMarkers.filter((m) => m > startMinutes && m < endMinutes);
+  const scheduleSummary = segmentsWithTimes
+    .map((s) => `${s.name} (${s.segStartLabel} - ${s.segEndLabel})`)
+    .join("; ");
 
   if (!selectedDate) return null;
 
@@ -241,18 +298,18 @@ export function BookingTimelineBar({
         </span>
       </div>
       <div className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px min-w-0">
-        <div className="min-w-0 flex-[3] rounded-sm bg-zinc-700/50 animate-pulse" />
-        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/40 animate-pulse" />
-        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/50 animate-pulse" />
+        <div className="min-w-0 flex-3 rounded-sm bg-zinc-700/50 animate-pulse" />
+        <div className="min-w-0 flex-2 rounded-sm bg-zinc-700/40 animate-pulse" />
+        <div className="min-w-0 flex-2 rounded-sm bg-zinc-700/50 animate-pulse" />
       </div>
       <div className="mt-1.5 flex min-h-[14px] items-center overflow-hidden min-w-0">
-        <div className="min-w-0 flex-[3] pr-0.5">
+        <div className="min-w-0 flex-3 pr-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
         </div>
-        <div className="min-w-0 flex-[2] px-0.5">
+        <div className="min-w-0 flex-2 px-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/28 animate-pulse" />
         </div>
-        <div className="min-w-0 flex-[2] pl-0.5">
+        <div className="min-w-0 flex-2 pl-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
         </div>
       </div>
@@ -291,10 +348,6 @@ export function BookingTimelineBar({
   if (isLoading && isFetching) return <LoadingState />;
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
-  const scheduleSummary = segments
-    .map((s) => `${s.name} (${s.durationMins} min)`)
-    .join("; ");
-
   return (
     <div className={cn(shellBase, "px-2.5 py-2 sm:px-3", className)}>
       <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
@@ -306,26 +359,33 @@ export function BookingTimelineBar({
           {formatTotalDuration(totalMins)}
         </span>
       </div>
-
-
-
-      <div className="relative min-h-[18px] flex-1 min-w-0 mx-4">
-        {timeMarkers.map((m) => {
-          const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
-          const clamped = Math.max(0, Math.min(100, pct));
-          return (
-            <div
-              key={m}
-              className="absolute top-0 flex flex-col items-center"
-              style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
-            >
-              <div className="h-2 w-px rounded-full bg-zinc-500" />
-              <span className="mt-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500">
-                {formatMinutesToTime(m)}
-              </span>
-            </div>
-          );
-        })}
+      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
+          {formatMinutesToTime(startMinutes)}
+        </span>
+        <div className="relative min-h-[18px] min-w-0 flex-1 mx-[2px]">
+          {interiorTimeMarkers.map((m) => {
+            const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
+            const clamped = Math.max(0, Math.min(100, pct));
+            return (
+              <div
+                key={m}
+                className="absolute top-0"
+                style={{ left: `${clamped}%` }}
+              >
+                <div className="-translate-x-1/2 h-2 w-px rounded-full bg-zinc-500" />
+                <span
+                  className="mt-0.5 block pl-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500"
+                >
+                  {formatMinutesToTime(m)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/70")}>
+          {formatMinutesToTime(endMinutes)}
+        </span>
       </div>
 
 
@@ -334,13 +394,12 @@ export function BookingTimelineBar({
         role="img"
         aria-label={`Booking schedule, ${formatTotalDuration(totalMins)} total. ${scheduleSummary}`}
       >
-        {segments.map((seg, idx) => {
+        {segmentsWithTimes.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           const isFirst = idx === 0;
           const isLast = idx === segments.length - 1;
           const widthPct = Math.max(0, pct);
-          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
               key={`${seg.name}-${idx}`}
@@ -352,13 +411,12 @@ export function BookingTimelineBar({
               )}
               style={{
                 flex: `0 0 ${widthPct}%`,
-                minWidth: minPx || undefined,
               }}
-              title={`${seg.name} — ${seg.durationMins} min`}
+              title={`${seg.name} — ${seg.segStartLabel} - ${seg.segEndLabel}`}
             >
               <span
                 className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-[8px] font-semibold leading-none text-white/90"
-                title={seg.durationLabel}
+                title={`${seg.durationLabel} (${seg.segStartLabel} - ${seg.segEndLabel})`}
               >
                 <span className="truncate">{seg.durationLabel}</span>
               </span>
@@ -368,18 +426,16 @@ export function BookingTimelineBar({
       </div>
 
       <div className="mt-1.5 flex min-h-[14px] overflow-hidden min-w-0 leading-snug">
-        {segments.map((seg, idx) => {
+        {segmentsWithTimes.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           const widthPct = Math.max(0, pct);
-          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
               key={`${seg.name}-${idx}-label`}
               className="min-w-0 flex items-start gap-0.5 px-0.5"
               style={{
                 flex: `0 0 ${widthPct}%`,
-                minWidth: minPx || undefined,
               }}
             >
               <span
@@ -391,7 +447,7 @@ export function BookingTimelineBar({
                   "min-w-0 truncate text-[9px] font-medium sm:text-[10px]",
                   color.text
                 )}
-                title={`${seg.name} (${seg.durationMins} min)`}
+                title={`${seg.name} (${seg.segStartLabel} - ${seg.segEndLabel})`}
               >
                 {seg.name}
               </span>

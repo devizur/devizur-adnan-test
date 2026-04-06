@@ -29,7 +29,7 @@ export function PaymentSuccessModal({ open, onOpenChange, onDone }: PaymentSucce
             Payment successful
           </AlertDialogTitle>
           <p className="text-sm text-gray-400 leading-relaxed">
-            You’ll get a check-in code by SMS. Show it at the counter to complete check-in.
+            You’ll get a check-in code by Email. Show it at the counter to complete check-in.
           </p>
         </div>
         <AlertDialogFooter className="px-6 pb-6 pt-0 justify-center border-0">

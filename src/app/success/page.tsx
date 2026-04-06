@@ -52,7 +52,7 @@ function SuccessContent() {
       </div>
       <h1 className="text-xl font-semibold text-white mb-2">Payment successful</h1>
       <p className="text-sm text-gray-400 max-w-md leading-relaxed mb-2">
-        Thank you. You’ll get a check-in code by SMS. Show it at the counter to complete check-in.
+        Thank you. You’ll get a check-in code by Email. Show it at the counter to complete check-in.
       </p>
       <p className="text-xs text-gray-600 mb-6">Reference: {(sessionId ?? "").slice(0, 24)}…</p>
       <Button asChild className="bg-primary-1 text-black hover:bg-primary-1/90 rounded-xl min-h-11">

@@ -386,7 +386,7 @@ export function StepAvailabilitySelection() {
                   )}
                 >
                   <div className={catalogCardImageShell}>
-                    <img
+                    <img   
                       src={
                         activity.image ||
                         `https://picsum.photos/seed/a-${activity.id}/800/600`

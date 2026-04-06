@@ -47,9 +47,26 @@ export interface CreateCheckoutSessionParams {
 
 /** POST /api/BookingPayments/create-payment-intent request */
 export interface BookingPaymentsCreatePaymentIntentBody {
+  /**
+   * By default: major currency unit (e.g. 216.30 for USD) — matches a typical .NET decimal amount.
+   * Set NEXT_PUBLIC_BOOKING_PAYMENTS_AMOUNT_IN_CENTS=true to send Stripe-style integer cents (21630).
+   */
   amount: number;
   currency: string;
   metadata?: Record<string, string>;
+}
+
+function useBookingPaymentsAmountInCents(): boolean {
+  const v = process.env.NEXT_PUBLIC_BOOKING_PAYMENTS_AMOUNT_IN_CENTS?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+/** Value sent as `amount` on create-payment-intent (major unit or cents — see env). */
+export function amountForBookingPaymentsApi(amountTotalCents: number): number {
+  if (useBookingPaymentsAmountInCents()) {
+    return amountTotalCents;
+  }
+  return Number((amountTotalCents / 100).toFixed(2));
 }
 
 function extractPaymentIntentClientSecret(data: unknown): string | undefined {
@@ -159,17 +176,17 @@ function paymentGatewayErrorMessage(error: unknown, fallbackPrefix: string): str
 
 /**
  * Creates a Stripe PaymentIntent via payment gateway (POST /api/BookingPayments/create-payment-intent).
- * Amount is in the smallest currency unit (e.g. USD cents), same as Stripe.
+ * Internally totals are computed in cents; the gateway `amount` field defaults to major units (e.g. 216.30).
  */
 export async function createPaymentIntent(
   params: CreateCheckoutSessionParams
 ): Promise<{ clientSecret: string; paymentIntentId: string }> {
-  const { amountTotalCents: amount, description, metadata: meta } = params;
+  const { amountTotalCents, description, metadata: meta } = params;
 
-  if (typeof amount !== "number" || !Number.isInteger(amount)) {
+  if (typeof amountTotalCents !== "number" || !Number.isInteger(amountTotalCents)) {
     throw new Error("amountTotalCents must be an integer (e.g. USD cents)");
   }
-  if (amount < 50) {
+  if (amountTotalCents < 50) {
     throw new Error("Amount must be at least 50 ($0.50 USD minimum)");
   }
 
@@ -182,7 +199,7 @@ export async function createPaymentIntent(
   }
 
   const body: BookingPaymentsCreatePaymentIntentBody = {
-    amount,
+    amount: amountForBookingPaymentsApi(amountTotalCents),
     currency,
     metadata,
   };

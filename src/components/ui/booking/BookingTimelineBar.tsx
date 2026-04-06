@@ -103,7 +103,7 @@ export interface BookingTimelineBarProps {
 }
 
 const endpointLabelClass =
-  "w-[3.4rem] shrink-0 text-center text-[8px] font-semibold tracking-[0.08em] text-zinc-500 sm:w-[3.6rem]";
+  "w-[4.2rem] shrink-0 text-center text-[10px] font-semibold tracking-[0.06em] text-zinc-500 sm:w-[4.4rem]";
 
 type TimelineSegment = {
   name: string;
@@ -351,46 +351,45 @@ export function BookingTimelineBar({
   return (
     <div className={cn(shellBase, "px-2.5 py-2 sm:px-3", className)}>
       <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
-        <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
           Schedule
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-zinc-900/80 px-2 py-0.5 text-[9px] font-medium tabular-nums text-zinc-400">
-          <Clock className="size-2.5 text-zinc-500" aria-hidden />
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-zinc-900/80 px-2.5 py-1 text-[10px] font-medium tabular-nums text-zinc-400">
+          <Clock className="size-3 text-zinc-500" aria-hidden />
           {formatTotalDuration(totalMins)}
         </span>
       </div>
-      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
-          {formatMinutesToTime(startMinutes)}
-        </span>
-        <div className="relative min-h-[18px] min-w-0 flex-1 mx-[2px]">
-          {interiorTimeMarkers.map((m) => {
-            const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
-            const clamped = Math.max(0, Math.min(100, pct));
-            return (
-              <div
-                key={m}
-                className="absolute top-0"
-                style={{ left: `${clamped}%` }}
-              >
-                <div className="-translate-x-1/2 h-2 w-px rounded-full bg-zinc-500" />
-                <span
-                  className="mt-0.5 block pl-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500"
-                >
-                  {formatMinutesToTime(m)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/70")}>
-          {formatMinutesToTime(endMinutes)}
-        </span>
+ 
+      <div className="mb-1 flex min-h-[14px] overflow-hidden min-w-0 leading-none">
+        {segmentsWithTimes.map((seg, idx) => {
+          const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
+          const widthPct = Math.max(0, pct);
+          const showRangeLabels = widthPct >= 18;
+          const showSingleLabel = widthPct < 18;
+          return (
+            <div
+              key={`${seg.name}-${idx}-time-range`}
+              className="min-w-0 px-1"
+              style={{ flex: `0 0 ${widthPct}%` }}
+              title={`${seg.name} — ${seg.segStartLabel} - ${seg.segEndLabel}`}
+            >
+              {showRangeLabels ? (
+                <div className="flex items-center justify-between text-[9px] font-semibold tabular-nums text-zinc-400">
+                  <span className="truncate">{seg.segStartLabel}</span>
+                  <span className="truncate pl-1">{seg.segEndLabel}</span>
+                </div>
+              ) : showSingleLabel ? (
+                <div className="flex items-center justify-center gap-1 text-[9px] font-semibold tabular-nums text-zinc-400">
+                  <span className="truncate">{seg.segStartLabel} - {seg.segEndLabel}</span>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
-
       <div
-        className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"
+        className="flex h-6 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"
         role="img"
         aria-label={`Booking schedule, ${formatTotalDuration(totalMins)} total. ${scheduleSummary}`}
       >
@@ -415,7 +414,7 @@ export function BookingTimelineBar({
               title={`${seg.name} — ${seg.segStartLabel} - ${seg.segEndLabel}`}
             >
               <span
-                className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-[8px] font-semibold leading-none text-white/90"
+                className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-[10px] font-semibold leading-none text-white/95"
                 title={`${seg.durationLabel} (${seg.segStartLabel} - ${seg.segEndLabel})`}
               >
                 <span className="truncate">{seg.durationLabel}</span>
@@ -425,7 +424,7 @@ export function BookingTimelineBar({
         })}
       </div>
 
-      <div className="mt-1.5 flex min-h-[14px] overflow-hidden min-w-0 leading-snug">
+      <div className="mt-2 flex min-h-[18px] overflow-hidden min-w-0 leading-snug">
         {segmentsWithTimes.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
@@ -444,7 +443,7 @@ export function BookingTimelineBar({
               />
               <span
                 className={cn(
-                  "min-w-0 truncate text-[9px] font-medium sm:text-[10px]",
+                  "min-w-0 truncate text-[10px] font-medium sm:text-[11px]",
                   color.text
                 )}
                 title={`${seg.name} (${seg.segStartLabel} - ${seg.segEndLabel})`}

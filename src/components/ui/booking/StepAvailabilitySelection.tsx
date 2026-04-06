@@ -122,10 +122,10 @@ function getActivityCardPricingSubtitle(
 
 /** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
 const catalogCardBtnBase =
-  "group/card  w-[min(238px,82vw)] sm:w-[252px] shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
+  "group/card  w-[min(238px,82vw)] sm:w-full shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
 
 const catalogColumnClass =
-  "flex bg-red-200  w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px] lg:w-full";
+  "flex   w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px] lg:w-full";
 
 const catalogCardImageShell =
   "relative  h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0 w-full";

@@ -17,35 +17,55 @@ function parseDurationMins(value: string): number {
   return Math.round(num);
 }
 
-/** Parse "HH:mm" to minutes since midnight (e.g. "09:00" → 540, "13:57" → 837). */
-function parseHhMmToMinutes(s: string): number {
-  const parts = String(s || "00:00").trim().split(":");
-  const h = parseInt(parts[0], 10) || 0;
-  const m = parseInt(parts[1], 10) || 0;
-  return h * 60 + m;
+/** Parse various time formats into minutes since midnight without timezone conversion. */
+function parseTimeToMinutes(raw: string): number {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return 0;
+
+  // "9:00 am", "12:30 pm"
+  const m12 = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (m12) {
+    let h = parseInt(m12[1], 10) || 0;
+    const mins = parseInt(m12[2], 10) || 0;
+    const isPm = m12[3] === "pm";
+    if (isPm && h !== 12) h += 12;
+    if (!isPm && h === 12) h = 0;
+    return h * 60 + mins;
+  }
+
+  // "HH:mm" or "HH:mm:ss"
+  const m24 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m24) {
+    const h = parseInt(m24[1], 10) || 0;
+    const mins = parseInt(m24[2], 10) || 0;
+    return h * 60 + mins;
+  }
+
+  // ISO-like strings: "2026-04-06T12:30:00"
+  const isoLike = s.match(/t(\d{2}):(\d{2})/);
+  if (isoLike) {
+    const h = parseInt(isoLike[1], 10) || 0;
+    const mins = parseInt(isoLike[2], 10) || 0;
+    return h * 60 + mins;
+  }
+
+  return 0;
 }
 
 /** Parse display time like "9:00 am" to minutes since midnight. */
 function parseDisplayTimeToMinutes(t: string): number {
-  const s = String(t || "").trim().toLowerCase();
-  const m12 = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
-  if (!m12) return 9 * 60;
-  let h = parseInt(m12[1], 10) || 0;
-  const mins = parseInt(m12[2], 10) || 0;
-  const isPm = m12[3] === "pm";
-  if (isPm && h !== 12) h += 12;
-  if (!isPm && h === 12) h = 0;
-  return h * 60 + mins;
+  const parsed = parseTimeToMinutes(t);
+  return parsed > 0 ? parsed : 9 * 60;
 }
 
-/** Format minutes since midnight to display time like "9:00 AM". */
+/** Format minutes since midnight to display time like "4:58pm". */
 function formatMinutesToTime(m: number): string {
-  const h = Math.floor(m / 60) % 24;
-  const min = m % 60;
-  if (h === 0) return `12:${String(min).padStart(2, "0")} AM`;
-  if (h === 12) return `12:${String(min).padStart(2, "0")} PM`;
-  if (h < 12) return `${h}:${String(min).padStart(2, "0")} AM`;
-  return `${h - 12}:${String(min).padStart(2, "0")} PM`;
+  const safe = ((m % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h24 = Math.floor(safe / 60);
+  const min = safe % 60;
+  const suffix = h24 >= 12 ? "pm" : "am";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(min).padStart(2, "0")}${suffix}`;
 }
 
 function formatTotalDuration(mins: number): string {
@@ -83,7 +103,7 @@ export interface BookingTimelineBarProps {
 }
 
 const endpointLabelClass =
-  "w-[2.25rem] shrink-0 text-center text-[8px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:w-[2.5rem]";
+  "w-[3.4rem] shrink-0 text-center text-[8px] font-semibold tracking-[0.08em] text-zinc-500 sm:w-[3.6rem]";
 
 export function BookingTimelineBar({
   bookingReferenceId,
@@ -130,33 +150,45 @@ export function BookingTimelineBar({
   const { startMinutes, totalMins, segments } = React.useMemo(() => {
     const start = parseDisplayTimeToMinutes(effectiveTimeSlot);
     if (steps.length > 0) {
-      const firstStart = parseHhMmToMinutes(steps[0]!.startingTime);
-      const lastEnd = parseHhMmToMinutes(steps[steps.length - 1]!.endingTime);
-      const total = lastEnd - firstStart;
+      const firstStart = parseTimeToMinutes(steps[0]!.startingTime);
+      const lastEnd = parseTimeToMinutes(steps[steps.length - 1]!.endingTime);
+      const total = Math.max(1, lastEnd - firstStart);
       const segs = steps.map((s) => ({
         name: s.itemName,
-        durationMins: parseHhMmToMinutes(s.endingTime) - parseHhMmToMinutes(s.startingTime),
+        durationMins: Math.max(1, parseTimeToMinutes(s.endingTime) - parseTimeToMinutes(s.startingTime)),
+        durationLabel: s.itemDuration || `${Math.max(1, parseTimeToMinutes(s.endingTime) - parseTimeToMinutes(s.startingTime))} mins`,
       }));
       return { startMinutes: firstStart, totalMins: total, segments: segs };
     }
     if (slotsResponseReceived && fallbackSegments.length > 0) {
       const total = fallbackSegments.reduce((a, s) => a + s.durationMins, 0);
-      return { startMinutes: start, totalMins: total, segments: fallbackSegments };
+      return {
+        startMinutes: start,
+        totalMins: total,
+        segments: fallbackSegments.map((s) => ({
+          ...s,
+          durationLabel: `${s.durationMins} mins`,
+        })),
+      };
     }
     return { startMinutes: start, totalMins: 60, segments: [] };
   }, [steps, fallbackSegments, effectiveTimeSlot, slotsResponseReceived]);
 
   const timeMarkers = React.useMemo(() => {
-    const markers: number[] = [];
+    const markerSet = new Set<number>();
     const interval = 60;
     const end = startMinutes + totalMins;
-    let t = Math.floor(startMinutes / interval) * interval;
-    while (t <= end) {
-      markers.push(t);
+
+    markerSet.add(startMinutes);
+    markerSet.add(end);
+
+    let t = Math.ceil(startMinutes / interval) * interval;
+    while (t < end) {
+      markerSet.add(t);
       t += interval;
     }
-    if (markers.length === 0) markers.push(startMinutes, end);
-    return markers;
+
+    return Array.from(markerSet).sort((a, b) => a - b);
   }, [startMinutes, totalMins]);
 
   const hasSegments = segments.length > 0;
@@ -197,12 +229,16 @@ export function BookingTimelineBar({
         <div className="h-6 w-16 shrink-0 animate-pulse rounded-full bg-zinc-700/40" aria-hidden />
       </div>
       <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
+          {formatMinutesToTime(startMinutes)}
+        </span>
         <div
           className="min-h-[18px] flex-1 rounded-md bg-zinc-800/50 ring-1 ring-white/6 animate-pulse"
           aria-hidden
         />
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/40")}>End</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/40")}>
+          {formatMinutesToTime(startMinutes + totalMins)}
+        </span>
       </div>
       <div className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px min-w-0">
         <div className="min-w-0 flex-[3] rounded-sm bg-zinc-700/50 animate-pulse" />
@@ -272,7 +308,9 @@ export function BookingTimelineBar({
       </div>
 
       <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
+          {formatMinutesToTime(startMinutes)}
+        </span>
         <div className="relative min-h-[18px] flex-1 min-w-0">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
@@ -291,7 +329,9 @@ export function BookingTimelineBar({
             );
           })}
         </div>
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1")}>End</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1")}>
+          {formatMinutesToTime(startMinutes + totalMins)}
+        </span>
       </div>
 
       <div
@@ -310,7 +350,7 @@ export function BookingTimelineBar({
             <div
               key={`${seg.name}-${idx}`}
               className={cn(
-                "min-w-0 bg-linear-to-b shadow-sm ring-1 ring-black/25",
+                "relative min-w-0 bg-linear-to-b shadow-sm ring-1 ring-black/25",
                 color.bg,
                 isFirst && "rounded-l-[5px]",
                 isLast && "rounded-r-[5px]"
@@ -320,7 +360,14 @@ export function BookingTimelineBar({
                 minWidth: minPx || undefined,
               }}
               title={`${seg.name} — ${seg.durationMins} min`}
-            />
+            >
+              <span
+                className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-[8px] font-semibold leading-none text-white/90"
+                title={seg.durationLabel}
+              >
+                <span className="truncate">{seg.durationLabel}</span>
+              </span>
+            </div>
           );
         })}
       </div>

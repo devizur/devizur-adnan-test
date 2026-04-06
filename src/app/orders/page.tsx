@@ -48,7 +48,7 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Order</p>
-          <p className="text-sm font-mono text-zinc-300">{order.id}</p>
+          <p className="text-sm font-mono text-accent">{order.id}</p>
           <p className="text-xs text-zinc-500 mt-1">Paid {orderPaidDisplay(order)}</p>
           {order.serverReceivedAt ? (
             <p className="text-[10px] text-zinc-600 mt-0.5">Server saved {order.serverReceivedAt}</p>
@@ -85,19 +85,19 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
 
       <div className="border-t border-zinc-800 pt-4 space-y-2 text-sm">
         {entry.activities.map(({ activity, gameNo }) => (
-          <div key={`a-${activity.id}`} className="flex justify-between gap-2 text-zinc-300">
+          <div key={`a-${activity.id}`} className="flex justify-between gap-2 text-accent">
             <span className="min-w-0 truncate">{activity.title || activity.productName}</span>
             <span className="text-zinc-500 shrink-0">{gameNo} game{gameNo !== 1 ? "s" : ""}</span>
           </div>
         ))}
         {entry.packages.map((pkg) => (
-          <div key={`p-${pkg.id}`} className="flex justify-between gap-2 text-zinc-300">
+          <div key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
             <span className="min-w-0 truncate">{pkg.title || pkg.productName}</span>
             <span className="text-zinc-500 shrink-0">Package</span>
           </div>
         ))}
         {entry.foods.map(({ food, quantity }) => (
-          <div key={`f-${food.id}`} className="flex justify-between gap-2 text-zinc-300">
+          <div key={`f-${food.id}`} className="flex justify-between gap-2 text-accent">
             <span className="min-w-0 truncate">{food.title || food.productName}</span>
             <span className="text-zinc-500 shrink-0">×{quantity}</span>
           </div>
@@ -171,7 +171,7 @@ export default function OrdersPage() {
               type="button"
               variant="outline"
               asChild
-              className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:text-white hover:border-zinc-600 rounded-xl h-10"
+              className="border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:text-white hover:border-zinc-600 rounded-xl h-10"
             >
               <Link href="/">
                 <ArrowLeft className="size-4 mr-2" />
@@ -182,9 +182,9 @@ export default function OrdersPage() {
               type="button"
               variant="outline"
               onClick={() => void loadOrders()}
-              className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:border-zinc-600 shrink-0 rounded-xl h-10"
+              className="border-zinc-700/90 text-accent hover:text-white hover:bg-zinc-800/80 hover:border-zinc-600 shrink-0 rounded-xl h-10"
             >
-              Refresh
+              Refresh 
             </Button>
           </div>
 

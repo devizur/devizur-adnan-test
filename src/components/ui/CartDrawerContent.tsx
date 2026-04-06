@@ -34,7 +34,7 @@ const iconGhostBtnClass =
   "inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 text-zinc-500 transition-colors hover:border-red-500/35 hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/35";
 
 const clearCartBtnClass =
-  "w-full min-h-9 cursor-pointer rounded-md border border-white/10 bg-[#1c1c1c] px-3 text-xs font-medium text-zinc-300 shadow-sm shadow-black/15 transition-colors hover:border-white/14 hover:bg-[#252525] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/35";
+  "w-full min-h-9 cursor-pointer rounded-md border border-white/10 bg-[#1c1c1c] px-3 text-xs font-medium text-accent shadow-sm shadow-black/15 transition-colors hover:border-white/14 hover:bg-[#252525] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/35";
 
 interface CartDrawerContentProps {
   onClose?: () => void;
@@ -116,7 +116,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
               strokeWidth={1.25}
               aria-hidden
             />
-            <p className="text-sm font-medium text-zinc-300">Your cart is empty</p>
+            <p className="text-sm font-medium text-accent">Your cart is empty</p>
             <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-zinc-500">
               Add a booking from activities or food to see it here.
             </p>
@@ -366,7 +366,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
                 </div>
                 <div className="flex justify-between gap-3 text-zinc-400">
                   <span className="text-primary-1/90">Discount</span>
-                  <span className="tabular-nums font-medium text-zinc-300">
+                  <span className="tabular-nums font-medium text-accent">
                     {formatPrice(discount)}
                   </span>
                 </div>

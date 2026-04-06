@@ -1,20 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {
-  PaymentElement,
-  Elements,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { CardElement, Elements, useStripe, useElements } from "@stripe/react-stripe-js";
 import type { Appearance, Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  confirmBookingPaymentIntent,
-  createPaymentIntent,
-  fetchStripePublishableKey,
-  isAlreadySucceededPaymentIntentError,
-} from "@/lib/stripeCheckout";
+import { createPaymentIntent, fetchStripePublishableKey, isAlreadySucceededPaymentIntentError } from "@/lib/stripeCheckout";
+import { confirmPayment } from "@/lib/paymentApi";
 import { cn } from "@/lib/utils";
 import { segmentedPrimaryCtaClass } from "@/components/ui/booking/booking-segmented-styles";
 
@@ -67,19 +58,6 @@ const bookingPaymentAppearance: Appearance = {
       color: "#71717a",
       marginBottom: "6px",
     },
-    ".Tab": {
-      borderRadius: "6px",
-      border: "1px solid rgba(255, 255, 255, 0.08)",
-      backgroundColor: "rgba(0, 0, 0, 0.2)",
-    },
-    ".Tab:hover": {
-      borderColor: "rgba(255, 255, 255, 0.12)",
-    },
-    ".Tab--selected": {
-      borderColor: "rgba(250, 204, 21, 0.45)",
-      backgroundColor: "rgba(250, 204, 21, 0.1)",
-      boxShadow: "0 0 0 1px rgba(250, 204, 21, 0.12)",
-    },
     ".Block": {
       backgroundColor: "transparent",
       borderColor: "rgba(255, 255, 255, 0.06)",
@@ -89,13 +67,42 @@ const bookingPaymentAppearance: Appearance = {
   },
 };
 
+const cardElementOptions = {
+  style: {
+    base: {
+      color: "#f4f4f5",
+      fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      fontSize: "15px",
+      "::placeholder": {
+        color: "#71717a",
+      },
+    },
+    invalid: {
+      color: "#fca5a5",
+    },
+  },
+};
+
+export interface BillingDetailsForStripe {
+  name?: string;
+  email?: string;
+}
+
 interface StripePaymentFormInnerProps {
   totalLabel: string;
   disabled: boolean;
+  paymentIntentId: string;
+  billingDetails: BillingDetailsForStripe;
   onPaid: (meta?: StripePaymentSuccessMeta) => void;
 }
 
-function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentFormInnerProps) {
+function StripePaymentFormInner({
+  totalLabel,
+  disabled,
+  paymentIntentId,
+  billingDetails,
+  onPaid,
+}: StripePaymentFormInnerProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = React.useState(false);
@@ -103,56 +110,65 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (disabled || !stripe || !elements) return;
+    if (disabled || !stripe || !elements || !paymentIntentId) return;
     setMessage(null);
     setSubmitting(true);
     try {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${origin}/success`,
-        },
-        redirect: "if_required",
-      });
-      if (error) {
-        setMessage(error.message ?? "Payment failed");
+      const card = elements.getElement(CardElement);
+      if (!card) {
+        setMessage("Card field is not ready");
         setSubmitting(false);
         return;
       }
-      if (paymentIntent?.status === "succeeded") {
-        const intentId = paymentIntent.id;
-        const pm = paymentIntent.payment_method;
-        const paymentMethodId =
-          typeof pm === "string"
-            ? pm
-            : pm && typeof pm === "object" && "id" in pm
-              ? String((pm as { id: string }).id)
-              : "";
-        if (intentId && paymentMethodId) {
-          try {
-            await confirmBookingPaymentIntent({
-              paymentIntentId: intentId,
-              paymentMethodId,
-            });
-          } catch (confirmErr) {
-            const msg =
-              confirmErr instanceof Error ? confirmErr.message : String(confirmErr);
-            if (!isAlreadySucceededPaymentIntentError(msg)) {
-              setMessage(
-                msg || "Payment succeeded but server confirmation failed. Contact support if charged."
-              );
-              setSubmitting(false);
-              return;
-            }
-          }
-        }
+
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card,
+        billing_details: {
+          name: billingDetails.name || undefined,
+          email: billingDetails.email || undefined,
+        },
+      });
+
+      if (error) {
+        setMessage(error.message ?? "Payment method creation failed");
         setSubmitting(false);
-        onPaid({ stripePaymentIntentId: intentId });
-      } else {
-        setMessage(`Payment status: ${paymentIntent?.status ?? "unknown"}. Try again or use another method.`);
-        setSubmitting(false);
+        return;
       }
+
+      if (!paymentMethod?.id) {
+        setMessage("Could not create payment method");
+        setSubmitting(false);
+        return;
+      }
+
+      let result: Awaited<ReturnType<typeof confirmPayment>>;
+      try {
+        result = await confirmPayment(paymentIntentId, paymentMethod.id);
+      } catch (confirmErr) {
+        const msg = confirmErr instanceof Error ? confirmErr.message : String(confirmErr);
+        if (isAlreadySucceededPaymentIntentError(msg)) {
+          setSubmitting(false);
+          onPaid({ stripePaymentIntentId: paymentIntentId });
+          return;
+        }
+        setMessage(msg || "Payment confirmation failed");
+        setSubmitting(false);
+        return;
+      }
+
+      if (result.status === "succeeded") {
+        setSubmitting(false);
+        onPaid({ stripePaymentIntentId: paymentIntentId });
+        return;
+      }
+      if (result.status === "requires_action") {
+        setMessage("Authentication required — complete verification if prompted by your bank, or try another card.");
+        setSubmitting(false);
+        return;
+      }
+      setMessage(result.message || result.status || "Payment was not completed");
+      setSubmitting(false);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Payment failed");
       setSubmitting(false);
@@ -162,8 +178,8 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
       <div className="rounded-xl border border-white/[0.08] bg-[#141414]/55 p-3 shadow-sm shadow-black/15 ring-1 ring-white/[0.04] sm:p-4">
-        <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-2.5 sm:p-3">
-          <PaymentElement options={{ layout: "tabs" }} />
+        <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-3 sm:p-3.5">
+          <CardElement options={cardElementOptions} />
         </div>
         <p className="mt-2.5 text-[10px] leading-relaxed text-zinc-600">
           Secured by Stripe — card data never touches our servers.
@@ -192,14 +208,13 @@ function StripePaymentFormInner({ totalLabel, disabled, onPaid }: StripePaymentF
 }
 
 export interface StripePaymentElementProps {
-  /** USD cents, must match server rules (min 50). */
+ 
   amountTotalCents: number;
   totalLabel: string;
   description?: string;
   metadata?: Record<string, string>;
-  /** When true, hides form and disables pay (e.g. empty cart). */
-  disabled: boolean;
-  /** Bump to force a new PaymentIntent (e.g. dialog closed). */
+  billingDetails?: BillingDetailsForStripe;
+  disabled: boolean; 
   resetKey: number;
   onPaid: (meta?: StripePaymentSuccessMeta) => void;
 }
@@ -209,12 +224,14 @@ export function StripePaymentElementBlock({
   totalLabel,
   description = "Booking payment",
   metadata,
+  billingDetails = {},
   disabled,
   resetKey,
   onPaid,
 }: StripePaymentElementProps) {
   const [stripePromise, setStripePromise] = React.useState<Promise<Stripe | null> | null>(null);
   const [clientSecret, setClientSecret] = React.useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [pkLoading, setPkLoading] = React.useState(true);
@@ -250,6 +267,7 @@ export function StripePaymentElementBlock({
   React.useEffect(() => {
     if (disabled || amountTotalCents < 50) {
       setClientSecret(null);
+      setPaymentIntentId(null);
       setLoading(false);
       setError(null);
       return;
@@ -259,15 +277,17 @@ export function StripePaymentElementBlock({
     setLoading(true);
     setError(null);
     setClientSecret(null);
+    setPaymentIntentId(null);
 
     createPaymentIntent({
       amountTotalCents,
       description,
       metadata,
     })
-      .then(({ clientSecret: secret }) => {
+      .then(({ clientSecret: secret, paymentIntentId: pi }) => {
         if (!cancelled) {
           setClientSecret(secret);
+          setPaymentIntentId(pi);
           setLoading(false);
         }
       })
@@ -325,7 +345,7 @@ export function StripePaymentElementBlock({
     );
   }
 
-  if (!clientSecret || !stripePromise) {
+  if (!clientSecret || !stripePromise || !paymentIntentId) {
     return null;
   }
 
@@ -336,7 +356,13 @@ export function StripePaymentElementBlock({
 
   return (
     <Elements key={`${clientSecret}-${resetKey}`} stripe={stripePromise} options={options}>
-      <StripePaymentFormInner totalLabel={totalLabel} disabled={disabled} onPaid={onPaid} />
+      <StripePaymentFormInner
+        totalLabel={totalLabel}
+        disabled={disabled}
+        paymentIntentId={paymentIntentId}
+        billingDetails={billingDetails}
+        onPaid={onPaid}
+      />
     </Elements>
   );
 }

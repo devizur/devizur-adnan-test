@@ -59,7 +59,7 @@ export function CancelOrderConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
           <AlertDialogDescription className="text-zinc-400">
-            Order <span className="font-mono text-zinc-300">{order.id}</span> will be removed from the server JSON
+            Order <span className="font-mono text-accent">{order.id}</span> will be removed from the server JSON
             file and from saved orders in this browser. This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -69,7 +69,7 @@ export function CancelOrderConfirmDialog({
         <AlertDialogFooter className="gap-2 sm:gap-0">
           <AlertDialogCancel
             disabled={busy}
-            className="border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white mt-0"
+            className="border-zinc-600 text-accent hover:bg-zinc-800 hover:text-white mt-0"
           >
             Keep order
           </AlertDialogCancel>

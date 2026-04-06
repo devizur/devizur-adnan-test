@@ -14,7 +14,7 @@ interface PaginationProps {
 }
 
 const navBtnClass =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-[#1e1e1e] text-zinc-300 shadow-sm shadow-black/10 transition-colors hover:border-white/12 hover:bg-[#252525] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-4";
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-[#1e1e1e] text-accent shadow-sm shadow-black/10 transition-colors hover:border-white/12 hover:bg-[#252525] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-4";
 
 export const Pagination: React.FC<PaginationProps> = ({
   page,

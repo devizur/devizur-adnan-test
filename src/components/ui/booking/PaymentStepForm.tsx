@@ -5,18 +5,28 @@ import { formatPrice } from "@/lib/utils";
 import type { PaymentStepState } from "@/components/ui/booking/usePaymentStep";
 import { StripePaymentElementBlock } from "@/components/ui/booking/StripePaymentElement";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/store";
 
 interface PaymentStepFormProps {
   payment: PaymentStepState;
 }
 
 const sectionLabel =
-  "text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500";
+  "text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500 ";
 
 const panelClass =
   "rounded-xl border border-white/[0.08] bg-[#141414]/60 p-3 shadow-sm shadow-black/10 sm:p-4";
 
 export function PaymentStepForm({ payment }: PaymentStepFormProps) {
+  const holderDetails = useAppSelector((s) => s.booking.holderDetails);
+  const billingDetails = React.useMemo(
+    () => ({
+      name: [holderDetails.firstName, holderDetails.lastName].filter(Boolean).join(" ").trim() || undefined,
+      email: holderDetails.email?.trim() || undefined,
+    }),
+    [holderDetails.firstName, holderDetails.lastName, holderDetails.email]
+  );
+
   const {
     subtotal,
     serviceFee,
@@ -33,12 +43,13 @@ export function PaymentStepForm({ payment }: PaymentStepFormProps) {
   return (
     <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
       <div className="min-w-0 space-y-2">
-        <p className={sectionLabel}>Card & billing</p>
+        <p className={sectionLabel} >Card & billing</p>
         <StripePaymentElementBlock
           amountTotalCents={amountTotalCents}
           totalLabel={formatPrice(totalPaymentAmount)}
           description="Booking payment"
           metadata={checkoutMetadata}
+          billingDetails={billingDetails}
           disabled={isCartEmpty}
           resetKey={paymentIntentResetKey}
           onPaid={completePaymentSuccess}
@@ -55,21 +66,21 @@ export function PaymentStepForm({ payment }: PaymentStepFormProps) {
         ) : (
           <div className={cn(panelClass, "space-y-3")}>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-zinc-500">
+              <div className="flex justify-between text-accent">
                 <span>Subtotal</span>
-                <span className="tabular-nums text-zinc-300">{formatPrice(subtotal)}</span>
+                <span className="tabular-nums text-accent">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-zinc-500">
                 <span>Service fee (5%)</span>
-                <span className="tabular-nums text-zinc-300">{formatPrice(serviceFee)}</span>
+                <span className="tabular-nums text-accent">{formatPrice(serviceFee)}</span>
               </div>
               <div className="flex justify-between text-zinc-500">
                 <span>Discount</span>
-                <span className="tabular-nums text-zinc-300">- {formatPrice(discount)}</span>
+                <span className="tabular-nums text-accent">- {formatPrice(discount)}</span>
               </div>
               <div className="flex justify-between text-zinc-500">
                 <span>Card fee (3%)</span>
-                <span className="tabular-nums text-zinc-300">{formatPrice(creditCardFee)}</span>
+                <span className="tabular-nums text-accent">{formatPrice(creditCardFee)}</span>
               </div>
             </div>
             <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">

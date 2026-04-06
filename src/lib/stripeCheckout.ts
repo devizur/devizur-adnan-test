@@ -66,6 +66,27 @@ function extractPaymentIntentClientSecret(data: unknown): string | undefined {
   return undefined;
 }
 
+function extractPaymentIntentId(data: unknown): string | undefined {
+  if (!data || typeof data !== "object") return undefined;
+  const d = data as Record<string, unknown>;
+  if (typeof d.paymentIntentId === "string" && d.paymentIntentId.trim()) return d.paymentIntentId.trim();
+  if (typeof d.payment_intent_id === "string" && d.payment_intent_id.trim()) return d.payment_intent_id.trim();
+  const inner = d.data;
+  if (inner && typeof inner === "object") {
+    const i = inner as Record<string, unknown>;
+    if (typeof i.paymentIntentId === "string" && i.paymentIntentId.trim()) return i.paymentIntentId.trim();
+    if (typeof i.id === "string" && i.id.startsWith("pi_")) return i.id.trim();
+  }
+  return undefined;
+}
+
+/** Stripe client secrets are `pi_xxx_secret_yyy` — derive id when the gateway omits it. */
+export function paymentIntentIdFromClientSecret(clientSecret: string): string {
+  const idx = clientSecret.indexOf("_secret_");
+  if (idx > 0) return clientSecret.slice(0, idx);
+  throw new Error("Invalid PaymentIntent client secret");
+}
+
 function stringFromPayloadField(val: unknown): string | undefined {
   if (typeof val === "string" && val.trim()) return val.trim();
   if (val && typeof val === "object" && "message" in val) {
@@ -140,7 +161,9 @@ function paymentGatewayErrorMessage(error: unknown, fallbackPrefix: string): str
  * Creates a Stripe PaymentIntent via payment gateway (POST /api/BookingPayments/create-payment-intent).
  * Amount is in the smallest currency unit (e.g. USD cents), same as Stripe.
  */
-export async function createPaymentIntent(params: CreateCheckoutSessionParams): Promise<{ clientSecret: string }> {
+export async function createPaymentIntent(
+  params: CreateCheckoutSessionParams
+): Promise<{ clientSecret: string; paymentIntentId: string }> {
   const { amountTotalCents: amount, description, metadata: meta } = params;
 
   if (typeof amount !== "number" || !Number.isInteger(amount)) {
@@ -173,7 +196,9 @@ export async function createPaymentIntent(params: CreateCheckoutSessionParams): 
     if (!clientSecret) {
       throw new Error("No client secret returned from payment gateway");
     }
-    return { clientSecret };
+    const fromApi = extractPaymentIntentId(data);
+    const paymentIntentId = fromApi ?? paymentIntentIdFromClientSecret(clientSecret);
+    return { clientSecret, paymentIntentId };
   } catch (error) {
     throw new Error(paymentGatewayErrorMessage(error, "Payment setup failed"));
   }
@@ -197,15 +222,54 @@ export function isAlreadySucceededPaymentIntentError(message: string): boolean {
   );
 }
 
+export interface ConfirmPaymentResult {
+  status: string;
+  message?: string;
+}
+
+function parseConfirmPaymentResponse(data: unknown): ConfirmPaymentResult {
+  if (!data || typeof data !== "object") {
+    return { status: "succeeded" };
+  }
+  const d = data as Record<string, unknown>;
+  const topStatus = typeof d.status === "string" ? d.status : undefined;
+  const topMessage = typeof d.message === "string" ? d.message : undefined;
+  if (topStatus) {
+    return { status: topStatus, message: topMessage };
+  }
+  const inner = d.data;
+  if (inner && typeof inner === "object") {
+    const i = inner as Record<string, unknown>;
+    if (typeof i.status === "string") {
+      return {
+        status: i.status,
+        message: typeof i.message === "string" ? i.message : undefined,
+      };
+    }
+  }
+  return { status: "succeeded" };
+}
+
 /**
- * Notifies payment gateway after Stripe client confirmation (POST /api/BookingPayments/confirm-payment-intent).
+ * Confirms/charges the PaymentIntent on the payment gateway (POST /api/BookingPayments/confirm-payment-intent).
+ * Does not call Stripe.js `confirmPayment` on the client — gateway attaches the payment method and confirms server-side.
  */
-export async function confirmBookingPaymentIntent(
-  body: ConfirmBookingPaymentIntentBody
-): Promise<void> {
+export async function confirmPayment(
+  paymentIntentId: string,
+  paymentMethodId: string
+): Promise<ConfirmPaymentResult> {
   try {
-    await paymentGatewayHttp.post("/api/BookingPayments/confirm-payment-intent", body);
+    const { data } = await paymentGatewayHttp.post<unknown>(
+      "/api/BookingPayments/confirm-payment-intent",
+      { paymentIntentId, paymentMethodId }
+    );
+    return parseConfirmPaymentResponse(data);
   } catch (error) {
     throw new Error(paymentGatewayErrorMessage(error, "Payment confirmation failed"));
   }
+}
+
+/** @deprecated Use confirmPayment — kept for any external imports */
+export async function confirmBookingPaymentIntent(body: ConfirmBookingPaymentIntentBody): Promise<void> {
+  await confirmPayment(body.paymentIntentId, body.paymentMethodId);
 }

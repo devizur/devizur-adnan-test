@@ -180,7 +180,7 @@ function OrderDetailsDialog({
                   <p className="text-xs uppercase tracking-wide text-zinc-500">Line items</p>
                   <ul className="space-y-2 text-sm">
                     {entry.activities.map(({ activity, gameNo }) => (
-                      <li key={`a-${activity.id}-${gameNo}`} className="flex justify-between gap-2 text-zinc-300">
+                      <li key={`a-${activity.id}-${gameNo}`} className="flex justify-between gap-2 text-accent">
                         <span className="min-w-0">
                           {activity.title || activity.productName}
                           <span className="text-zinc-500"> · Activity</span>
@@ -191,13 +191,13 @@ function OrderDetailsDialog({
                       </li>
                     ))}
                     {entry.packages.map((pkg) => (
-                      <li key={`p-${pkg.id}`} className="flex justify-between gap-2 text-zinc-300">
+                      <li key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
                         <span className="min-w-0">{pkg.title || pkg.productName}</span>
                         <span className="text-zinc-500 shrink-0">Package</span>
                       </li>
                     ))}
                     {entry.foods.map(({ food, quantity }) => (
-                      <li key={`f-${food.id}`} className="flex justify-between gap-2 text-zinc-300">
+                      <li key={`f-${food.id}`} className="flex justify-between gap-2 text-accent">
                         <span className="min-w-0">{food.title || food.productName}</span>
                         <span className="text-zinc-500 shrink-0">×{quantity}</span>
                       </li>
@@ -228,7 +228,7 @@ function OrderDetailsDialog({
                 Cancel order
               </Button>
             ) : null}
-            <AlertDialogCancel className="border-zinc-600/90 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-500 mt-0 w-full sm:w-auto">
+            <AlertDialogCancel className="border-zinc-600/90 text-accent hover:bg-zinc-800 hover:text-white hover:border-zinc-500 mt-0 w-full sm:w-auto">
               Close
             </AlertDialogCancel>
           </AlertDialogFooter>
@@ -308,7 +308,7 @@ export default function MyBookingsPage() {
                 type="button"
                 variant="outline"
                 asChild
-                className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:text-white hover:border-zinc-600 rounded-xl h-10"
+                className="border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:text-white hover:border-zinc-600 rounded-xl h-10"
               >
                 <Link href="/">
                   <ArrowLeft className="size-4 mr-2" />
@@ -320,7 +320,7 @@ export default function MyBookingsPage() {
                   type="button"
                   variant="outline"
                   asChild
-                  className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10"
+                  className="border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10"
                 >
                   <Link href="/orders">Orders</Link>
                 </Button>
@@ -329,16 +329,16 @@ export default function MyBookingsPage() {
                   variant="outline"
                   onClick={() => void load()}
                   disabled={loading}
-                  className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10"
+                  className="border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10"
                 >
                   <RefreshCw className={cn("size-4 mr-2", loading && "animate-spin")} />
-                  Refresh
+                  Refresh 
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleLogout}
-                  className="border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10 shrink-0"
+                  className="border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:border-zinc-600 rounded-xl h-10 shrink-0"
                 >
                   <LogOut className="size-4 mr-2" />
                   Log out
@@ -429,7 +429,7 @@ export default function MyBookingsPage() {
                 <Button asChild className="bg-primary-1 text-black hover:bg-primary-1-hover font-semibold rounded-xl h-10 px-6">
                   <Link href="/activities">Browse activities</Link>
                 </Button>
-                <Button asChild variant="outline" className="border-zinc-600 text-zinc-300 hover:bg-zinc-800 rounded-xl h-10">
+                <Button asChild variant="outline" className="border-zinc-600 text-accent hover:bg-zinc-800 rounded-xl h-10">
                   <Link href="/orders">View order list</Link>
                 </Button>
               </div>
@@ -438,10 +438,10 @@ export default function MyBookingsPage() {
             <div className="space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <p className="text-sm text-zinc-500">
-                  <span className="text-zinc-300 font-medium tabular-nums">{orders.length}</span> paid order
+                  <span className="text-accent font-medium tabular-nums">{orders.length}</span> paid order
                   {orders.length !== 1 ? "s" : ""}
                   <span className="text-zinc-600 mx-2">·</span>
-                  <span className="text-zinc-300 font-medium tabular-nums">{rows.length}</span> booking line
+                  <span className="text-accent font-medium tabular-nums">{rows.length}</span> booking line
                   {rows.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -461,7 +461,7 @@ export default function MyBookingsPage() {
                       "hover:border-zinc-700/90 hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.65)]",
                     )}
                   >
-                    <div className="shrink-0 relative w-full lg:w-52 aspect-[16/10] lg:aspect-auto lg:h-36 rounded-xl overflow-hidden bg-zinc-900 ring-1 ring-white/[0.06]">
+                    <div className="shrink-0 relative w-full lg:w-52 aspect-16/10 lg:aspect-auto lg:h-36 rounded-xl overflow-hidden bg-zinc-900 ring-1 ring-white/6">
                       <Image
                         src={img}
                         alt={title}
@@ -494,15 +494,15 @@ export default function MyBookingsPage() {
                           </div>
 
                           <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-zinc-300">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-accent">
                               <Calendar className="size-3.5 text-primary-1 shrink-0" aria-hidden />
                               {entry.date}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-zinc-300">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-accent">
                               <Clock className="size-3.5 text-primary-1 shrink-0" aria-hidden />
                               {entry.timeSlot} · {shiftLabel(entry.timeOfDay)}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-zinc-300">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-900/50 px-3 py-1 text-xs text-accent">
                               <User className="size-3.5 text-primary-1 shrink-0" aria-hidden />
                               {peopleLabel(entry)}
                             </span>

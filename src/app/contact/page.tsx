@@ -119,11 +119,11 @@ export default function ContactPage() {
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-10">
           <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-5">
             <InfoCard icon={MapPin} title="Location">
-              <p className="text-zinc-300">{contact.location}</p>
+              <p className="text-accent">{contact.location}</p>
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-3 h-9 w-full rounded-xl border-zinc-700/90 text-zinc-300 hover:bg-zinc-800/80 hover:text-white sm:w-auto"
+                className="mt-3 h-9 w-full rounded-xl border-zinc-700/90 text-accent hover:bg-zinc-800/80 hover:text-white sm:w-auto"
                 asChild
               >
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
@@ -136,11 +136,11 @@ export default function ContactPage() {
             <InfoCard icon={Clock} title="Hours">
               <p>
                 <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">Mon–Fri</span>{" "}
-                <span className="text-zinc-300">{contact.hours.week}</span>
+                <span className="text-accent">{contact.hours.week}</span>
               </p>
               <p>
                 <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">Weekend</span>{" "}
-                <span className="text-zinc-300">{contact.hours.weekend}</span>
+                <span className="text-accent">{contact.hours.weekend}</span>
               </p>
             </InfoCard>
 

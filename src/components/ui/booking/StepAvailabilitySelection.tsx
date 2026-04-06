@@ -122,19 +122,19 @@ function getActivityCardPricingSubtitle(
 
 /** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
 const catalogCardBtnBase =
-  "group/card w-[min(238px,82vw)] sm:w-[252px] shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
+  "group/card  w-[min(238px,82vw)] sm:w-[252px] shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
 
 const catalogColumnClass =
-  "flex w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px]";
+  "flex bg-red-200  w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px] lg:w-full";
 
 const catalogCardImageShell =
-  "relative h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0";
+  "relative  h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0 w-full";
 
 const catalogCardImgClass =
-  "h-full w-full object-cover transition-transform duration-500 ease-out will-change-transform";
+  "h-full w-full object-cover transition-transform duration-500 ease-out will-change-transform ";
 
 const catalogCardImgOverlay =
-  "pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent";
+  "pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent w-full";
 
 const catalogCardBody =
   "flex min-h-0 flex-col justify-center gap-1 border-t border-white/[0.06] bg-zinc-950/40 px-2.5 py-2.5 sm:px-3 sm:py-3";
@@ -155,7 +155,7 @@ const optionChipBase =
   "min-h-9 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]";
 
 const optionChipIdle =
-  "border-zinc-700/55 bg-zinc-900/60 text-zinc-300 hover:border-zinc-600/70 hover:bg-zinc-800/60 hover:text-zinc-100";
+  "border-zinc-700/55 bg-zinc-900/60 text-accent hover:border-zinc-600/70 hover:bg-zinc-800/60 hover:text-zinc-100";
 
 const optionChipActive = "border-primary-1/55 bg-primary-1 text-secondary shadow-md shadow-primary-1/10";
 
@@ -341,7 +341,7 @@ export function StepAvailabilitySelection() {
               </span>
             ) : null}
           </div>
-          <div className="-mx-0.5 flex min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
+          <div className="-mx-0.5 flex flex-row  lg:flex-col min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
@@ -379,7 +379,7 @@ export function StepAvailabilitySelection() {
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
                     catalogCardBtnBase,
-                    "shadow-md shadow-black/30",
+                    "shadow-md bg-red shadow-black/30",
                     selected
                       ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
                       : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
@@ -660,7 +660,7 @@ export function StepAvailabilitySelection() {
                         "flex-1 min-h-7 py-1 px-1 rounded-md text-[10px] sm:text-[11px] font-medium leading-tight transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-inset",
                         timeOfDay === tab.id
                           ? "bg-[#2a2a2a] text-white shadow-sm border border-white/[0.06]"
-                          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
+                          : "text-zinc-500 hover:text-accent hover:bg-white/[0.03]"
                       )}
                     >
                       {tab.apiKey}
@@ -704,7 +704,7 @@ export function StepAvailabilitySelection() {
                     </div>
                   ) : slots.length === 0 ? (
                     <div className="col-span-full py-7 flex flex-col items-center justify-center gap-1 text-zinc-400 text-xs text-center px-3">
-                      <span className="font-medium text-zinc-300">No slots in this window</span>
+                      <span className="font-medium text-accent">No slots in this window</span>
                       <span className="text-[10px] text-zinc-500 max-w-xs leading-relaxed">
                         Try another session period or pick a different date.
                       </span>

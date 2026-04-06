@@ -307,32 +307,27 @@ export function BookingTimelineBar({
         </span>
       </div>
 
-      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
-          {formatMinutesToTime(startMinutes)}
-        </span>
-        <div className="relative min-h-[18px] flex-1 min-w-0">
-          {timeMarkers.map((m) => {
-            const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
-            const clamped = Math.max(0, Math.min(100, pct));
-            return (
-              <div
-                key={m}
-                className="absolute top-0 flex flex-col items-center"
-                style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
-              >
-                <div className="h-2 w-px rounded-full bg-zinc-500" />
-                <span className="mt-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500">
-                  {formatMinutesToTime(m)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1")}>
-          {formatMinutesToTime(startMinutes + totalMins)}
-        </span>
+
+
+      <div className="relative min-h-[18px] flex-1 min-w-0 mx-4">
+        {timeMarkers.map((m) => {
+          const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
+          const clamped = Math.max(0, Math.min(100, pct));
+          return (
+            <div
+              key={m}
+              className="absolute top-0 flex flex-col items-center"
+              style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
+            >
+              <div className="h-2 w-px rounded-full bg-zinc-500" />
+              <span className="mt-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500">
+                {formatMinutesToTime(m)}
+              </span>
+            </div>
+          );
+        })}
       </div>
+
 
       <div
         className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"

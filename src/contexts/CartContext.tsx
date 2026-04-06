@@ -14,7 +14,7 @@ import type { HolderDetails, BookingPersons } from "@/store/bookingSlice";
 
 const CART_STORAGE_KEY = "booking_cart";
 
-/** Single cart entry = one booking with holder details + products (activities, packages, foods). */
+/** Checkout entry = one booking with holder details + products (activities, packages, foods). Only one at a time. */
 export interface CartEntry {
   id: string;
   /** Booking holder contact/details – kept in relation to this entry's products */
@@ -44,10 +44,15 @@ export interface CartPackageItem {
 }
 
 interface CartContextType {
-  /** All cart entries (each = one booking with holder + products). Persisted to localStorage. */
+  /** At most one checkout booking (holder + products). Persisted to localStorage. */
   entries: CartEntry[];
-  /** Add one complete booking to the cart (holder + activities + packages + foods). */
+  /** Set the single checkout booking (replaces any previous entry). */
   addEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
+  /**
+   * Update the lone booking entry in place (same id), or create one if empty.
+   * Use while the booking dialog is open so cart stays aligned with Redux selection.
+   */
+  syncBookingEntry: (entry: Omit<CartEntry, "id" | "addedAt">) => void;
   /** Remove one booking from the cart. */
   removeEntry: (id: string) => void;
   /** Update one entry (e.g. change food quantity, remove an item). */
@@ -109,7 +114,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       addedAt: Date.now(),
     };
-    setEntries((prev) => [...prev, newEntry]);
+    setEntries([newEntry]);
+  }, []);
+
+  const syncBookingEntry = useCallback((data: Omit<CartEntry, "id" | "addedAt">) => {
+    setEntries((prev) => {
+      if (prev.length === 0) {
+        const id = `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        return [{ ...data, id, addedAt: Date.now() }];
+      }
+      const current = prev[0]!;
+      return [{ ...current, ...data, id: current.id, addedAt: current.addedAt }];
+    });
   }, []);
 
   const removeEntry = useCallback((id: string) => {
@@ -158,6 +174,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       entries,
       addEntry,
+      syncBookingEntry,
       removeEntry,
       updateEntry,
       clearCart,
@@ -170,6 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [
       entries,
       addEntry,
+      syncBookingEntry,
       removeEntry,
       updateEntry,
       clearCart,

@@ -1,12 +1,14 @@
 import { getBrandConfig } from "@/lib/brand-config";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 
 export default function MenuPage() {
     const config = getBrandConfig();
     const { menu } = config.content;
 
     return (
-        <div className="container mx-auto px-4 py-16">
-            <div className="max-w-3xl mx-auto">
+        <div className={cn(PAGE_CONTENT_CLASS, "py-16")}>
+            <div className="mx-auto max-w-3xl">
                 <h1 className="text-4xl font-bold mb-4 text-center">{menu.title}</h1>
                 <p className="text-center text-muted-foreground mb-12">{menu.subtitle}</p>
 

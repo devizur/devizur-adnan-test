@@ -37,9 +37,9 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
         if (!open) onClose();
       }}
     >
-      <DrawerContent className="max-h-[90vh] lg:min-w-150 bg-secondary-2 border-secondary-2 md:h-full md:max-h-none flex flex-col">
-        <DrawerTitle className="sr-only">Checkout</DrawerTitle>
-        <CartDrawerContent onPaymentSuccess={onClose} />
+      <DrawerContent className="flex max-h-[90vh] flex-col border-white/10 bg-[#121212] ring-1 ring-white/5 md:h-full md:max-h-none lg:min-w-150">
+        <DrawerTitle className="sr-only">Cart</DrawerTitle>
+        <CartDrawerContent />
       </DrawerContent>
     </Drawer>
   );

@@ -2,13 +2,12 @@
 
 import { getBrandConfig } from "@/lib/brand-config";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useCart } from "@/contexts/CartContext";
-import CartDrawer from "@/components/ui/CartDrawer";
 import { useAppSelector } from "@/store/hooks";
 import { ShopSelectorButton } from "@/components/ui/ShopSelectorButton";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
@@ -16,11 +15,8 @@ export function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isNotFound, setIsNotFound] = useState(false);
-    const [isCartOpen, setIsCartOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { navContent } = config.content;
-    const { getTotalItems } = useCart();
-    const totalItems = getTotalItems();
 
     // Check if we're on a 404 page
     useEffect(() => {
@@ -65,8 +61,9 @@ export function Navbar() {
     if (pathname === "/brands" || isNotFound) return null;
 
     return (
-        <div className="w-full   flex justify-center">
-            <nav className="container mx-auto h-24  md:px-4 flex items-center justify-between z-50 absolute top-0 p-4  ">
+        <>
+            <nav className="absolute top-0 left-0 right-0 z-50">
+                <div className={cn(PAGE_CONTENT_CLASS, "flex h-24 items-center justify-between")}>
                 <Link href="/" >
                     <div className="">
                         {/* Native img + suppressHydrationWarning: browser extensions (e.g. Porda) can inject attributes into the logo img after SSR, causing hydration mismatch */}
@@ -113,34 +110,10 @@ export function Navbar() {
                     >
                         {navContent.bookings}
                     </button>
-                    <button
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative cursor-pointer group"
-                    >
-                        <div className="w-10 h-10 border-2 border-primary-1 rounded-xl flex items-center justify-center">
-                            <ShoppingBag className="w-5 h-5 text-primary-1" strokeWidth={2.5} />
-                        </div>
-                        {totalItems > 0 && (
-                            <span className="absolute -top-1.5 -right-1.5 bg-primary-1 text-black text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#05080d]">
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
                 </div>
 
-                {/* Mobile: Cart + Hamburger */}
+                {/* Mobile: Hamburger */}
                 <div className="flex lg:hidden items-center gap-2 ">
-                    <button
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative w-10 h-10 rounded-xl border-2 border-primary-1 flex items-center justify-center text-primary-1 cursor-pointer hover:bg-primary-1/10 transition-colors"
-                    >
-                        <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
-                        {totalItems > 0 && (
-                            <span className="absolute -top-1.5 -right-1.5 bg-primary-1 text-black text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-[#171717]">
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
                     <button
                         onClick={() => setIsMobileMenuOpen((o) => !o)}
                         className={cn(
@@ -154,6 +127,7 @@ export function Navbar() {
                     >
                         {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
+                </div>
                 </div>
             </nav>
 
@@ -232,7 +206,6 @@ export function Navbar() {
                             : navContent.bookings}</button>
                 </div>
             </div>
-            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-        </div>
+        </>
     );
 }

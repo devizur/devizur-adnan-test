@@ -33,9 +33,9 @@ export interface HolderDetails {
 export type BookingFlowMode = "activityFirst" | "foodFirst";
 
 export interface BookingState {
-  /** When foodFirst: step 1=Food, 2=Availability, 3=Holder. Else step 1=Availability, 2=Food, 3=Holder */
+  /** When foodFirst: step 1=Food, 2=Availability, 3=Holder, 4=Payment. Else step 1=Availability, 2=Food, 3=Holder, 4=Payment */
   flowMode: BookingFlowMode;
-  /** Current step (1–3); meaning depends on flowMode */
+  /** Current step (1–4); meaning depends on flowMode */
   step: number;
   /** Step 1: name for availability check */
   availabilityName: string;
@@ -48,7 +48,7 @@ export interface BookingState {
   /** Step 1: selected time slot e.g. "11:00 am" */
   timeSlot: string;
   /** From retrieveTimeSlots or generateBookingItemSteps – used for subsequent API calls */
-  bookingId: string;
+  bookingReferenceId: string;
   /** Step 1: number of persons */
   persons: BookingPersons;
   /** Step 1: selected activities (game no and/or API attribute combination for dynamic options) */
@@ -82,7 +82,7 @@ const initialState: BookingState = {
   date: "",
   timeOfDay: 1,
   timeSlot: "",
-  bookingId: "",
+  bookingReferenceId: "",
   persons: { adults: 0, kids: 0 },
   selectedActivities: [],
   selectedPackages: [],
@@ -98,10 +98,10 @@ const bookingSlice = createSlice({
       state.flowMode = action.payload;
     },
     setStep: (state, action: PayloadAction<number>) => {
-      state.step = Math.max(1, Math.min(3, action.payload));
+      state.step = Math.max(1, Math.min(4, action.payload));
     },
     nextStep: (state) => {
-      if (state.step < 3) state.step += 1;
+      if (state.step < 4) state.step += 1;
     },
     prevStep: (state) => {
       if (state.step > 1) state.step -= 1;
@@ -121,8 +121,8 @@ const bookingSlice = createSlice({
     setTimeSlot: (state, action: PayloadAction<string>) => {
       state.timeSlot = action.payload;
     },
-    setBookingId: (state, action: PayloadAction<string>) => {
-      state.bookingId = action.payload;
+    setBookingReferenceId: (state, action: PayloadAction<string>) => {
+      state.bookingReferenceId = action.payload;
     },
     setPersons: (state, action: PayloadAction<BookingPersons>) => {
       state.persons = action.payload;
@@ -234,7 +234,7 @@ export const {
   setDate,
   setTimeOfDay,
   setTimeSlot,
-  setBookingId,
+  setBookingReferenceId,
   setPersons,
   incrementAdults,
   decrementAdults,

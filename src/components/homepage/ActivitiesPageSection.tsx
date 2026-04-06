@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 import ActivitiesCard, { ActivitiesCardSkeleton } from "@/components/ui/reused/ActivitiesCard";
 import { useActivities } from "@/lib/api/hooks";
 import { Pagination } from "@/components/ui/reused/Pagination";
@@ -37,7 +39,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
 
     if (isLoading) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {Array.from({ length: PAGE_SIZE }).map((_, index) => (
                         <ActivitiesCardSkeleton key={index} />
@@ -49,7 +51,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
 
     if (error) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="text-center py-20">
                     <p className="text-red-500">Error loading activities: {error.message}</p>
                 </div>
@@ -59,7 +61,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
 
     if (!allActivities.length) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="text-center py-20">
                     <p className="text-muted-foreground">No activities found.</p>
                 </div>
@@ -68,7 +70,7 @@ const ActivitiesPageSection: React.FC<ActivitiesPageSectionProps> = ({ searchTer
     }
 
     return (
-        <section className="container mx-auto pb-20">
+        <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedActivities.map((activity, index) => {
                     const key = `${(activity as any).productId ?? activity.id}-${index}`;

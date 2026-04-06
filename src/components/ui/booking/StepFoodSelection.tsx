@@ -8,8 +8,14 @@ import { addFood, removeFood, updateFoodQuantity } from "@/store/bookingSlice";
 import type { SelectedFoodModifier } from "@/store/bookingSlice";
 import { Minus, Plus } from "lucide-react";
 import FoodCard from "@/components/ui/reused/FoodCard";
-import { Button } from "@/components/ui/button";
 import { FoodModifierDialog } from "@/components/ui/booking/FoodModifierDialog";
+import { cn } from "@/lib/utils";
+import {
+  segmentedPrimaryCtaClass,
+  segmentedSideBtnClass,
+  segmentedStripClass,
+  segmentedNumericValueClass,
+} from "@/components/ui/booking/booking-segmented-styles";
 
 export function StepFoodSelection() {
   const dispatch = useAppDispatch();
@@ -57,62 +63,75 @@ export function StepFoodSelection() {
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-     
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 scrollbar-dark">
-        {foods.map((food, index) => {
-          const qty = getQuantity(food.id);
-          return (
-            <FoodCard
-              key={`${food.id}-${index}`}
-              item={food}
-              showTimeSlots={false}
-              action={
-                qty === 0 ? (
-                  <Button
-                    type="button"
-                    onClick={() => handleAddClick(food)}
-                    className="mt-2 sm:mt-3 w-full min-h-10 sm:h-11 rounded-lg sm:rounded-[10px] bg-primary-1 text-black font-semibold text-xs sm:text-sm hover:bg-primary-1-hover cursor-pointer touch-manipulation"
-                    aria-label={`Add ${food.title} to cart`}
-                  >
-                    Add to Cart
-                  </Button>
-                ) : (
-                  <div className="mt-2 sm:mt-3 flex items-center justify-between rounded-lg sm:rounded-[10px] bg-black/40 px-2.5 sm:px-3 py-2">
-                    <Button
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-white/[0.06] bg-gradient-to-b from-[#181818] to-[#161616] px-3 py-2.5 sm:px-5 sm:py-3">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+          Food options
+        </p>
+        
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 scrollbar-dark sm:px-5 sm:py-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
+          {foods.map((food, index) => {
+            const qty = getQuantity(food.id);
+            return (
+              <FoodCard
+                key={`${food.id}-${index}`}
+                item={food}
+                compact
+                showTimeSlots={false}
+                action={
+                  qty === 0 ? (
+                    <button
                       type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label={`Decrease quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] border border-gray-700 bg-transparent text-primary/90 hover:bg-gray-800 cursor-pointer touch-manipulation"
-                      onClick={() => {
-                        if (qty <= 1) dispatch(removeFood(food.id));
-                        else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
-                      }}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span
-                      className="text-sm font-medium text-primary/90 tabular-nums"
-                      aria-live="polite"
-                    >
-                      {qty} in cart
-                    </span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      aria-label={`Increase quantity of ${food.title}`}
-                      className="min-h-9 min-w-9 h-9 w-9 rounded-lg sm:rounded-[8px] bg-primary-1 text-black hover:bg-primary-1-hover font-semibold cursor-pointer touch-manipulation"
                       onClick={() => handleAddClick(food)}
+                      className={cn(
+                        segmentedPrimaryCtaClass,
+                        "mt-2 w-full cursor-pointer touch-manipulation"
+                      )}
+                      aria-label={`Add ${food.title} to cart`}
                     >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )
-              }
-            />
-          );
-        })}
+                      Add to cart
+                    </button>
+                  ) : (
+                    <div className="mt-2 w-full">
+                      <div className={segmentedStripClass} role="group" aria-label={`Quantity of ${food.title} in cart`}>
+                        <button
+                          type="button"
+                          aria-label={`Decrease quantity of ${food.title}`}
+                          className={cn(segmentedSideBtnClass, "touch-manipulation")}
+                          onClick={() => {
+                            if (qty <= 1) dispatch(removeFood(food.id));
+                            else dispatch(updateFoodQuantity({ foodId: food.id, quantity: qty - 1 }));
+                          }}
+                        >
+                          <Minus className="size-3.5 shrink-0" strokeWidth={2.25} />
+                        </button>
+                        <span
+                          className={segmentedNumericValueClass}
+                          aria-live="polite"
+                          aria-label={`${qty} in cart`}
+                        >
+                          {qty}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Increase quantity of ${food.title}`}
+                          className={cn(segmentedSideBtnClass, "touch-manipulation")}
+                          onClick={() => handleAddClick(food)}
+                        >
+                          <Plus className="size-3.5 shrink-0" strokeWidth={2.25} />
+                        </button>
+                      </div>
+                     
+                    </div>
+                  )
+                }
+              />
+            );
+          })}
+        </div>
       </div>
 
       <FoodModifierDialog
@@ -121,13 +140,13 @@ export function StepFoodSelection() {
           setIsModifierDialogOpen(open);
           if (!open) {
             setModifierFood(null);
-              setModifierQuantities({});
+            setModifierQuantities({});
           }
         }}
         food={modifierFood}
-          modifierQuantities={modifierQuantities}
-          onIncrementModifier={handleIncrementModifier}
-          onDecrementModifier={handleDecrementModifier}
+        modifierQuantities={modifierQuantities}
+        onIncrementModifier={handleIncrementModifier}
+        onDecrementModifier={handleDecrementModifier}
         onConfirm={handleConfirmModifiers}
       />
     </div>

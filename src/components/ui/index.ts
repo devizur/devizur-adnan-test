@@ -12,6 +12,7 @@ export * from "./booking-dialog";
 export * from "./payment-dialog";
 export { ShopSelectorButton } from "./ShopSelectorButton";
 export { default as CartDrawer } from "./CartDrawer";
+export { CartPopup } from "./CartPopup";
 export * from "./booking";
 export * from "./reused";
 

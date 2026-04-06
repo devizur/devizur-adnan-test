@@ -7,7 +7,7 @@ import {
   setDate,
   setTimeOfDay,
   setTimeSlot,
-  setBookingId,
+  setBookingReferenceId,
   addActivity,
   removeActivity,
   setActivityGameNo,
@@ -16,12 +16,14 @@ import {
   removePackage,
 } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
-import { Check } from "lucide-react";
+import { Check, Loader2, CalendarClock, Package, Ticket } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
 import { BookingTimelineBar } from "./BookingTimelineBar";
+import { segmentedPrimaryCtaClass } from "./booking-segmented-styles";
 
 const OPTIONS = [
   { label: "1 Game", value: 1 },
@@ -32,13 +34,136 @@ const OPTIONS = [
 const SHIFT = [
   { id: 1, label: "Morning", apiKey: "Morning" as const },
   { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
-  { id: 3, label: "Evening", apiKey: "Night" as const },
+  { id: 3, label: "Evening", apiKey: "Evening" as const },
 ] as const;
+
+/** e.g. "1 Game Adult" → 1, "2 Games Kids" → 2 */
+function getGameCountFromCombinationName(name: string): number | null {
+  const m = String(name).trim().match(/^(\d+)\s+Games?\b/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function formatActivityPriceAmount(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
+/** Min–max price for one game tier (adult/kids variants), e.g. "1 game · $15–$200 per person" */
+function summarizeDynamicPricesForGameCount(
+  combinations: AttributeCombinationItem[],
+  gameCount: number
+): string | null {
+  const subset = combinations.filter(
+    (c) => getGameCountFromCombinationName(c.attributeCombinationName) === gameCount
+  );
+  if (subset.length === 0) return null;
+  const prices = subset
+    .map((c) => c.fixedPrice)
+    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
+  if (prices.length === 0) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const tier = gameCount === 1 ? "1 game" : `${gameCount} games`;
+  const range =
+    min === max
+      ? `$${formatActivityPriceAmount(min)}`
+      : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)}`;
+  return `${tier} · ${range} per person`;
+}
+
+function fallbackAllCombinationsRange(combinations: AttributeCombinationItem[]): string | null {
+  const prices = combinations
+    .map((c) => c.fixedPrice)
+    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
+  if (prices.length === 0) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max
+    ? `$${formatActivityPriceAmount(min)} per person`
+    : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)} per person`;
+}
+
+function getActivityCardPricingSubtitle(
+  activity: Activity,
+  combinations: AttributeCombinationItem[],
+  selected: boolean,
+  selectedCombination: AttributeCombinationItem | undefined
+): string {
+  const slots = (activity as Activity & { timeSlots?: string[] }).timeSlots;
+  if (slots && slots.length > 0) {
+    return slots.join(", ");
+  }
+  if (combinations.length === 0) return "--";
+
+  if (selected && selectedCombination) {
+    const n = getGameCountFromCombinationName(selectedCombination.attributeCombinationName);
+    if (n != null) {
+      const line = summarizeDynamicPricesForGameCount(combinations, n);
+      if (line) return line;
+    }
+  }
+
+  const counts = [
+    ...new Set(
+      combinations
+        .map((c) => getGameCountFromCombinationName(c.attributeCombinationName))
+        .filter((x): x is number => x != null)
+    ),
+  ].sort((a, b) => a - b);
+  if (counts.length > 0) {
+    const line = summarizeDynamicPricesForGameCount(combinations, counts[0]!);
+    if (line) return line;
+  }
+
+  return fallbackAllCombinationsRange(combinations) ?? "--";
+}
+
+/** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
+const catalogCardBtnBase =
+  "group/card  w-[min(238px,82vw)] sm:w-full shrink-0 text-left rounded-xl border transition-all duration-300 ease-out overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414] flex flex-col";
+
+const catalogColumnClass =
+  "flex   w-[min(238px,82vw)] shrink-0 flex-col sm:w-[252px] lg:w-full";
+
+const catalogCardImageShell =
+  "relative  h-[4.25rem] sm:h-[4.75rem] overflow-hidden shrink-0 w-full";
+
+const catalogCardImgClass =
+  "h-full w-full object-cover transition-transform duration-500 ease-out will-change-transform ";
+
+const catalogCardImgOverlay =
+  "pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent w-full";
+
+const catalogCardBody =
+  "flex min-h-0 flex-col justify-center gap-1 border-t border-white/[0.06] bg-zinc-950/40 px-2.5 py-2.5 sm:px-3 sm:py-3";
+
+const catalogCardTitleClass =
+  "line-clamp-2 text-left text-[12px] sm:text-[13px] font-semibold leading-snug tracking-tight text-zinc-50";
+
+const catalogCardMetaClass =
+  "line-clamp-2 text-left text-[10px] sm:text-[11px] font-medium leading-snug tabular-nums text-zinc-500 transition-colors group-hover/card:text-zinc-400";
+
+const catalogSelectedCheckClass =
+  "absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary-1 shadow-lg shadow-black/40 ring-2 ring-black/60";
+
+const packageCardBadgeClass =
+  "pointer-events-none absolute left-2 top-2 z-[1] inline-flex items-center gap-0.5 rounded-md border border-primary-1/40 bg-zinc-950/90 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.12em] text-primary-1 shadow-sm backdrop-blur-sm sm:text-[8px]";
+
+const optionChipBase =
+  "min-h-9 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]";
+
+const optionChipIdle =
+  "border-zinc-700/55 bg-zinc-900/60 text-accent hover:border-zinc-600/70 hover:bg-zinc-800/60 hover:text-zinc-100";
+
+const optionChipActive = "border-primary-1/55 bg-primary-1 text-secondary shadow-md shadow-primary-1/10";
 
 export function StepAvailabilitySelection() {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const shopId = useAppSelector((state) => state.shop.shopId);
-  const { date, timeOfDay, timeSlot, bookingId: reduxBookingId, selectedActivities, selectedPackages, persons } =
+  const { date, timeOfDay, timeSlot, bookingReferenceId: reduxBookingReferenceId, selectedActivities, selectedPackages, persons } =
     useAppSelector((state) => state.booking);
 
   const { data: activities = [] } = useActivities();
@@ -162,8 +287,10 @@ export function StepAvailabilitySelection() {
   }, [date, dispatch]);
 
   React.useEffect(() => {
-    if (effectiveSlotsData?.bookingId) dispatch(setBookingId(effectiveSlotsData.bookingId));
-  }, [effectiveSlotsData?.bookingId, dispatch]);
+    if (!slotsRequested || !effectiveSlotsData) return;
+    const id = effectiveSlotsData.bookingReferenceId?.trim();
+    if (id) dispatch(setBookingReferenceId(id));
+  }, [slotsRequested, effectiveSlotsData, dispatch]);
 
   React.useEffect(() => {
     if (periodsWithSlots.length === 0) return;
@@ -179,25 +306,58 @@ export function StepAvailabilitySelection() {
   const isPackageSelected = (id: number) => selectedPackages.some((p) => p.id === id);
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-      {/* Left panel - Activity List */}
-      <div className="w-full md:w-[300px] lg:w-1/3 shrink-0 md:min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-800/80 bg-[#161616]">
-        <div className="px-3 sm:px-4 py-3 sm:py-3.5 border-b border-gray-800/80 shrink-0">
-          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Choose activities
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain md:flex-row md:overflow-hidden"
+      style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+    >
+      {/* Left panel - Activity List (capped on mobile so date/time slots stay reachable) */}
+      <div className="flex min-h-0 min-w-0 w-full shrink-0 flex-col border-b border-white/[0.06] bg-[#141414] max-md:max-h-[min(42vh,320px)] md:max-h-none md:w-[300px] md:border-b-0 md:border-r lg:w-[min(400px,38%)]">
+        <div className="shrink-0 border-b border-white/[0.06] bg-zinc-950/60 px-3 py-3 sm:px-4">
+          <h3 className="whitespace-nowrap text-[11px] font-semibold tracking-tight text-zinc-100 sm:text-xs">
+            Activities &amp; packages
           </h3>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3 md:p-3">
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-2.5 sm:p-3.5">
+          <div
+            className={cn(
+              "mb-2.5 flex w-full min-w-0 flex-nowrap items-center text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:tracking-[0.16em]",
+              suggestedPackages.length > 0 ? "justify-between gap-2" : "justify-start gap-x-2 sm:gap-x-3"
+            )}
+          >
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
+              <Ticket
+                className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                aria-hidden
+              />
+              Activities
+            </span>
+            {suggestedPackages.length > 0 ? (
+              <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
+                <Package
+                  className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                  aria-hidden
+                />
+                Packages
+              </span>
+            ) : null}
+          </div>
+          <div className="-mx-0.5 flex flex-row  lg:flex-col min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
             const combinations = getCombinations(activity);
             const hasDynamicOptions = combinations.length > 0;
             const defaultCombo = combinations[0];
+            const selectedCombo = selected ? getSelectedCombination(activity.id) : undefined;
+            const pricingSubtitle = getActivityCardPricingSubtitle(
+              activity,
+              combinations,
+              selected,
+              selectedCombo
+            );
 
             return (
-              <div key={activity.id} className="relative group">
+              <div key={activity.id} className={cn(catalogColumnClass, "relative")}>
                 <button
                   type="button"
                   onClick={() => {
@@ -218,48 +378,45 @@ export function StepAvailabilitySelection() {
                   aria-pressed={selected}
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
-                    "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
+                    catalogCardBtnBase,
+                    "shadow-md bg-red shadow-black/30",
                     selected
-                      ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
-                      : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
+                      ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                      : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
                   )}
                 >
-                  <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
-                    <img
-                      src={activity.image || "https://picsum.photos/400/200"}
+                  <div className={catalogCardImageShell}>
+                    <img   
+                      src={
+                        activity.image ||
+                        `https://picsum.photos/seed/a-${activity.id}/800/600`
+                      }
                       alt={(activity as any).title || "Activity image"}
                       className={cn(
-                        "w-full h-full object-cover transition-transform duration-200",
-                        selected ? "brightness-110" : "group-hover:scale-[1.02]"
+                        catalogCardImgClass,
+                        selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                       )}
                     />
+                    <div className={catalogCardImgOverlay} aria-hidden />
                     {selected && (
-                      <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" strokeWidth={2.5} />
+                      <div className={catalogSelectedCheckClass}>
+                        <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                       </div>
                     )}
                   </div>
-                  <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
-                    <h4 className="font-medium text-xs sm:text-base text-white truncate">{activity.title}</h4>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 line-clamp-1 sm:line-clamp-2">
-                      {activity.timeSlots && activity.timeSlots.length > 0
-                        ? activity.timeSlots.join(", ")
-                        : combinations.length > 0
-                          ? combinations
-                              .map((c) => `${c.attributeCombinationName} $${c.fixedPrice}`)
-                              .join(", ")
-                          : "--"}
-                    </p>
+                  <div className={catalogCardBody}>
+                    <h4 className={catalogCardTitleClass}>{activity.title}</h4>
+                    <p className={catalogCardMetaClass}>{pricingSubtitle}</p>
                   </div>
                 </button>
                 {selected && hasDynamicOptions && (
-                  <div className="mt-1 sm:mt-2 px-0.5 space-y-1 sm:space-y-2">
+                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
                     {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
                         const selectedIds =
                           getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
                         return (
                           <div key={group.attributeId}>
-                            <div className="flex flex-wrap gap-1 sm:gap-1.5">
+                            <div className="flex flex-wrap gap-1.5">
                               {group.options.map((opt) => {
                                 const isOptSelected = selectedIds.includes(opt.attributeOptionId);
                                 return (
@@ -288,10 +445,8 @@ export function StepAvailabilitySelection() {
                                     aria-pressed={isOptSelected}
                                     aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
                                     className={cn(
-                                      "min-h-9 sm:min-h-10 py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                                      isOptSelected
-                                        ? "bg-primary-1 text-secondary"
-                                        : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                                      optionChipBase,
+                                      isOptSelected ? optionChipActive : optionChipIdle
                                     )}
                                   >
                                     {opt.attributeOptionName}
@@ -305,7 +460,11 @@ export function StepAvailabilitySelection() {
                   </div>
                 )}
                 {selected && !hasDynamicOptions && (
-                  <div className="flex gap-1 sm:gap-1.5 mt-1 sm:mt-2 px-0.5">
+                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
+                      Games
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
                       {getAvailableOptions(activity).map((opt) => {
                         const basePrice = Number((activity as any).fixedPrice);
                         const hasPrice = !Number.isNaN(basePrice) && basePrice > 0;
@@ -330,33 +489,39 @@ export function StepAvailabilitySelection() {
                                 : `${opt.label} price unavailable for ${activity.title}`
                             }
                             className={cn(
-                              "flex-1 min-h-9 sm:min-h-10 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-medium transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                              gameNo === opt.value
-                                ? "bg-primary-1 text-secondary"
-                                : "bg-[#1e1e1e] text-gray-400 hover:text-gray-300 hover:bg-[#252525] border border-gray-800"
+                              optionChipBase,
+                              "min-w-[4.5rem] flex-1 flex flex-col items-center justify-center gap-0.5 py-2",
+                              gameNo === opt.value ? optionChipActive : optionChipIdle
                             )}
                           >
                             <span>{opt.label}</span>
-                            <span className="opacity-80">/</span>
-                            <span className="text-[10px] opacity-80">{priceLabel}</span>
+                            <span
+                              className={cn(
+                                "text-[10px] font-semibold tabular-nums",
+                                gameNo === opt.value ? "text-secondary/90" : "text-zinc-500"
+                              )}
+                            >
+                              {priceLabel}
+                            </span>
                           </button>
                         );
                       })}
+                    </div>
                   </div>
                 )}
               </div>
             );
           })}
-          </div>
-
-          {suggestedPackages.length > 0 && (
-            <>
-              <p className="text-[11px] text-gray-500 font-medium mt-3 sm:mt-5 mb-1.5 sm:mb-2 uppercase tracking-wider">Packages</p>
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible md:flex-col md:space-y-3 scrollbar-dark pb-1 -mx-1 px-1 md:pb-0 md:mx-0 md:px-0">
-                {suggestedPackages.map((pkg) => {
-                  const selected = isPackageSelected(pkg.id);
-                  return (
-                    <div key={pkg.id} className="relative group shrink-0 md:shrink">
+            {suggestedPackages.length > 0 ? (
+              <div
+                className="mx-0.5 w-px shrink-0 self-stretch bg-zinc-700/45"
+                aria-hidden
+              />
+            ) : null}
+            {suggestedPackages.map((pkg) => {
+              const selected = isPackageSelected(pkg.id);
+              return (
+                    <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
                       <button
                         type="button"
                         onClick={() =>
@@ -365,151 +530,210 @@ export function StepAvailabilitySelection() {
                         aria-pressed={selected}
                         aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
                         className={cn(
-                          "w-[220px] sm:w-[260px] md:w-full text-left rounded-lg sm:rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex flex-col shrink-0 md:shrink",
+                          catalogCardBtnBase,
+                          "shadow-md shadow-black/30",
                           selected
-                            ? "border-primary-1/60 bg-primary-1/5 shadow-[0_0_0_1px_rgba(255,212,0,0.2)]"
-                            : "border-gray-800 bg-[#1e1e1e] hover:bg-[#252525] hover:border-gray-700"
+                            ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                            : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
                         )}
                       >
-                        <div className="relative h-16 sm:h-auto sm:aspect-2/1 md:aspect-3/1 overflow-hidden shrink-0">
+                        <div className={catalogCardImageShell}>
                           <img
-                            src={pkg.image || "https://picsum.photos/400/200"}
+                            src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
                             alt={pkg.title || "Package image"}
                             className={cn(
-                              "w-full h-full object-cover transition-transform duration-200",
-                              selected ? "brightness-110" : "group-hover:scale-[1.02]"
+                              catalogCardImgClass,
+                              selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                             )}
                           />
+                          <div className={catalogCardImgOverlay} aria-hidden />
+                          <span className={packageCardBadgeClass}>
+                            <Package className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
+                            Package
+                          </span>
                           {selected && (
-                            <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary-1 flex items-center justify-center shadow-lg">
-                              <Check className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" strokeWidth={2.5} />
+                            <div className={catalogSelectedCheckClass}>
+                              <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                             </div>
                           )}
                         </div>
-                        <div className="p-2 sm:p-3 flex flex-col justify-center min-h-0">
-                          <h4 className="font-medium text-xs sm:text-base text-white truncate">{pkg.title}</h4>
-                          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">{pkg.price}</p>
+                        <div className={catalogCardBody}>
+                          <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
+                          <p className={catalogCardMetaClass}>{pkg.price}</p>
                         </div>
                       </button>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Right panel - Date, time & availability */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#161616]">
-        <div className="px-4 sm:px-5 md:px-5 py-3 sm:py-4 border-b border-gray-800/80 flex flex-col gap-3 sm:gap-4 md:gap-4 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-3 md:gap-4">
-            <BookingGuests />
-            <BookingCalendar
-              value={date ?? ""}
-              onChange={(d) => dispatch(setDate(d))}
+      <div className="flex min-h-0 min-w-0 w-full flex-none flex-col bg-[#161616] max-md:min-h-[min(52dvh,420px)] md:flex-1">
+        <div className="shrink-0 border-b border-white/[0.06] bg-gradient-to-b from-[#181818] to-[#161616]">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
+             
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 lg:items-start">
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Guests
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <BookingGuests />
+                </div>
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Visit date
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <BookingCalendar
+                    value={date ?? ""}
+                    onChange={(d) => dispatch(setDate(d))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Availability
+                </p>
+                <div className="rounded-lg border border-white/[0.08] bg-[#141414]/90 px-2 py-2 sm:px-2.5">
+                  <button
+                    type="button"
+                    disabled={!canFetchSlots || slotsLoading}
+                    onClick={() => {
+                      queryClient.invalidateQueries({ queryKey: ["availability"] });
+                      setSlotsRequested(true);
+                    }}
+                    aria-label="Load available time slots for your selection"
+                    className={cn(
+                      segmentedPrimaryCtaClass,
+                      canFetchSlots && !slotsLoading
+                        ? "cursor-pointer hover:brightness-110 active:scale-[0.99]"
+                        : "opacity-45 cursor-not-allowed"
+                    )}
+                  >
+                    {slotsLoading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" aria-hidden />
+                        <span>Loading…</span>
+                      </>
+                    ) : (
+                      <span>Check availability</span>
+                    )}
+                  </button>
+                  <div className="mt-1 h-[15px] shrink-0" aria-hidden />
+                </div>
+              </div>
+            </div>
+
+            <BookingTimelineBar
+              bookingReferenceId={reduxBookingReferenceId || effectiveSlotsData?.bookingReferenceId}
+              timeSlot={timeSlot}
+              selectedDate={date ?? undefined}
+              slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
+              selectedActivities={selectedActivities}
+              selectedPackages={selectedPackages}
+              className="rounded-lg border border-white/[0.06] bg-[#141414]/40 px-2 py-1.5 sm:px-2.5"
             />
-            <button
-              type="button"
-              disabled={!canFetchSlots || slotsLoading}
-              onClick={() => setSlotsRequested(true)}
-              className={cn(
-                "min-h-8 py-1.5 px-3 sm:min-h-9 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-medium transition-all duration-200 bg-primary-1 text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                canFetchSlots && !slotsLoading
-                  ? "cursor-pointer hover:brightness-110"
-                  : "opacity-50 cursor-not-allowed"
-              )}
-            >
-              {slotsLoading ? "Loading…" : "Get Time Slots"}
-            </button>
-          </div>
-          
 
-          <BookingTimelineBar
-            bookingId={reduxBookingId || effectiveSlotsData?.bookingId}
-            timeSlot={timeSlot}
-            selectedDate={date ?? undefined}
-            slotsResponseReceived={!!effectiveSlotsData && !!timeSlot}
-            selectedActivities={selectedActivities}
-            selectedPackages={selectedPackages}
-          />
-
-
-
-          <div className="flex gap-1.5 sm:gap-2 md:gap-2" role="tablist" aria-label="Time of day">
-            {visibleShifts.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={timeOfDay === tab.id}
-                aria-label={`${tab.apiKey} sessions`}
-                onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
-                className={cn(
-                  "flex-1 min-h-10 sm:min-h-11 md:min-h-11 py-2 sm:py-2.5 rounded-lg sm:rounded-xl md:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                  timeOfDay === tab.id
-                    ? "bg-primary-1 text-secondary"
-                    : "bg-[#1e1e1e] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-gray-300"
-                )}
-              >
-                {tab.apiKey}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 md:px-5 py-3 sm:py-4 md:py-4 space-y-4 sm:space-y-5 scrollbar-dark">
-          <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2 sm:mb-3 md:mb-3">
-              {!slotsParams
-                ? "Start time · Select date, time of day, at least one activity or package, and guests"
-                : slotsLoading
-                  ? "Start time · Loading…"
-                  : slots.length === 0
-                    ? "Start time · No slots available"
-                    : !timeSlot
-                      ? "Start time · Select a time below"
-                      : `Start time · ${slots.length} slot${slots.length !== 1 ? "s" : ""} available`
-              }
-            </p>
-            {slotsParams && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-1.5 sm:gap-2 md:gap-2" role="group" aria-label="Select start time">
-                {slotsLoading ? (
-                  <div className="col-span-full py-6 sm:py-8 flex flex-col items-center justify-center gap-2 sm:gap-3 text-gray-400 text-xs sm:text-sm">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
-                    <span>Loading available times…</span>
-                  </div>
-                ) : slots.length === 0 ? (
-                  <div className="col-span-full py-6 sm:py-8 flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-gray-400 text-xs sm:text-sm text-center px-3 sm:px-4">
-                    <span>No time slots available for this period.</span>
-                    <span className="text-[11px] sm:text-xs text-gray-500">Try selecting another time of day or date.</span>
-                  </div>
-                ) : (
-                  slots.map((s) => (
+            {visibleShifts.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Session period
+                </p>
+                <div
+                  className="flex gap-0.5 p-0.5 rounded-lg bg-[#141414] border border-white/[0.08]"
+                  role="tablist"
+                  aria-label="Time of day"
+                >
+                  {visibleShifts.map((tab) => (
                     <button
-                      key={s.startTime}
+                      key={tab.id}
                       type="button"
-                      disabled={s.available <= 0}
-                      onClick={() => dispatch(setTimeSlot(s.startTime))}
-                      aria-pressed={timeSlot === s.startTime}
+                      role="tab"
+                      aria-selected={timeOfDay === tab.id}
+                      aria-label={`${tab.apiKey} sessions`}
+                      onClick={() => dispatch(setTimeOfDay(tab.id as 1 | 2 | 3))}
                       className={cn(
-                        "relative min-h-14 sm:min-h-18 md:min-h-18 py-2.5 sm:py-3 md:py-3 px-1.5 sm:px-2 md:px-2 rounded-lg sm:rounded-xl border text-xs sm:text-sm md:text-sm transition-all duration-150 flex flex-col items-center justify-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
-                        s.available <= 0 && "opacity-50 cursor-not-allowed",
-                        timeSlot === s.startTime
-                          ? "bg-primary-1 text-secondary border-primary-1 shadow-md cursor-pointer"
-                          : s.available > 0
-                            ? "bg-[#1e1e1e] text-gray-300 border-gray-800 hover:bg-[#252525] hover:border-gray-700 cursor-pointer"
-                            : "bg-[#1e1e1e] text-gray-500 border-gray-800"
+                        "flex-1 min-h-7 py-1 px-1 rounded-md text-[10px] sm:text-[11px] font-medium leading-tight transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-inset",
+                        timeOfDay === tab.id
+                          ? "bg-[#2a2a2a] text-white shadow-sm border border-white/[0.06]"
+                          : "text-zinc-500 hover:text-accent hover:bg-white/[0.03]"
                       )}
                     >
-                      <span className="font-semibold text-xs sm:text-sm">{s.startTime}</span>
-                      <span className="text-[10px] sm:text-xs opacity-70">{s.available} available</span>
+                      {tab.apiKey}
                     </button>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
             )}
           </div>
+        </div>
+
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 pb-6 scrollbar-dark sm:px-5 sm:py-4 max-md:min-h-[min(36dvh,300px)] max-md:max-h-[min(50dvh,440px)] max-md:flex-none md:max-h-none md:flex-1"
+          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+        >
+          {!slotsParams ? (
+              <div
+                className="rounded-xl border border-dashed border-white/[0.1] bg-[#141414]/40 px-4 py-6 sm:py-7 text-center"
+                role="status"
+              >
+                <CalendarClock className="mx-auto h-7 w-7 text-zinc-600 mb-2" aria-hidden />
+                <p className="text-sm font-medium text-zinc-200 sm:text-[0.9375rem]">
+                  Ready when you are
+                </p>
+                <p className="mt-2 max-w-sm mx-auto text-xs leading-relaxed text-zinc-500 sm:text-[0.8125rem]">
+                  Select what you would like to book, set guest counts, choose a date, then use{" "}
+                  <span className="font-medium text-zinc-400">Check availability</span> to load start times.
+                </p>
+              </div>
+            ) : (
+              <div
+                className="rounded-xl border border-white/[0.08] bg-[#141414]/60 p-2 sm:p-2.5"
+                role="group"
+                aria-label="Select start time"
+              >
+                <div className="grid touch-manipulation grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-1.5 sm:gap-1.5">
+                  {slotsLoading ? (
+                    <div className="col-span-full py-8 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
+                      <Loader2 className="h-6 w-6 text-primary-1 animate-spin" aria-hidden />
+                      <span>Loading available times…</span>
+                    </div>
+                  ) : slots.length === 0 ? (
+                    <div className="col-span-full py-7 flex flex-col items-center justify-center gap-1 text-zinc-400 text-xs text-center px-3">
+                      <span className="font-medium text-accent">No slots in this window</span>
+                      <span className="text-[10px] text-zinc-500 max-w-xs leading-relaxed">
+                        Try another session period or pick a different date.
+                      </span>
+                    </div>
+                  ) : (
+                    slots.map((s) => (
+                      <button
+                        key={s.startTime}
+                        type="button"
+                        disabled={s.available <= 0}
+                        onClick={() => dispatch(setTimeSlot(s.startTime))}
+                        aria-pressed={timeSlot === s.startTime}
+                        className={cn(
+                          "relative min-h-11 min-w-0 py-2 px-1 rounded-md border text-[11px] sm:min-h-11 sm:py-1 sm:text-xs transition-all duration-150 flex items-center justify-center leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141414] active:scale-[0.98]",
+                          s.available <= 0 && "opacity-45 cursor-not-allowed",
+                          timeSlot === s.startTime
+                            ? "bg-primary-1 text-secondary border-primary-1 shadow-sm shadow-black/20 cursor-pointer font-semibold"
+                            : s.available > 0
+                              ? "bg-[#1e1e1e] text-zinc-200 border-white/[0.08] hover:bg-[#252525] hover:border-white/[0.12] cursor-pointer font-medium"
+                              : "bg-[#1a1a1a] text-zinc-600 border-white/[0.06]"
+                        )}
+                      >
+                        <span className="tabular-nums leading-none">{s.startTime}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
         </div>
       </div>
     </div>

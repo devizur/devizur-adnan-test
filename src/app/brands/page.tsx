@@ -10,7 +10,7 @@ export default function BrandsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-950 to-black flex items-center justify-center p-6">
-            <div className="max-w-5xl w-full space-y-12">
+            <div className="w-full max-w-7xl space-y-12">
                 <div className="text-center space-y-3">
                     <h1 className="text-5xl font-bold text-white">Choose Your Brand</h1>
                     <p className="text-gray-400">Select a brand to continue</p>

@@ -1,11 +1,13 @@
 import { getBrandConfig } from "@/lib/brand-config";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 
 export default function ServicesPage() {
     const config = getBrandConfig();
     const { services } = config.content;
 
     return (
-        <div className="container mx-auto px-4 py-16">
+        <div className={cn(PAGE_CONTENT_CLASS, "py-16")}>
             <h1 className="text-4xl font-bold mb-8 text-center">{services.title}</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {services.items.map((service, index) => (

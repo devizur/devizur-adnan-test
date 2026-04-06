@@ -1,4 +1,5 @@
 import {
+  type ApiResponse,
   SignInResponse,
   RequestOtpRequest,
   RequestOtpResponse,
@@ -22,7 +23,7 @@ export { activitiesApi, foodsApi, packagesApi, modifiersApi };
 export const availabilityApi = {
   async getSlots(params: GetAvailabilitySlotsParams): Promise<AvailabilitySlotsResult> {
     const { date, selectedBookableProducts, adults, kids, shopId } = params;
-    const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [], bookingId: undefined };
+    const empty: AvailabilitySlotsResult = { timeSlots: {}, periodsWithSlots: [], bookingReferenceId: undefined };
     if (selectedBookableProducts.length === 0 || adults + kids === 0) {
       return empty;
     }
@@ -30,7 +31,7 @@ export const availabilityApi = {
       const response = await bookingFlowUrlHttp.post<RetrieveTimeSlotsResponse>(
         "/api/Booking/retrieveTimeSlots",
         {
-          bookingId: "",
+          bookingReferenceId: "",
           shopId: String(shopId),
           selectedDate: date,
           selectedBookableProducts,
@@ -42,13 +43,23 @@ export const availabilityApi = {
       if (!success || !data?.timeSlots) {
         return empty;
       }
-      const periodsWithSlots = (["Morning", "Afternoon", "Night"] as const).filter(
-        (k) => data.timeSlots && k in data.timeSlots && Array.isArray(data.timeSlots[k])
+      // API uses "Evening"; older payloads may use "Night". Normalize so UI always reads "Evening".
+      const raw = data.timeSlots;
+      const timeSlots: Record<string, string[]> = { ...raw };
+      if (
+        (!("Evening" in timeSlots) || !Array.isArray(timeSlots.Evening)) &&
+        "Night" in raw &&
+        Array.isArray(raw.Night)
+      ) {
+        timeSlots.Evening = raw.Night;
+      }
+      const periodsWithSlots = (["Morning", "Afternoon", "Evening"] as const).filter(
+        (k) => k in timeSlots && Array.isArray(timeSlots[k])
       );
       return {
-        timeSlots: data.timeSlots ?? {},
+        timeSlots,
         periodsWithSlots,
-        bookingId: data.bookingId,
+        bookingReferenceId: data.bookingReferenceId ?? data.bookingId,
       };
     } catch {
       return empty;
@@ -59,7 +70,7 @@ export const availabilityApi = {
 // Booking API – uses bookingFlowUrlHttp (UAT backend)
 export const bookingApi = {
   async generateBookingItemSteps(params: {
-    bookingId: string;
+    bookingReferenceId: string;
     selectedSlot: string; // "09:00" or slot id
     selectedDate: string; // YYYY-MM-DD
   }): Promise<{
@@ -70,26 +81,84 @@ export const bookingApi = {
       itemName: string;
       itemDuration: string;
     }[];
-    bookingId?: string;
+    bookingReferenceId?: string;
   }> {
     const response = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
       "/api/Booking/generateBookingItemSteps",
       params
     );
-    const { success, data, bookingId } = response.data ?? {};
+    const { success, data, bookingReferenceId, bookingId: legacyBookingId } = response.data ?? {};
     if (!success || !Array.isArray(data)) return { steps: [] };
     let steps = data;
-    let returnedBookingId = bookingId;
-    if (returnedBookingId && !params.bookingId) {
+    let returnedRef = bookingReferenceId ?? legacyBookingId;
+    if (returnedRef && !params.bookingReferenceId) {
       const second = await bookingFlowUrlHttp.post<GenerateBookingItemStepsResponse>(
         "/api/Booking/generateBookingItemSteps",
-        { ...params, bookingId: returnedBookingId }
+        { ...params, bookingReferenceId: returnedRef }
       );
       const s = second.data ?? {};
       if (s.success && Array.isArray(s.data)) steps = s.data;
-      if (s.bookingId) returnedBookingId = s.bookingId;
+      const nextRef = s.bookingReferenceId ?? s.bookingId;
+      if (nextRef) returnedRef = nextRef;
     }
-    return { steps, bookingId: returnedBookingId };
+    return { steps, bookingReferenceId: returnedRef };
+  },
+
+  /** POST /api/Booking/reserveBooking — lock selected slot after date/time chosen (booking flow). */
+  async reserveBooking(params: {
+    bookingReferenceId: string;
+    selectedSlot: string;
+    selectedDate: string;
+  }): Promise<void> {
+    try {
+      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+        "/api/Booking/reserveBooking",
+        params
+      );
+      const { success, message } = response.data ?? {};
+      if (!success) {
+        throw new Error(
+          typeof message === "string" && message.trim()
+            ? message
+            : "Failed to reserve this time slot"
+        );
+      }
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<unknown>>;
+      if (err.response?.data && typeof err.response.data === "object") {
+        const m = (err.response.data as ApiResponse<unknown>).message;
+        if (typeof m === "string" && m.trim()) throw new Error(m);
+      }
+      if (error instanceof Error && error.message) throw error;
+      throw new Error("Failed to reserve this time slot");
+    }
+  },
+
+  /** POST /api/Booking/unreserveBooking — release slot (id as query param, e.g. ?bookingReferenceId=…). */
+  async unreserveBooking(params: { bookingReferenceId: string }): Promise<void> {
+    try {
+      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+        "/api/Booking/unreserveBooking",
+        undefined,
+        { params: { bookingReferenceId: params.bookingReferenceId } }
+      );
+      const { success, message } = response.data ?? {};
+      if (!success) {
+        throw new Error(
+          typeof message === "string" && message.trim()
+            ? message
+            : "Failed to unreserve time slot"
+        );
+      }
+    } catch (error) {
+      const err = error as AxiosError<ApiResponse<unknown>>;
+      if (err.response?.data && typeof err.response.data === "object") {
+        const m = (err.response.data as ApiResponse<unknown>).message;
+        if (typeof m === "string" && m.trim()) throw new Error(m);
+      }
+      if (error instanceof Error && error.message) throw error;
+      throw new Error("Failed to unreserve time slot");
+    }
   },
 
   async getDapperStatuses(): Promise<BookingDapperStatus[]> {

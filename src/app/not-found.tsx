@@ -68,15 +68,15 @@ export default function NotFound() {
         <div className="pt-8 text-sm text-zinc-500">
           <p>
             Or explore{" "}
-            <Link href="/packages" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
+            <Link href="/packages" className="text-accent hover:text-primary-1 transition-colors underline underline-offset-4">
               Packages
             </Link>
             ,{" "}
-            <Link href="/activities" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
+            <Link href="/activities" className="text-accent hover:text-primary-1 transition-colors underline underline-offset-4">
               Activities
             </Link>
             , or{" "}
-            <Link href="/foods" className="text-zinc-300 hover:text-primary-1 transition-colors underline underline-offset-4">
+            <Link href="/foods" className="text-accent hover:text-primary-1 transition-colors underline underline-offset-4">
               Foods
             </Link>
           </p>

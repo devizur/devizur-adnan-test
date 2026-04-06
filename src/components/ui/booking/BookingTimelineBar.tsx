@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { Clock } from "lucide-react";
+import { cn, displayTimeToApiSlot } from "@/lib/utils";
 import { useGenerateBookingItemSteps } from "@/lib/api/hooks";
-import { displayTimeToApiSlot } from "@/lib/utils";
 import { useAppDispatch } from "@/store";
-import { setBookingId } from "@/store/bookingSlice";
+import { setBookingReferenceId } from "@/store/bookingSlice";
 import type { Activity, Package } from "@/lib/api/types";
 
 /** Parse duration string like "60 mins" to minutes. */
@@ -48,18 +48,28 @@ function formatMinutesToTime(m: number): string {
   return `${h - 12}:${String(min).padStart(2, "0")} PM`;
 }
 
+function formatTotalDuration(mins: number): string {
+  if (mins <= 0) return "—";
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+/** Saturated blocks that stay readable on dark backgrounds */
 const SEGMENT_COLORS = [
-  { bg: "bg-[#e85d3c]", text: "text-[#e85d3c]" },
-  { bg: "bg-[#3b82f6]", text: "text-[#3b82f6]" },
-  { bg: "bg-[#22c55e]", text: "text-[#22c55e]" },
-  { bg: "bg-[#f97316]", text: "text-[#f97316]" },
-  { bg: "bg-[#a855f7]", text: "text-[#a855f7]" },
-  { bg: "bg-[#ec4899]", text: "text-[#ec4899]" },
+  { bg: "from-amber-500/95 to-orange-600/90", text: "text-amber-300", dot: "bg-amber-400" },
+  { bg: "from-sky-500/95 to-blue-600/90", text: "text-sky-300", dot: "bg-sky-400" },
+  { bg: "from-emerald-500/95 to-teal-600/90", text: "text-emerald-300", dot: "bg-emerald-400" },
+  { bg: "from-violet-500/95 to-purple-600/90", text: "text-violet-300", dot: "bg-violet-400" },
+  { bg: "from-rose-500/95 to-pink-600/90", text: "text-rose-300", dot: "bg-rose-400" },
+  { bg: "from-cyan-500/95 to-cyan-600/90", text: "text-cyan-300", dot: "bg-cyan-400" },
 ];
 
 export interface BookingTimelineBarProps {
-  /** Booking ID from retrieveTimeSlots (optional – API called with "" if missing) */
-  bookingId: string | undefined;
+  /** Booking reference from retrieveTimeSlots (optional – API called with "" if missing) */
+  bookingReferenceId: string | undefined;
   /** Must be true before generateBookingItemSteps is called (i.e. retrieveTimeSlots has returned) */
   slotsResponseReceived?: boolean;
   /** Display time slot e.g. "9:00 am" */
@@ -72,8 +82,11 @@ export interface BookingTimelineBarProps {
   className?: string;
 }
 
+const endpointLabelClass =
+  "w-[2.25rem] shrink-0 text-center text-[8px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:w-[2.5rem]";
+
 export function BookingTimelineBar({
-  bookingId,
+  bookingReferenceId,
   timeSlot,
   selectedDate,
   slotsResponseReceived = false,
@@ -86,7 +99,7 @@ export function BookingTimelineBar({
   const selectedSlotApi = displayTimeToApiSlot(effectiveTimeSlot);
 
   const { data, isLoading } = useGenerateBookingItemSteps(
-    bookingId ?? "",
+    bookingReferenceId ?? "",
     selectedSlotApi,
     selectedDate,
     slotsResponseReceived
@@ -94,8 +107,8 @@ export function BookingTimelineBar({
   const steps = data?.steps ?? [];
 
   React.useEffect(() => {
-    if (data?.bookingId) dispatch(setBookingId(data.bookingId));
-  }, [data?.bookingId, dispatch]);
+    if (data?.bookingReferenceId) dispatch(setBookingReferenceId(data.bookingReferenceId));
+  }, [data?.bookingReferenceId, dispatch]);
 
   const fallbackSegments = React.useMemo(() => {
     const items: { name: string; durationMins: number }[] = [];
@@ -152,20 +165,23 @@ export function BookingTimelineBar({
 
   if (!selectedDate) return null;
 
+  const shellBase =
+    "min-w-0 overflow-hidden shadow-sm shadow-black/20 ring-1 ring-white/5";
+
   const StatusCard: React.FC<{
     children: React.ReactNode;
     alignCenter?: boolean;
     showSpinner?: boolean;
   }> = ({ children, alignCenter = true, showSpinner = false }) => (
-    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm overflow-hidden min-w-0", className)}>
+    <div className={cn(shellBase, className)}>
       <div
         className={cn(
-          "h-[calc(18px+20px+8px+2px)] text-gray-400 text-[10px]",
-          alignCenter ? "flex items-center justify-center gap-2" : "flex flex-col items-center justify-center gap-0.5"
+          "px-2.5 py-2 text-[9px] leading-tight text-zinc-500 sm:px-3",
+          alignCenter ? "flex items-center justify-center gap-1.5" : "flex flex-col items-center justify-center gap-1"
         )}
       >
         {showSpinner && (
-          <div className="w-3 h-3 border-2 border-primary-1/40 border-t-primary-1 rounded-full animate-spin" />
+          <div className="size-3 shrink-0 rounded-full border-2 border-primary-1/30 border-t-primary-1 animate-spin" />
         )}
         {children}
       </div>
@@ -173,98 +189,170 @@ export function BookingTimelineBar({
   );
 
   const LoadingState = () => (
-    <div className={cn("bg-[#1e1e1e] border border-gray-800 px-2 py-4 rounded-sm overflow-hidden min-w-0", className)}>
-    
-      {/* Bar skeleton – matches: h-5 rounded-md border */}
-      <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
-        <div className="flex-[3]  rounded-l-md bg-gray-700/50 animate-pulse" />
-        <div className="flex-[2] bg-gray-700/40 animate-pulse" />
-        <div className="flex-[2] rounded-r-md bg-gray-700/40 animate-pulse" />
+    <div className={cn(shellBase, "px-2.5 py-2 sm:px-3", className)}>
+      <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
+        <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+          Schedule
+        </span>
+        <div className="h-6 w-16 shrink-0 animate-pulse rounded-full bg-zinc-700/40" aria-hidden />
       </div>
-      {/* Labels skeleton – matches: mt-0.5 text-[9px] */}
-      <div className="flex mt-0.5 overflow-hidden min-w-0">
-        <div className="flex-[3] h-2 rounded bg-gray-700/40 animate-pulse" />
-        <div className="flex-[2] h-2 rounded bg-gray-700/30 animate-pulse" />
-        <div className="flex-[2] h-2 rounded bg-gray-700/40 animate-pulse" />
+      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
+        <div
+          className="min-h-[18px] flex-1 rounded-md bg-zinc-800/50 ring-1 ring-white/6 animate-pulse"
+          aria-hidden
+        />
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/40")}>End</span>
+      </div>
+      <div className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px min-w-0">
+        <div className="min-w-0 flex-[3] rounded-sm bg-zinc-700/50 animate-pulse" />
+        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/40 animate-pulse" />
+        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/50 animate-pulse" />
+      </div>
+      <div className="mt-1.5 flex min-h-[14px] items-center overflow-hidden min-w-0">
+        <div className="min-w-0 flex-[3] pr-0.5">
+          <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
+        </div>
+        <div className="min-w-0 flex-[2] px-0.5">
+          <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/28 animate-pulse" />
+        </div>
+        <div className="min-w-0 flex-[2] pl-0.5">
+          <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
+        </div>
       </div>
     </div>
   );
 
   const EmptyState = () => (
     <StatusCard alignCenter={false}>
-      <span>No timeline data available.</span>
-      <span className="text-[9px] text-gray-500">Select a time slot or check back later.</span>
+      <span className="text-xs font-medium text-zinc-400">No schedule data</span>
+      <span className="max-w-[18rem] text-center text-[10px] leading-snug text-zinc-600">
+        Pick a time slot or try checking availability again.
+      </span>
     </StatusCard>
   );
 
+  const initHint =
+    "Select activities, guests, and a start time to preview your day.";
+
   const InitState = () => (
-    <StatusCard>
-      <span>Select activities, guests, and a start time below.</span>
-    </StatusCard>
+    <div className={cn(shellBase, className)}>
+      <div
+        className="flex min-w-0 items-center justify-center gap-1.5 px-2.5 py-2 sm:px-3"
+        role="status"
+      >
+        <Clock className="size-3.5 shrink-0 text-zinc-600" aria-hidden />
+        <span
+          className="min-w-0 truncate text-[10px] font-normal leading-none text-zinc-400 sm:text-[11px]"
+          title={initHint}
+        >
+          {initHint}
+        </span>
+      </div>
+    </div>
   );
 
   if (isLoading && isFetching) return <LoadingState />;
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
+  const scheduleSummary = segments
+    .map((s) => `${s.name} (${s.durationMins} min)`)
+    .join("; ");
+
   return (
-    <div className={cn("  bg-[#1e1e1e] border border-gray-800 px-2 py-1 rounded-sm   overflow-hidden min-w-0", className)}>
-      {/* Top row: Start | time markers | Finish */}
-      <div className="relative flex items-start gap-2 mb-0.5 min-w-0">
-        <span className="text-[9px] text-gray-400 uppercase tracking-wider shrink-0">Start</span>
-        <div className="flex-1 relative min-h-[18px] min-w-0 overflow-hidden    ">
+    <div className={cn(shellBase, "px-2.5 py-2 sm:px-3", className)}>
+      <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
+        <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+          Schedule
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-zinc-900/80 px-2 py-0.5 text-[9px] font-medium tabular-nums text-zinc-400">
+          <Clock className="size-2.5 text-zinc-500" aria-hidden />
+          {formatTotalDuration(totalMins)}
+        </span>
+      </div>
+
+      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
+        <div className="relative min-h-[18px] flex-1 min-w-0">
           {timeMarkers.map((m) => {
             const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
             const clamped = Math.max(0, Math.min(100, pct));
             return (
               <div
                 key={m}
-                className="absolute pl-10 top-0 flex flex-col items-center"
+                className="absolute top-0 flex flex-col items-center"
                 style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
               >
-                <div className="w-px h-1.5 bg-gray-600" />
-                <span className="text-[8px] text-gray-400 mt-0.5 whitespace-nowrap">
+                <div className="h-2 w-px rounded-full bg-zinc-500" />
+                <span className="mt-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500">
                   {formatMinutesToTime(m)}
                 </span>
               </div>
             );
           })}
         </div>
-        <span className="text-[9px] text-primary-1 uppercase tracking-wider shrink-0">Finish</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1")}>End</span>
       </div>
-      
-      <div className="flex h-5 rounded-md overflow-hidden border border-gray-700/50 min-w-0">
+
+      <div
+        className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"
+        role="img"
+        aria-label={`Booking schedule, ${formatTotalDuration(totalMins)} total. ${scheduleSummary}`}
+      >
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           const isFirst = idx === 0;
           const isLast = idx === segments.length - 1;
+          const widthPct = Math.max(0, pct);
+          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
               key={`${seg.name}-${idx}`}
               className={cn(
+                "min-w-0 bg-linear-to-b shadow-sm ring-1 ring-black/25",
                 color.bg,
-                isFirst && "rounded-l-md",
-                isLast && "rounded-r-md"
+                isFirst && "rounded-l-[5px]",
+                isLast && "rounded-r-[5px]"
               )}
-              style={{ flex: `0 0 ${Math.max(0, pct)}%`, minWidth: 0 }}
-              title={`${seg.name} (${seg.durationMins} mins)`}
+              style={{
+                flex: `0 0 ${widthPct}%`,
+                minWidth: minPx || undefined,
+              }}
+              title={`${seg.name} — ${seg.durationMins} min`}
             />
           );
         })}
       </div>
-      {/* Activity labels */}
-      <div className="flex mt-0.5 overflow-hidden min-w-0">
+
+      <div className="mt-1.5 flex min-h-[14px] overflow-hidden min-w-0 leading-snug">
         {segments.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
+          const widthPct = Math.max(0, pct);
+          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
-              key={`${seg.name}-${idx}`}
-              className={cn("text-[9px] font-medium truncate", color.text)}
-              style={{ flex: `0 0 ${Math.max(0, pct)}%`, minWidth: 0 }}
-              title={seg.name}
+              key={`${seg.name}-${idx}-label`}
+              className="min-w-0 flex items-start gap-0.5 px-0.5"
+              style={{
+                flex: `0 0 ${widthPct}%`,
+                minWidth: minPx || undefined,
+              }}
             >
-              {seg.name}
+              <span
+                className={cn("mt-0.5 size-1 shrink-0 rounded-full", color.dot)}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  "min-w-0 truncate text-[9px] font-medium sm:text-[10px]",
+                  color.text
+                )}
+                title={`${seg.name} (${seg.durationMins} min)`}
+              >
+                {seg.name}
+              </span>
             </div>
           );
         })}

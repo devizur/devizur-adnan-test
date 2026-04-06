@@ -8,6 +8,7 @@ import { Food } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface FoodCardProps {
     item: Food;
@@ -16,16 +17,30 @@ interface FoodCardProps {
     modifierNames?: string[];
     /** When provided, renders instead of the default Book Now button (e.g. quantity controls in booking flow) */
     action?: React.ReactNode;
+    /** Dense layout + chrome aligned with booking dialog (e.g. food step) */
+    compact?: boolean;
 }
 
-const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifierNames, action }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifierNames, action, compact = false }) => {
     const { getFoodQuantity } = useCart();
     const quantity = getFoodQuantity(item.id);
     const isInCart = quantity > 0;
 
     return (
-        <Card className="p-2  bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
-            <div className="relative h-48 rounded-[10px] overflow-hidden">
+        <Card
+            className={cn(
+                "group p-2 transition-transform duration-300",
+                compact
+                    ? "rounded-lg border border-white/[0.08] bg-[#1a1a1a] shadow-sm shadow-black/10 hover:border-white/[0.12]"
+                    : "border border-transparent bg-secondary-2 hover:border"
+            )}
+        >
+            <div
+                className={cn(
+                    "relative overflow-hidden",
+                    compact ? "h-28 rounded-md sm:h-32" : "h-48 rounded-[10px]"
+                )}
+            >
                 <img
                     src={item.image}
                     alt={item.title}
@@ -44,13 +59,27 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifi
                 )}
             </div>
 
-            <CardContent className="px-1.5 pb-2 pt-2 sm:pt-3">
-                <div className="flex justify-between items-start mb-1.5 sm:mb-2.5">
+            <CardContent className={cn("px-1.5 pb-2 pt-2", compact ? "sm:pt-2" : "sm:pt-3")}>
+                <div className={cn("flex justify-between items-start", compact ? "mb-1.5" : "mb-1.5 sm:mb-2.5")}>
                     <div className="flex-1 pr-1.5 sm:pr-2 min-w-0">
-                        <h3 className="text-xs sm:text-[15px] font-bold text-primary tracking-tight leading-tight mb-0.5 sm:mb-1">
+                        <h3
+                            className={cn(
+                                "font-semibold tracking-tight leading-tight text-zinc-100",
+                                compact
+                                    ? "text-[11px] sm:text-xs mb-0.5"
+                                    : "text-xs sm:text-[15px] font-bold text-primary mb-0.5 sm:mb-1"
+                            )}
+                        >
                             {item.title}
                         </h3>
-                        <span className="text-[10px] sm:text-[12px] text-gray-400 font-medium">
+                        <span
+                            className={cn(
+                                "font-medium",
+                                compact
+                                    ? "text-[9px] text-zinc-500"
+                                    : "text-[10px] sm:text-[12px] text-gray-400"
+                            )}
+                        >
                             Freshly Prepared
                         </span>
                         {modifierNames && modifierNames.length > 0 && (
@@ -72,10 +101,20 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifi
                         )}
                     </div>
                     <div className="text-right shrink-0">
-                        <div className="text-primary-1 text-base sm:text-[18px] font-bold">
+                        <div
+                            className={cn(
+                                "font-bold text-primary-1",
+                                compact ? "text-sm sm:text-[0.9375rem]" : "text-base sm:text-[18px]"
+                            )}
+                        >
                             {item.price}
                         </div>
-                        <div className="text-[9px] sm:text-[11px] text-gray-400 font-medium mt-0.5">
+                        <div
+                            className={cn(
+                                "font-medium mt-0.5",
+                                compact ? "text-[9px] text-zinc-500" : "text-[9px] sm:text-[11px] text-gray-400"
+                            )}
+                        >
                             {item.unit}
                         </div>
                     </div>

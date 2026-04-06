@@ -45,7 +45,7 @@ export const brands: Record<string, BrandConfig> = {
   "devizur": devizur as BrandConfig,
   "brand-one": brandOne as BrandConfig,
   "brand-two": brandTwo as BrandConfig,
-  "urban-bite": brandTwo as BrandConfig, // Alias
+  "urban-bite": brandTwo as BrandConfig,  
 };
 
 export function isValidBrand(key: string | undefined): key is keyof typeof brands {
@@ -54,12 +54,6 @@ export function isValidBrand(key: string | undefined): key is keyof typeof brand
 
 export function getBrandConfig(): BrandConfig {
   const brandKey = process.env.NEXT_PUBLIC_BRAND || "";
-
-  if (!isValidBrand(brandKey)) {
-    // If we're here, we might want to return a basic default OR let the middleware/layout handle redirect
-    // Returning devizur as default to prevent crash, but we will redirect in layout
-    return brands["devizur"];
-  }
 
   return brands[brandKey];
 }

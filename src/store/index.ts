@@ -11,7 +11,7 @@ export {
   setDate,
   setTimeOfDay,
   setTimeSlot,
-  setBookingId,
+  setBookingReferenceId,
   addActivity,
   removeActivity,
   setActivityGameNo,

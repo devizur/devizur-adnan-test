@@ -21,8 +21,27 @@ export function formatPrice(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-/** Demo image used everywhere for catalog cards */
-export const DemoImageUrl = "https://picsum.photos/400/200";
+/**
+ * Lorem Picsum demo imagery. Plain width/height returns a random photo per request;
+ * for stable-but-varied images per product, use `/seed/{id}/800/600` (see productServices).
+ */
+export const DemoImageUrl = "https://picsum.photos/800/600";
+
+export type DemoCatalogKind = "food" | "activity" | "package";
+
+export function demoCatalogImage(kind: DemoCatalogKind, productId: number): string {
+  return `https://picsum.photos/seed/${kind}-${productId}/800/600`;
+}
+
+export function catalogImageOrDemo(
+  imageUrl: string | undefined | null,
+  kind: DemoCatalogKind,
+  productId: number
+): string {
+  const t = (imageUrl ?? "").trim();
+  if (t && /^https?:\/\//i.test(t)) return t;
+  return demoCatalogImage(kind, productId);
+}
 
 /** Format "09:30" → "9:30 am", "14:00" → "2:00 pm" */
 export function formatTimeForDisplay(raw: string): string {

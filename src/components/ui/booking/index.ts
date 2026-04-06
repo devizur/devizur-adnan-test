@@ -1,7 +1,7 @@
-export { Step4YourDetails } from "./Step4YourDetails";
 export { StepAvailabilitySelection } from "./StepAvailabilitySelection";
 export { StepFoodSelection } from "./StepFoodSelection";
-export { Step3HolderDetails } from "./Step3HolderDetails";
+export { StepHolderDetails } from "./StepHolderDetails";
+export { StepPayment } from "./StepPayment";
 export type {
   BookingActivityItem,
   BookingPeople,

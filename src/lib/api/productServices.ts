@@ -1,7 +1,6 @@
 import { Activity, Food, Package, ProductAdvancedItem } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import type { AxiosError } from "axios";
-import { DemoImageUrl } from "@/lib/utils";
 
 async function fetchFromApi<T>(path: string, errorLabel: string): Promise<T> {
   try {
@@ -61,7 +60,7 @@ function getPriceFromProduct(item: ProductAdvancedItem): { price: string; fixedP
 function mapProductToBase(item: ProductAdvancedItem) {
   const category = item.categoryName || item.subCategoryName || "";
   const { price, fixedPrice } = getPriceFromProduct(item);
-  const image = DemoImageUrl;
+  const image = `https://picsum.photos/seed/${item.productId}/800/600`;
   const opts = item.attributeOptions ?? [];
   const combos = item.attributeCombinations ?? [];
   // Derive games from API: e.g. "Game Type" options 1 Game → 1, 2 Games → 2

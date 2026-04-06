@@ -3,6 +3,11 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  segmentedStripClass,
+  segmentedSideBtnClass,
+  segmentedMainBtnClass,
+} from "./booking-segmented-styles";
 
 function getOrdinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
@@ -16,6 +21,16 @@ export function formatDialogDate(date: Date) {
   const year = date.getFullYear();
   const weekday = date.toLocaleString("en-US", { weekday: "long" });
   return `${weekday}, ${getOrdinal(day)} ${month} ${year}`;
+}
+
+/** Shorter label for compact booking UI (e.g. "Sat, Apr 4, 2026"). */
+export function formatDialogDateShort(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 /** Format date as YYYY-MM-DD in local time (avoids UTC off-by-one when selecting calendar days). */
@@ -119,35 +134,38 @@ export function BookingCalendar({
   }
 
   return (
-    <div className={cn("relative flex items-center justify-center gap-2", className)}>
-      <button
-        type="button"
-        onClick={() => setDisplayDate(-1)}
-        className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
-        aria-label="Previous date"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setIsCalendarOpen((open) => !open)}
-        className="text-sm font-medium text-white min-w-[220px] text-center py-2.5 px-4 rounded-xl bg-[#1e1e1e] border border-gray-800/80 hover:bg-[#222] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50"
-        aria-label="Open date picker"
-        aria-expanded={isCalendarOpen}
-      >
-        {formatDialogDate(displayDate)}
-      </button>
-      <button
-        type="button"
-        onClick={() => setDisplayDate(1)}
-        className="min-h-11 min-w-11 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] flex items-center justify-center"
-        aria-label="Next date"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+    <div className={cn("relative w-full max-w-full", className)}>
+      <div className={segmentedStripClass}>
+        <button
+          type="button"
+          onClick={() => setDisplayDate(-1)}
+          className={segmentedSideBtnClass}
+          aria-label="Previous date"
+        >
+          <ChevronLeft className="w-4 h-4 shrink-0" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsCalendarOpen((open) => !open)}
+          className={segmentedMainBtnClass}
+          aria-label="Open date picker"
+          aria-expanded={isCalendarOpen}
+        >
+          {formatDialogDateShort(displayDate)}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDisplayDate(1)}
+          className={segmentedSideBtnClass}
+          aria-label="Next date"
+        >
+          <ChevronRight className="w-4 h-4 shrink-0" />
+        </button>
+      </div>
+      <div className="mt-1 h-[15px] shrink-0" aria-hidden />
       {isCalendarOpen && (
-        <div className="absolute top-full mt-2 z-30 w-full max-w-xs rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-xl">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        <div className="absolute top-full z-30 mt-2 w-full max-w-xs rounded-2xl border border-zinc-700/70 bg-zinc-900 shadow-xl shadow-black/40">
+          <div className="flex items-center justify-between border-b border-zinc-700/60 px-4 py-2">
             <button
               type="button"
               onClick={() => goToCalendarMonth(-1)}
@@ -178,7 +196,7 @@ export function BookingCalendar({
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="px-4 pt-2 pb-3 text-xs text-gray-400">
+          <div className="px-4 pb-3 pt-2 text-xs text-zinc-500">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
                 <div key={d} className="h-7 flex items-center justify-center tracking-[0.08em]">

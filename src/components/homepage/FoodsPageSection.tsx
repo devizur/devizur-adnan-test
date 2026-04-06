@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
+import { cn } from "@/lib/utils";
 import { useFoods } from "@/lib/api/hooks";
 import type { Food } from "@/lib/api/types";
 import FoodCard, { FoodCardSkeleton } from "../ui/reused/FoodCard";
@@ -86,7 +88,7 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
 
     if (isLoading) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {Array.from({ length: PAGE_SIZE }).map((_, index) => (
                         <FoodCardSkeleton key={index} />
@@ -98,7 +100,7 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
 
     if (error) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="text-center py-20">
                     <p className="text-red-500">Error loading foods: {error.message}</p>
                 </div>
@@ -108,7 +110,7 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
 
     if (!allFoods.length) {
         return (
-            <section className="container mx-auto pb-20">
+            <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
                 <div className="text-center py-20">
                     <p className="text-muted-foreground">No foods found.</p>
                 </div>
@@ -117,7 +119,7 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     }
 
     return (
-        <section className="container mx-auto pb-20">
+        <section className={cn(PAGE_CONTENT_CLASS, "pb-20")}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedFoods.map((food, index) => {
                     const qty = getFoodQuantity(food.id);

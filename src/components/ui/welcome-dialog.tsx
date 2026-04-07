@@ -127,13 +127,7 @@ export function WelcomeDialog() {
                   Choose your shop
                 </AlertDialogTitle>
                 <AlertDialogDescription className="mt-1.5 text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
-                  Pick a location to load activities, food, and packages for that venue. Shops are loaded for{" "}
-                  {company?.name ? (
-                    <span className="font-medium text-zinc-300">{company.name}</span>
-                  ) : (
-                    "your company"
-                  )}
-                  . You can change this anytime from the header.
+                  Pick a location to load activities, food, and packages for that venue 
                 </AlertDialogDescription>
               </div>
             </div>

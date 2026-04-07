@@ -186,7 +186,14 @@ export function BookingDialog({
       }
     }
     if (initialPackage) {
-      dispatch(addPackage(initialPackage));
+      const pCombos = (
+        initialPackage as Package & { attributeCombinations?: AttributeCombinationItem[] }
+      ).attributeCombinations;
+      if (Array.isArray(pCombos) && pCombos.length > 0 && pCombos[0]) {
+        dispatch(addPackage({ pkg: initialPackage, combination: pCombos[0] }));
+      } else {
+        dispatch(addPackage({ pkg: initialPackage }));
+      }
     }
     if (initialFood) {
       dispatch(addFood({ food: initialFood, quantity: 1 }));

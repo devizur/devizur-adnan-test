@@ -90,9 +90,17 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
             <span className="text-zinc-500 shrink-0">{gameNo} game{gameNo !== 1 ? "s" : ""}</span>
           </div>
         ))}
-        {entry.packages.map((pkg) => (
+        {entry.packages.map(({ pkg, combination }) => (
           <div key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
-            <span className="min-w-0 truncate">{pkg.title || pkg.productName}</span>
+            <span className="min-w-0 truncate">
+              {pkg.title || pkg.productName}
+              {combination?.attributeCombinationName ? (
+                <span className="text-zinc-500">
+                  {" "}
+                  · {combination.attributeCombinationName}
+                </span>
+              ) : null}
+            </span>
             <span className="text-zinc-500 shrink-0">Package</span>
           </div>
         ))}

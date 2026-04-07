@@ -14,11 +14,12 @@ import {
   setActivityCombination,
   addPackage,
   removePackage,
+  setPackageCombination,
 } from "@/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
-import { Check, Loader2, CalendarClock, Package, Ticket } from "lucide-react";
+import type { Activity, AttributeCombinationItem, Package } from "@/lib/api/types";
+import { Check, Loader2, CalendarClock, Package as PackageIcon, Ticket } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
@@ -103,6 +104,10 @@ function getActivityCardPricingSubtitle(
       const line = summarizeDynamicPricesForGameCount(combinations, n);
       if (line) return line;
     }
+    const fp = selectedCombination.fixedPrice;
+    if (typeof fp === "number" && !Number.isNaN(fp) && fp >= 0) {
+      return `$${formatActivityPriceAmount(fp)} per person`;
+    }
   }
 
   const counts = [
@@ -118,6 +123,134 @@ function getActivityCardPricingSubtitle(
   }
 
   return fallbackAllCombinationsRange(combinations) ?? "--";
+}
+
+type CatalogProduct = Activity | Package;
+
+function getProductCombinations(product: CatalogProduct): AttributeCombinationItem[] {
+  const combos = (product as Activity & { attributeCombinations?: AttributeCombinationItem[] })
+    .attributeCombinations;
+  return Array.isArray(combos) && combos.length > 0 ? combos : [];
+}
+
+function getAttributeGroupsForProduct(product: CatalogProduct) {
+  const options = product.attributeOptions ?? [];
+  const groups: {
+    attributeId: number;
+    attributeName: string;
+    options: typeof options;
+  }[] = [];
+  for (const opt of options) {
+    let group = groups.find((g) => g.attributeId === opt.attributeId);
+    if (!group) {
+      group = { attributeId: opt.attributeId, attributeName: opt.attributeName, options: [] };
+      groups.push(group);
+    }
+    group.options.push(opt);
+  }
+  return groups;
+}
+
+/** Shown in Guests (adults/kids) — do not render as extra attribute chips. */
+function isGuestDerivedAttributeGroup(attributeName: string): boolean {
+  const n = attributeName.trim().toLowerCase();
+  return (
+    /\bage\s*group\b/.test(n) ||
+    /\bage\s*category\b/.test(n) ||
+    /\bguest\s*age\b/.test(n) ||
+    /^age$/i.test(attributeName.trim())
+  );
+}
+
+function pickAgeOptionIdForGroup(
+  options: Array<{ attributeOptionId: number; attributeOptionName: string }>,
+  persons: { adults: number; kids: number }
+): number | undefined {
+  if (options.length === 0) return undefined;
+  const { adults, kids } = persons;
+  const pick = (pred: (name: string) => boolean) =>
+    options.find((o) => pred(o.attributeOptionName))?.attributeOptionId;
+
+  if (adults > 0 && kids === 0) {
+    return pick((name) => /\badult\b|senior|18\s*\+|16\s*\+/i.test(name)) ?? options[0]!.attributeOptionId;
+  }
+  if (kids > 0 && adults === 0) {
+    return (
+      pick((name) => /\bchild\b|\bkids?\b|junior|minor|under\s*\d+/i.test(name)) ??
+      options[options.length - 1]!.attributeOptionId
+    );
+  }
+  if (adults > 0 && kids > 0) {
+    return (
+      pick((name) => /family|mixed|group|both|all\s*ages/i.test(name)) ??
+      pick((name) => /\badult\b/i.test(name)) ??
+      options[0]!.attributeOptionId
+    );
+  }
+  return options[0]!.attributeOptionId;
+}
+
+function collectGuestDerivedAgeOptionIds(
+  product: CatalogProduct,
+  persons: { adults: number; kids: number }
+): number[] {
+  const ids: number[] = [];
+  for (const g of getAttributeGroupsForProduct(product)) {
+    if (!isGuestDerivedAttributeGroup(g.attributeName)) continue;
+    const id = pickAgeOptionIdForGroup(g.options, persons);
+    if (id != null) ids.push(id);
+  }
+  return ids;
+}
+
+function stripGuestDerivedOptionIds(product: CatalogProduct, ids: number[]): number[] {
+  const drop = new Set<number>();
+  for (const g of getAttributeGroupsForProduct(product)) {
+    if (!isGuestDerivedAttributeGroup(g.attributeName)) continue;
+    for (const o of g.options) drop.add(o.attributeOptionId);
+  }
+  return ids.filter((id) => !drop.has(id));
+}
+
+function buildFullCombinationOptionIds(
+  product: CatalogProduct,
+  visibleSelectedIds: number[],
+  persons: { adults: number; kids: number }
+): number[] {
+  const stripped = stripGuestDerivedOptionIds(product, visibleSelectedIds);
+  const ageIds = collectGuestDerivedAgeOptionIds(product, persons);
+  return [...new Set([...stripped, ...ageIds])].sort((a, b) => a - b);
+}
+
+function findCombinationByOptionIds(
+  product: CatalogProduct,
+  selectedOptionIds: number[]
+): AttributeCombinationItem | undefined {
+  const combos = getProductCombinations(product);
+  return combos.find((c) => {
+    const set = c.attributeCombinationSet;
+    return (
+      set.length === selectedOptionIds.length && selectedOptionIds.every((id) => set.includes(id))
+    );
+  });
+}
+
+function pickDefaultCombination(
+  product: CatalogProduct,
+  persons: { adults: number; kids: number }
+): AttributeCombinationItem | undefined {
+  const combos = getProductCombinations(product);
+  if (combos.length === 0) return undefined;
+  const ageIds = collectGuestDerivedAgeOptionIds(product, persons);
+  if (ageIds.length === 0) return combos[0];
+  const match = combos.find((c) => ageIds.every((id) => c.attributeCombinationSet.includes(id)));
+  return match ?? combos[0];
+}
+
+function attributeGroupsForDisplay(product: CatalogProduct) {
+  return getAttributeGroupsForProduct(product).filter(
+    (g) => !isGuestDerivedAttributeGroup(g.attributeName)
+  );
 }
 
 /** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
@@ -182,7 +315,7 @@ export function StepAvailabilitySelection() {
           date,
           timeOfDay,
           activityIds: selectedActivities.map((a) => a.activity.id),
-          packageIds: selectedPackages.map((p) => p.id),
+          packageIds: selectedPackages.map((p) => p.pkg.id),
           selectedBookableProducts: [
             ...selectedActivities.map((a) => ({
               id: (a.activity as { productId?: number }).productId ?? a.activity.id,
@@ -191,7 +324,13 @@ export function StepAvailabilitySelection() {
                   ? a.combination.attributeCombinationSet[0]
                   : a.gameNo,
             })),
-            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+            ...selectedPackages.map((p) => ({
+              id: (p.pkg as { productId?: number }).productId ?? p.pkg.id,
+              attributeOptionId:
+                p.combination?.attributeCombinationSet?.length
+                  ? p.combination.attributeCombinationSet[0]
+                  : 1,
+            })),
           ],
           adults: persons.adults,
           kids: persons.kids,
@@ -207,7 +346,9 @@ export function StepAvailabilitySelection() {
   }, [
     date,
     selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
-    selectedPackages.map((p) => p.id).join(","),
+    selectedPackages
+      .map((p) => `${p.pkg.id}-${p.combination?.productAttributeCombinationId ?? 0}`)
+      .join(","),
     persons.adults,
     persons.kids,
   ]);
@@ -244,41 +385,10 @@ export function StepAvailabilitySelection() {
   };
 
  
-  const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
-    const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
-      .attributeCombinations;
-    return Array.isArray(combos) && combos.length > 0 ? combos : [];
-  };
+  const getCombinations = getProductCombinations;
 
   const getSelectedCombination = (activityId: number) =>
     selectedActivities.find((i) => i.activity.id === activityId)?.combination;
-
-  /** Group attributeOptions by attributeName for per-attribute selection UI */
-  const getAttributeGroups = (activity: Activity) => {
-    const options = activity.attributeOptions ?? [];
-    const groups: { attributeId: number; attributeName: string; options: typeof options }[] = [];
-    for (const opt of options) {
-      let group = groups.find((g) => g.attributeId === opt.attributeId);
-      if (!group) {
-        group = { attributeId: opt.attributeId, attributeName: opt.attributeName, options: [] };
-        groups.push(group);
-      }
-      group.options.push(opt);
-    }
-    return groups;
-  };
-
-  /** Find the combination whose attributeCombinationSet matches the given option IDs */
-  const findCombinationByOptions = (activity: Activity, selectedOptionIds: number[]) => {
-    const combos = getCombinations(activity);
-    return combos.find((c) => {
-      const set = c.attributeCombinationSet;
-      return (
-        set.length === selectedOptionIds.length &&
-        selectedOptionIds.every((id) => set.includes(id))
-      );
-    });
-  };
 
   React.useEffect(() => {
     if (!date) {
@@ -300,10 +410,51 @@ export function StepAvailabilitySelection() {
     }
   }, [periodsWithSlots.join(","), timeOfDay, dispatch]);
 
+  /** Keep attribute combinations aligned with adults/kids when API has hidden age-group options. */
+  React.useEffect(() => {
+    selectedActivities.forEach(({ activity, combination }) => {
+      const combos = getProductCombinations(activity);
+      if (combos.length === 0 || !combination) return;
+      const visibleOnly = stripGuestDerivedOptionIds(
+        activity,
+        combination.attributeCombinationSet
+      );
+      const merged = buildFullCombinationOptionIds(activity, visibleOnly, persons);
+      const next = findCombinationByOptionIds(activity, merged);
+      if (
+        next &&
+        next.productAttributeCombinationId !== combination.productAttributeCombinationId
+      ) {
+        dispatch(
+          setActivityCombination({ activityId: activity.id, combination: next })
+        );
+      }
+    });
+    selectedPackages.forEach(({ pkg, combination }) => {
+      const combos = getProductCombinations(pkg);
+      if (combos.length === 0 || !combination) return;
+      const visibleOnly = stripGuestDerivedOptionIds(
+        pkg,
+        combination.attributeCombinationSet
+      );
+      const merged = buildFullCombinationOptionIds(pkg, visibleOnly, persons);
+      const next = findCombinationByOptionIds(pkg, merged);
+      if (
+        next &&
+        next.productAttributeCombinationId !== combination.productAttributeCombinationId
+      ) {
+        dispatch(setPackageCombination({ packageId: pkg.id, combination: next }));
+      }
+    });
+  }, [persons.adults, persons.kids, dispatch, selectedActivities, selectedPackages]);
+
   const isActivitySelected = (id: number) => selectedActivities.some((i) => i.activity.id === id);
   const getActivityGameNo = (id: number) =>
     selectedActivities.find((i) => i.activity.id === id)?.gameNo ?? 1;
-  const isPackageSelected = (id: number) => selectedPackages.some((p) => p.id === id);
+  const isPackageSelected = (id: number) => selectedPackages.some((p) => p.pkg.id === id);
+
+  const getSelectedPackageCombination = (packageId: number) =>
+    selectedPackages.find((i) => i.pkg.id === packageId)?.combination;
 
   return (
     <div
@@ -331,7 +482,7 @@ export function StepAvailabilitySelection() {
               />
              Activities and         {suggestedPackages.length > 0 ? (
               <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
-                <Package
+                <PackageIcon
                   className="hidden size-3 shrink-0 text-zinc-500 sm:block"
                   aria-hidden
                 />
@@ -347,7 +498,7 @@ export function StepAvailabilitySelection() {
             const gameNo = getActivityGameNo(activity.id);
             const combinations = getCombinations(activity);
             const hasDynamicOptions = combinations.length > 0;
-            const defaultCombo = combinations[0];
+            const defaultCombo = pickDefaultCombination(activity, persons);
             const selectedCombo = selected ? getSelectedCombination(activity.id) : undefined;
             const pricingSubtitle = getActivityCardPricingSubtitle(
               activity,
@@ -410,51 +561,61 @@ export function StepAvailabilitySelection() {
                   </div>
                 </button>
                 {selected && hasDynamicOptions && (
-                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
-                    {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
-                        const selectedIds =
-                          getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
-                        return (
-                          <div key={group.attributeId}>
-                            <div className="flex flex-wrap gap-1.5">
-                              {group.options.map((opt) => {
-                                const isOptSelected = selectedIds.includes(opt.attributeOptionId);
-                                return (
-                                  <button
-                                    key={opt.attributeOptionId}
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const otherIds = selectedIds.filter(
-                                        (id) =>
-                                          !group.options.some(
-                                            (o) => o.attributeOptionId === id
-                                          )
+                  <div className="mt-2 space-y-3 px-0.5 sm:px-0">
+                    {attributeGroupsForDisplay(activity).map((group) => {
+                      const selectedIds =
+                        getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
+                      return (
+                        <div key={group.attributeId} className="space-y-1.5">
+                          <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
+                            {group.attributeName}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.options.map((opt) => {
+                              const isOptSelected = selectedIds.includes(opt.attributeOptionId);
+                              return (
+                                <button
+                                  key={opt.attributeOptionId}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const otherIds = selectedIds.filter(
+                                      (id) =>
+                                        !group.options.some((o) => o.attributeOptionId === id)
+                                    );
+                                    const strippedOther = stripGuestDerivedOptionIds(
+                                      activity,
+                                      otherIds
+                                    );
+                                    const tentative = [...strippedOther, opt.attributeOptionId];
+                                    const merged = buildFullCombinationOptionIds(
+                                      activity,
+                                      tentative,
+                                      persons
+                                    );
+                                    const matched = findCombinationByOptionIds(activity, merged);
+                                    if (matched) {
+                                      dispatch(
+                                        setActivityCombination({
+                                          activityId: activity.id,
+                                          combination: matched,
+                                        })
                                       );
-                                      const newIds = [...otherIds, opt.attributeOptionId];
-                                      const matched = findCombinationByOptions(activity, newIds);
-                                      if (matched) {
-                                        dispatch(
-                                          setActivityCombination({
-                                            activityId: activity.id,
-                                            combination: matched,
-                                          })
-                                        );
-                                      }
-                                    }}
-                                    aria-pressed={isOptSelected}
-                                    aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
-                                    className={cn(
-                                      optionChipBase,
-                                      isOptSelected ? optionChipActive : optionChipIdle
-                                    )}
-                                  >
-                                    {opt.attributeOptionName}
-                                  </button>
-                                );
-                              })}
-                            </div>
+                                    }
+                                  }}
+                                  aria-pressed={isOptSelected}
+                                  aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
+                                  className={cn(
+                                    optionChipBase,
+                                    isOptSelected ? optionChipActive : optionChipIdle
+                                  )}
+                                >
+                                  {opt.attributeOptionName}
+                                </button>
+                              );
+                            })}
                           </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -520,49 +681,127 @@ export function StepAvailabilitySelection() {
             ) : null}
             {suggestedPackages.map((pkg) => {
               const selected = isPackageSelected(pkg.id);
+              const pkgCombinations = getCombinations(pkg);
+              const hasPkgDynamic = pkgCombinations.length > 0;
+              const defaultPkgCombo = pickDefaultCombination(pkg, persons);
+              const selectedPkgCombo = selected ? getSelectedPackageCombination(pkg.id) : undefined;
+              const pkgPricingSubtitle = getActivityCardPricingSubtitle(
+                pkg as Activity,
+                pkgCombinations,
+                selected,
+                selectedPkgCombo
+              );
               return (
-                    <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          selected ? dispatch(removePackage(pkg.id)) : dispatch(addPackage(pkg))
-                        }
-                        aria-pressed={selected}
-                        aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
+                <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selected) {
+                        dispatch(removePackage(pkg.id));
+                      } else if (hasPkgDynamic && defaultPkgCombo) {
+                        dispatch(addPackage({ pkg, combination: defaultPkgCombo }));
+                      } else {
+                        dispatch(addPackage({ pkg }));
+                      }
+                    }}
+                    aria-pressed={selected}
+                    aria-label={
+                      selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`
+                    }
+                    className={cn(
+                      catalogCardBtnBase,
+                      "shadow-md shadow-black/30",
+                      selected
+                        ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                        : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
+                    )}
+                  >
+                    <div className={catalogCardImageShell}>
+                      <img
+                        src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
+                        alt={pkg.title || "Package image"}
                         className={cn(
-                          catalogCardBtnBase,
-                          "shadow-md shadow-black/30",
-                          selected
-                            ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
-                            : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
+                          catalogCardImgClass,
+                          selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                         )}
-                      >
-                        <div className={catalogCardImageShell}>
-                          <img
-                            src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
-                            alt={pkg.title || "Package image"}
-                            className={cn(
-                              catalogCardImgClass,
-                              selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
-                            )}
-                          />
-                          <div className={catalogCardImgOverlay} aria-hidden />
-                          <span className={packageCardBadgeClass}>
-                            <Package className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
-                            Package
-                          </span>
-                          {selected && (
-                            <div className={catalogSelectedCheckClass}>
-                              <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
-                            </div>
-                          )}
+                      />
+                      <div className={catalogCardImgOverlay} aria-hidden />
+                      <span className={packageCardBadgeClass}>
+                        <PackageIcon className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
+                        Package
+                      </span>
+                      {selected && (
+                        <div className={catalogSelectedCheckClass}>
+                          <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                         </div>
-                        <div className={catalogCardBody}>
-                          <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
-                          <p className={catalogCardMetaClass}>{pkg.price}</p>
-                        </div>
-                      </button>
+                      )}
                     </div>
+                    <div className={catalogCardBody}>
+                      <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
+                      <p className={catalogCardMetaClass}>{pkgPricingSubtitle}</p>
+                    </div>
+                  </button>
+                  {selected && hasPkgDynamic && (
+                    <div className="mt-2 space-y-3 px-0.5 sm:px-0">
+                      {attributeGroupsForDisplay(pkg).map((group) => {
+                        const selectedIds =
+                          getSelectedPackageCombination(pkg.id)?.attributeCombinationSet ?? [];
+                        return (
+                          <div key={group.attributeId} className="space-y-1.5">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-600">
+                              {group.attributeName}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {group.options.map((opt) => {
+                                const isOptSelected = selectedIds.includes(opt.attributeOptionId);
+                                return (
+                                  <button
+                                    key={opt.attributeOptionId}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const otherIds = selectedIds.filter(
+                                        (id) =>
+                                          !group.options.some((o) => o.attributeOptionId === id)
+                                      );
+                                      const strippedOther = stripGuestDerivedOptionIds(
+                                        pkg,
+                                        otherIds
+                                      );
+                                      const tentative = [...strippedOther, opt.attributeOptionId];
+                                      const merged = buildFullCombinationOptionIds(
+                                        pkg,
+                                        tentative,
+                                        persons
+                                      );
+                                      const matched = findCombinationByOptionIds(pkg, merged);
+                                      if (matched) {
+                                        dispatch(
+                                          setPackageCombination({
+                                            packageId: pkg.id,
+                                            combination: matched,
+                                          })
+                                        );
+                                      }
+                                    }}
+                                    aria-pressed={isOptSelected}
+                                    aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
+                                    className={cn(
+                                      optionChipBase,
+                                      isOptSelected ? optionChipActive : optionChipIdle
+                                    )}
+                                  >
+                                    {opt.attributeOptionName}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

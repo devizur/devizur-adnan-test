@@ -9,7 +9,7 @@ import React, {
   useMemo,
   type ReactNode,
 } from "react";
-import type { Food, Activity, Package } from "@/lib/api/types";
+import type { Food, Activity, Package, AttributeCombinationItem } from "@/lib/api/types";
 import type { HolderDetails, BookingPersons } from "@/store/bookingSlice";
 
 const CART_STORAGE_KEY = "booking_cart";
@@ -24,7 +24,7 @@ export interface CartEntry {
   timeSlot: string;
   timeOfDay: 1 | 2 | 3;
   activities: { activity: Activity; gameNo: number }[];
-  packages: Package[];
+  packages: CartPackageItem[];
   foods: { food: Food; quantity: number }[];
   addedAt: number;
 }
@@ -41,6 +41,7 @@ export interface CartActivityItem {
 
 export interface CartPackageItem {
   pkg: Package;
+  combination?: AttributeCombinationItem;
 }
 
 interface CartContextType {
@@ -68,6 +69,14 @@ interface CartContextType {
   getFoodQuantity: (foodId: number) => number;
 }
 
+function normalizePackages(raw: unknown): CartPackageItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((p: unknown) => {
+    if (p && typeof p === "object" && "pkg" in p) return p as CartPackageItem;
+    return { pkg: p as Package };
+  });
+}
+
 function loadCartFromStorage(): CartEntry[] {
   if (typeof window === "undefined") return [];
   try {
@@ -75,7 +84,10 @@ function loadCartFromStorage(): CartEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed as CartEntry[];
+    return parsed.map((e: unknown) => {
+      const entry = e as CartEntry;
+      return { ...entry, packages: normalizePackages((entry as { packages?: unknown }).packages) };
+    });
   } catch {
     return [];
   }
@@ -158,7 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         else foodItems.push({ food, quantity });
       });
       e.activities.forEach(({ activity, gameNo }) => activityItems.push({ activity, gameNo }));
-      e.packages.forEach((pkg) => packageItems.push({ pkg }));
+      e.packages.forEach((row) => packageItems.push(row));
     });
     return { foodItems, activityItems, packageItems };
   }, [entries]);

@@ -17,4 +17,5 @@ export {
   setActivityGameNo,
   addPackage,
   removePackage,
+  setPackageCombination,
 } from "./bookingSlice";

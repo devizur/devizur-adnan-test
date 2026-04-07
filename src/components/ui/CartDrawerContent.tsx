@@ -61,10 +61,13 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
     (sum, item) => sum + parsePrice(item.activity.price) * item.gameNo,
     0
   );
-  const packageSubtotal = packageItems.reduce(
-    (sum, item) => sum + parsePrice(item.pkg.price),
-    0
-  );
+  const packageSubtotal = packageItems.reduce((sum, item) => {
+    const c = item.combination;
+    if (c && typeof c.fixedPrice === "number" && !Number.isNaN(c.fixedPrice) && c.fixedPrice >= 0) {
+      return sum + c.fixedPrice;
+    }
+    return sum + parsePrice(item.pkg.price);
+  }, 0);
   const subtotal = foodSubtotal + activitySubtotal + packageSubtotal;
   const serviceFee = subtotal * 0.05;
   const discount = 0;
@@ -233,7 +236,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
               {entry.packages.length > 0 && (
                 <div className="mb-3 space-y-2">
                   <p className={sectionLabelClass}>Packages</p>
-                  {entry.packages.map((pkg) => (
+                  {entry.packages.map(({ pkg, combination }) => (
                     <div key={pkg.id} className={lineRowClass}>
                       <img
                         src={catalogImageOrDemo(pkg.image, "package", pkg.id)}
@@ -243,9 +246,19 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-zinc-100">
                           {pkg.title}
+                          {combination?.attributeCombinationName ? (
+                            <span className="text-zinc-500 font-normal">
+                              {" "}
+                              · {combination.attributeCombinationName}
+                            </span>
+                          ) : null}
                         </p>
                         <p className="mt-0.5 text-[11px] tabular-nums text-primary-1">
-                          {pkg.price}
+                          {combination &&
+                          typeof combination.fixedPrice === "number" &&
+                          !Number.isNaN(combination.fixedPrice)
+                            ? formatPrice(combination.fixedPrice)
+                            : pkg.price}
                         </p>
                       </div>
                       <button
@@ -253,7 +266,7 @@ export const CartDrawerContent: React.FC<CartDrawerContentProps> = ({
                         onClick={() =>
                           updateEntry(entry.id, (prev) => ({
                             ...prev,
-                            packages: prev.packages.filter((p) => p.id !== pkg.id),
+                            packages: prev.packages.filter((p) => p.pkg.id !== pkg.id),
                           }))
                         }
                         className={iconGhostBtnClass}

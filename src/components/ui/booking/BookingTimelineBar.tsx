@@ -6,7 +6,7 @@ import { cn, displayTimeToApiSlot } from "@/lib/utils";
 import { useGenerateBookingItemSteps } from "@/lib/api/hooks";
 import { useAppDispatch } from "@/store";
 import { setBookingReferenceId } from "@/store/bookingSlice";
-import type { Activity, Package } from "@/lib/api/types";
+import type { Activity, AttributeCombinationItem, Package } from "@/lib/api/types";
 
 /** Parse duration string like "60 mins" to minutes. */
 function parseDurationMins(value: string): number {
@@ -98,7 +98,7 @@ export interface BookingTimelineBarProps {
   selectedDate: string | undefined;
   /** Fallback: build segments from selected items when API returns no data */
   selectedActivities?: { activity: Activity; gameNo: number }[];
-  selectedPackages?: Package[];
+  selectedPackages?: { pkg: Package; combination?: AttributeCombinationItem }[];
   className?: string;
 }
 
@@ -167,7 +167,7 @@ export function BookingTimelineBar({
         durationMins: parseDurationMins(activity.duration || "60 mins"),
       });
     }
-    for (const pkg of selectedPackages) {
+    for (const { pkg } of selectedPackages) {
       items.push({
         name: pkg.productName || pkg.title,
         durationMins: parseDurationMins(pkg.duration || "60 mins"),

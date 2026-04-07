@@ -14,10 +14,10 @@ import {
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
-import { activitiesApi, foodsApi, packagesApi } from "./productServices";
+import { activitiesApi, foodsApi, packagesApi, productApi } from "./productServices";
 import { modifiersApi } from "./modifierServices";
 
-export { activitiesApi, foodsApi, packagesApi, modifiersApi };
+export { activitiesApi, foodsApi, packagesApi, productApi, modifiersApi };
 
 // Availability / slots API – returns all time slots; filter by period client-side
 export const availabilityApi = {

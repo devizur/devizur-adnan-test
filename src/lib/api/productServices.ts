@@ -25,6 +25,47 @@ export interface ProductAdvancedParams {
   IsFood?: boolean;
 }
 
+export interface ProductDetailsResponse {
+  productId: number;
+  productName: string;
+  productShortName: string | null;
+  productDescription: string | null;
+  productCode: string | null;
+  productBarcode: string | null;
+  thumbnailBigImage: string | null;
+  thumbnailShortImage: string | null;
+  subCategoryId: number | null;
+  subCategoryName: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  unitOfMeasureId: number | null;
+  isActive: boolean;
+  costPrice: number | null;
+  reorderLevel: number | null;
+  tags: string | null;
+  allergens: string | null;
+  productType: string | null;
+  isSaleable: boolean;
+  isComboProduct: boolean;
+  isForCustomization: boolean;
+  discountApplicable: boolean;
+  stockTracking: boolean;
+  availableOnline: boolean;
+  isBookingRequired: boolean;
+  customAttributesObject: unknown;
+  productAttributes: Array<{
+    productAttributeId: number;
+    productId: number;
+    attributeOptionId: number;
+  }>;
+  productAttributeCombinations: Array<{
+    productAttributeCombinationId: number;
+    productId: number;
+    attributeCombinationName: string;
+    attributeCombinationSet: number[];
+  }>;
+}
+
 async function fetchProductAdvanced(
   params: ProductAdvancedParams
 ): Promise<ProductAdvancedItem[]> {
@@ -187,6 +228,12 @@ export const packagesApi = {
     });
     const item = raw[0];
     return item ? mapProductToPackage(item) : null;
+  },
+};
+
+export const productApi = {
+  async getById(id: number): Promise<ProductDetailsResponse> {
+    return fetchFromApi<ProductDetailsResponse>(`/api/Product/${id}`, "fetch product details");
   },
 };
 

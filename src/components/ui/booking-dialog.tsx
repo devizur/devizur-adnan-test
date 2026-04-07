@@ -17,7 +17,10 @@ import { useCart } from "@/contexts/CartContext";
 import { cn, displayTimeToApiSlot } from "@/lib/utils";
 import { bookingApi } from "@/lib/api/services";
 import { toast } from "sonner";
-import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
+import {
+  StepAvailabilitySelection,
+  pickDefaultCombination,
+} from "@/components/ui/booking/StepAvailabilitySelection";
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
 import { StepPayment } from "@/components/ui/booking/StepPayment";
@@ -170,12 +173,14 @@ export function BookingDialog({
     console.log("[BookingDialog] shopId:", shopId);
     clearCart();
     dispatch(resetBooking());
+    const personsAfterReset = store.getState().booking.persons;
     if (initialActivity) {
       const combos = (initialActivity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
         .attributeCombinations;
       const hasCombos = Array.isArray(combos) && combos.length > 0;
-      if (hasCombos && combos![0]) {
-        dispatch(addActivity({ activity: initialActivity, gameNo: 1, combination: combos![0] }));
+      const defaultCombo = pickDefaultCombination(initialActivity, personsAfterReset);
+      if (hasCombos && defaultCombo) {
+        dispatch(addActivity({ activity: initialActivity, gameNo: 1, combination: defaultCombo }));
       } else {
         const allowedValues =
           initialActivity.games && initialActivity.games.length > 0
@@ -189,8 +194,9 @@ export function BookingDialog({
       const pCombos = (
         initialPackage as Package & { attributeCombinations?: AttributeCombinationItem[] }
       ).attributeCombinations;
-      if (Array.isArray(pCombos) && pCombos.length > 0 && pCombos[0]) {
-        dispatch(addPackage({ pkg: initialPackage, combination: pCombos[0] }));
+      const defaultPkgCombo = pickDefaultCombination(initialPackage, personsAfterReset);
+      if (Array.isArray(pCombos) && pCombos.length > 0 && defaultPkgCombo) {
+        dispatch(addPackage({ pkg: initialPackage, combination: defaultPkgCombo }));
       } else {
         dispatch(addPackage({ pkg: initialPackage }));
       }

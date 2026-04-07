@@ -1,6 +1,6 @@
 "use client";
 
-import { getBrandConfig } from "@/lib/brand-config";
+import { useStaticCompanyConfig } from "@/contexts/StaticCompanyConfigContext";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
-    const config = getBrandConfig();
+    const config = useStaticCompanyConfig();
     const pathname = usePathname();
     const router = useRouter();
     const [isNotFound, setIsNotFound] = useState(false);
@@ -58,7 +58,7 @@ export function Navbar() {
         }
     };
 
-    if (pathname === "/brands" || isNotFound) return null;
+    if (pathname === "/companies" || isNotFound) return null;
 
     return (
         <>

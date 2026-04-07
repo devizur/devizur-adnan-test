@@ -1,9 +1,9 @@
-import { getBrandConfig } from "@/lib/brand-config";
+import { loadCompanyFromEngine } from "@/lib/load-company";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 
-export default function ServicesPage() {
-    const config = getBrandConfig();
+export default async function ServicesPage() {
+    const { config } = await loadCompanyFromEngine();
     const { services } = config.content;
 
     return (

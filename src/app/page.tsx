@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { getBrandConfig } from "@/lib/brand-config";
+import { useStaticCompanyConfig } from "@/contexts/StaticCompanyConfigContext";
 import HeroSection from "@/components/homepage/HeroSection";
 import PopularActivities from "@/components/homepage/PopularActivities";
 import PopularFoods from "@/components/homepage/PopularFoods";
@@ -8,7 +8,7 @@ import PopularPackage from "@/components/homepage/PopularPackage";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
-  const config = getBrandConfig();
+  const config = useStaticCompanyConfig();
   const { home } = config.content;
 
   return (

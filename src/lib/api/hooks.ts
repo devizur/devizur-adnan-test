@@ -5,6 +5,11 @@ import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, booking
 import type { GenerateBookingItemStep } from "./types";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
 import { useAppSelector } from "@/store/hooks";
+import { env } from "@/config";
+import {
+  fetchEngineCompanyConfig,
+  type CompanyConfigResponse,
+} from "./bookingEngineUrlHttp";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -184,4 +189,16 @@ export function useVerifyOtp(): UseMutationResult<SignInResponse, Error, VerifyO
     return useMutation({
         mutationFn: (data: VerifyOtpRequest) => authApi.verifyOtp(data),
     });
+}
+
+
+export function useCompanyConfig(): UseQueryResult<
+  CompanyConfigResponse | null,
+  Error
+> {
+  return useQuery({
+    queryKey: ["companyConfig"] as const,
+    queryFn: fetchEngineCompanyConfig,
+    staleTime: 5 * 60 * 1000,
+  });
 }

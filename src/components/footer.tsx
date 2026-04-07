@@ -1,12 +1,12 @@
 "use client";
-import { getBrandConfig } from "@/lib/brand-config";
+import { useStaticCompanyConfig } from "@/contexts/StaticCompanyConfigContext";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function Footer() {
-    const config = getBrandConfig();
+    const config = useStaticCompanyConfig();
     const pathname = usePathname();
     const [isNotFound, setIsNotFound] = useState(false);
 
@@ -22,7 +22,7 @@ export function Footer() {
         return () => clearInterval(interval);
     }, []);
 
-    if (pathname === "/brands" || isNotFound) return null;
+    if (pathname === "/companies" || isNotFound) return null;
 
     return (
         <footer className="bg-secondary-2 text-accent py-4">

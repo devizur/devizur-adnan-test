@@ -4,6 +4,7 @@ const DEFAULT_PAYMENT_GATEWAY_URL =
 export function env() {
   const bookingFlowUrl = process.env.NEXT_PUBLIC_bookingFlowUrl ?? "";
   const BookingEngineUrl = process.env.NEXT_PUBLIC_BookingEngineUrl ?? "";
+  const ClientUrl = process.env.NEXT_PUBLIC_CLIENT_URL ;
   const PaymentGatewayUrl =
     process.env.NEXT_PUBLIC_PaymentGatewayUrl?.trim() || DEFAULT_PAYMENT_GATEWAY_URL;
   const bookingBackendUrl =
@@ -15,6 +16,7 @@ export function env() {
     BookingEngineUrl,
     PaymentGatewayUrl: PaymentGatewayUrl.replace(/\/$/, ""),
     bookingBackendUrl,
+    ClientUrl,
   };
 }
 

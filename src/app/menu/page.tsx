@@ -1,9 +1,9 @@
-import { getBrandConfig } from "@/lib/brand-config";
+import { loadCompanyFromEngine } from "@/lib/load-company";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 
-export default function MenuPage() {
-    const config = getBrandConfig();
+export default async function MenuPage() {
+    const { config } = await loadCompanyFromEngine();
     const { menu } = config.content;
 
     return (

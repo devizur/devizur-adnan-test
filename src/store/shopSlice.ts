@@ -5,7 +5,8 @@ export interface ShopState {
 }
 
 const initialState: ShopState = {
-  shopId: 1,
+  /** Unset until the user picks a shop (see WelcomeDialog + localStorage). */
+  shopId: 0,
 };
 
 const shopSlice = createSlice({

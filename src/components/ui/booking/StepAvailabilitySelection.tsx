@@ -104,7 +104,10 @@ export function StepAvailabilitySelection() {
   const [slotsRequested, setSlotsRequested] = React.useState(false);
 
   const canFetchSlots =
-    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.kids > 0;
+    shopId > 0 &&
+    !!date &&
+    (selectedActivities.length > 0 || selectedPackages.length > 0) &&
+    persons.adults + persons.kids > 0;
 
   const slotsParams =
     canFetchSlots && slotsRequested

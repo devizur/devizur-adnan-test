@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaStar } from "react-icons/fa";
+ 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Food } from "@/lib/api/types";
@@ -51,12 +51,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, showTimeSlots = false, modifi
                         {item.discount}
                     </div>
                 )}
-                {item.rating && (
-                    <div className="absolute bottom-1.5 left-1.5 bg-primary-1 text-black px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-l-[12px] sm:rounded-l-[15px] rounded-tr-[12px] sm:rounded-tr-[16px] text-[10px] sm:text-xs font-bold flex items-center gap-0.5 sm:gap-1">
-                        <FaStar className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        {item.rating}
-                    </div>
-                )}
+            
             </div>
 
             <CardContent className={cn("px-1.5 pb-2 pt-2", compact ? "sm:pt-2" : "sm:pt-3")}>

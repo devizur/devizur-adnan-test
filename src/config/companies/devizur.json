@@ -23,6 +23,13 @@
             "heroTag": "All-in-one Booking + Ordering",
             "heroTitle": "Book Activities & Order Foods",
             "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
+            "emptyState": {
+                "badge": "Home Catalog",
+                "searchBadge": "Search Result",
+                "title": "No products available",
+                "description": "Your catalog is currently empty. Add activities, foods, or packages and they will appear here automatically.",
+                "searchDescription": "We could not find any matching activities, foods, or packages. Please try a different search keyword."
+            },
             "features": [
                 {
                     "title": "Gourmet Experience",

@@ -137,7 +137,13 @@ export function WelcomeDialog() {
                 </AlertDialogDescription>
               </div>
             </div>
-        
+            {/* {!listLoading && shops.length > 0 ? (
+              <span className="shrink-0 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium tabular-nums text-zinc-400 sm:self-center">
+                {search.trim()
+                  ? `${filteredShops.length} match${filteredShops.length === 1 ? "" : "es"}`
+                  : `${shops.length} location${shops.length === 1 ? "" : "s"}`}
+              </span>
+            ) : null} */}
           </div>
         </AlertDialogHeader>
 
@@ -233,7 +239,7 @@ export function WelcomeDialog() {
                       aria-label={`Select ${shop.title}`}
                       aria-current={isCurrent ? "true" : undefined}
                       className={[
-                        "group relative aspect-16/11 w-full overflow-hidden rounded-2xl border text-left transition-all duration-300",
+                        "group relative aspect-16/11 h-48 w-full overflow-hidden rounded-2xl border text-left transition-all duration-300",
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-1/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]",
                         isCurrent
                           ? "border-primary-1/50 shadow-lg shadow-primary-1/10 ring-1 ring-primary-1/30"
@@ -251,11 +257,7 @@ export function WelcomeDialog() {
                         className="absolute inset-0 bg-linear-to-t from-black via-black/75 to-black/25"
                         aria-hidden
                       />
-                      {isCurrent ? (
-                        <span className="absolute right-3 top-3 z-20 rounded-full border border-primary-1/40 bg-zinc-950/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-1 backdrop-blur-sm">
-                          Current
-                        </span>
-                      ) : null}
+                     
                       <div className="relative z-10 flex h-full flex-col justify-between p-4 sm:p-5">
                         <div className="flex flex-wrap gap-1.5">
                           {shop.tags.map((tag, i) => (
@@ -285,16 +287,10 @@ export function WelcomeDialog() {
                           <h3 className="text-lg font-semibold leading-snug tracking-tight text-white sm:text-xl">
                             {shop.title}
                           </h3>
-                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-400 sm:text-sm">
+                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-400  ">
                             {shop.description}
                           </p>
-                          <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-1 opacity-90 transition-opacity group-hover:opacity-100">
-                            Select this shop
-                            <ChevronRight
-                              className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                              aria-hidden
-                            />
-                          </span>
+                          
                         </div>
                       </div>
                     </button>

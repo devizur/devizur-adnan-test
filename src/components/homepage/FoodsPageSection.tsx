@@ -53,11 +53,6 @@ const FoodsPageSection: React.FC<FoodsPageSectionProps> = ({ searchTerm }) => {
     const handleModifierConfirm = useCallback((selectedModifiers: SelectedFoodModifier[]) => {
         const f = modifierFood;
         if (!f) return;
-        console.log("[FoodsPage] modifiers confirmed for food:", {
-            foodId: f.id,
-            productId: f.productId,
-            selectedModifiers,
-        });
         setModifierDialogOpen(false);
         setModifierFood(null);
         setModifierQuantities({});

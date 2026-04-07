@@ -32,6 +32,11 @@ export interface HolderDetails {
 
 export type BookingFlowMode = "activityFirst" | "foodFirst";
 
+export interface SelectedPackageItem {
+  pkg: Package;
+  combination?: AttributeCombinationItem;
+}
+
 export interface BookingState {
   /** When foodFirst: step 1=Food, 2=Availability, 3=Holder, 4=Payment. Else step 1=Availability, 2=Food, 3=Holder, 4=Payment */
   flowMode: BookingFlowMode;
@@ -57,8 +62,8 @@ export interface BookingState {
     gameNo: number;
     combination?: AttributeCombinationItem;
   }[];
-  /** Step 1: selected packages */
-  selectedPackages: Package[];
+  /** Step 1: selected packages (optional attribute combination from API) */
+  selectedPackages: SelectedPackageItem[];
   /** Step 2: optional food add-ons */
   selectedFoods: SelectedFoodItem[];
   /** Step 3: booking holder details */
@@ -177,12 +182,26 @@ const bookingSlice = createSlice({
       const item = state.selectedActivities.find((i) => i.activity.id === action.payload.activityId);
       if (item) item.combination = action.payload.combination;
     },
-    addPackage: (state, action: PayloadAction<Package>) => {
-      if (state.selectedPackages.some((p) => p.id === action.payload.id)) return;
-      state.selectedPackages.push(action.payload);
+    addPackage: (
+      state,
+      action: PayloadAction<{ pkg: Package; combination?: AttributeCombinationItem }>
+    ) => {
+      const { pkg, combination } = action.payload;
+      if (state.selectedPackages.some((p) => p.pkg.id === pkg.id)) return;
+      state.selectedPackages.push({
+        pkg,
+        ...(combination !== undefined && { combination }),
+      });
     },
     removePackage: (state, action: PayloadAction<number>) => {
-      state.selectedPackages = state.selectedPackages.filter((p) => p.id !== action.payload);
+      state.selectedPackages = state.selectedPackages.filter((p) => p.pkg.id !== action.payload);
+    },
+    setPackageCombination: (
+      state,
+      action: PayloadAction<{ packageId: number; combination: AttributeCombinationItem }>
+    ) => {
+      const item = state.selectedPackages.find((p) => p.pkg.id === action.payload.packageId);
+      if (item) item.combination = action.payload.combination;
     },
     addFood: (
       state,
@@ -246,6 +265,7 @@ export const {
   setActivityCombination,
   addPackage,
   removePackage,
+  setPackageCombination,
   addFood,
   removeFood,
   updateFoodQuantity,

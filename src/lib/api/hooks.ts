@@ -5,6 +5,12 @@ import { activitiesApi, foodsApi, packagesApi, authApi, availabilityApi, booking
 import type { GenerateBookingItemStep } from "./types";
 import { Activity, Food, Package, SignInResponse, RequestOtpRequest, RequestOtpResponse, VerifyOtpRequest, Slot, GetAvailabilitySlotsParams, BookingDapperStatus, AvailabilitySlotsResult } from "./types";
 import { useAppSelector } from "@/store/hooks";
+import { env } from "@/config";
+import {
+    fetchEngineCompanyConfig,
+    type CompanyConfigResponse,
+} from "./bookingEngineUrlHttp";
+import { fetchActiveShopsByCompanyId, type ActiveShop } from "./shopServices";
 
 // Query keys for React Query
 export const queryKeys = {
@@ -43,6 +49,10 @@ export const queryKeys = {
         itemSteps: (bookingReferenceId: string, selectedSlot: string, selectedDate: string) =>
             ["booking", "itemSteps", bookingReferenceId, selectedSlot, selectedDate] as const,
     },
+    shops: {
+        activeByCompany: (companyId: number) =>
+            ["shops", "activeByCompany", companyId] as const,
+    },
 };
 
 // Activities hooks – fetches all data; pagination is controlled on the frontend
@@ -57,6 +67,7 @@ export function useActivities(searchTerm?: string): UseQueryResult<Activity[], E
             : [...queryKeys.activities.list(), "shopId", shopId],
         queryFn: () =>
             hasSearch ? activitiesApi.search(query, shopId) : activitiesApi.getAll(shopId),
+        enabled: shopId > 0,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -66,7 +77,7 @@ export function useActivity(id: number): UseQueryResult<Activity | null, Error> 
     return useQuery({
         queryKey: [...queryKeys.activities.detail(id), "shopId", shopId],
         queryFn: () => activitiesApi.getById(id, shopId),
-        enabled: !!id,
+        enabled: !!id && shopId > 0,
         staleTime: 5 * 60 * 1000,
     });
 }
@@ -83,6 +94,7 @@ export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
             : [...queryKeys.foods.list(shopId)],
         queryFn: () =>
             hasSearch ? foodsApi.search(query, shopId) : foodsApi.getAll(shopId),
+        enabled: shopId > 0,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -94,7 +106,7 @@ export function useFood(id: number): UseQueryResult<Food | null, Error> {
     return useQuery({
         queryKey: queryKeys.foods.detail(id, shopId),
         queryFn: () => foodsApi.getById(id, shopId),
-        enabled: !!id,
+        enabled: !!id && shopId > 0,
         staleTime: 5 * 60 * 1000,
     });
 }
@@ -111,6 +123,7 @@ export function usePackages(searchTerm?: string): UseQueryResult<Package[], Erro
             : [...queryKeys.packages.list(shopId)],
         queryFn: () =>
             hasSearch ? packagesApi.search(query, shopId) : packagesApi.getAll(shopId),
+        enabled: shopId > 0,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 }
@@ -120,7 +133,7 @@ export function usePackage(id: number): UseQueryResult<Package | null, Error> {
     return useQuery({
         queryKey: queryKeys.packages.detail(id, shopId),
         queryFn: () => packagesApi.getById(id, shopId),
-        enabled: !!id,
+        enabled: !!id && shopId > 0,
         staleTime: 5 * 60 * 1000,
     });
 }
@@ -135,7 +148,12 @@ export function useAvailabilitySlots(params: GetAvailabilitySlotsParams | null):
     return useQuery({
         queryKey: params ? queryKeys.availability.slots(params) : ["availability", "slots", "disabled"],
         queryFn: () => availabilityApi.getSlots(params!),
-        enabled: !!params && hasDate && !!hasProducts && !!hasPersons,
+        enabled:
+            !!params &&
+            params.shopId > 0 &&
+            hasDate &&
+            !!hasProducts &&
+            !!hasPersons,
         staleTime: 2 * 60 * 1000, // 2 minutes – slots can change
     });
 }
@@ -184,4 +202,28 @@ export function useVerifyOtp(): UseMutationResult<SignInResponse, Error, VerifyO
     return useMutation({
         mutationFn: (data: VerifyOtpRequest) => authApi.verifyOtp(data),
     });
+}
+
+
+export function useCompanyConfig(): UseQueryResult<
+  CompanyConfigResponse | null,
+  Error
+> {
+  return useQuery({
+    queryKey: ["companyConfig"] as const,
+    queryFn: fetchEngineCompanyConfig,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useActiveShops(
+  companyId: number | null | undefined
+): UseQueryResult<ActiveShop[], Error> {
+  const id = typeof companyId === "number" && companyId > 0 ? companyId : null;
+  return useQuery({
+    queryKey: id != null ? queryKeys.shops.activeByCompany(id) : ["shops", "disabled"],
+    queryFn: () => fetchActiveShopsByCompanyId(id!),
+    enabled: id != null,
+    staleTime: 5 * 60 * 1000,
+  });
 }

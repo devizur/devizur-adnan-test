@@ -27,10 +27,13 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
     (sum, item) => sum + parsePrice(item.activity.price) * item.gameNo,
     0
   );
-  const packageSubtotal = packageItems.reduce(
-    (sum, item) => sum + parsePrice(item.pkg.price),
-    0
-  );
+  const packageSubtotal = packageItems.reduce((sum, item) => {
+    const c = item.combination;
+    if (c && typeof c.fixedPrice === "number" && !Number.isNaN(c.fixedPrice) && c.fixedPrice >= 0) {
+      return sum + c.fixedPrice;
+    }
+    return sum + parsePrice(item.pkg.price);
+  }, 0);
   const subtotal = foodSubtotal + activitySubtotal + packageSubtotal;
   const serviceFee = subtotal * 0.05;
   const discount = 0;

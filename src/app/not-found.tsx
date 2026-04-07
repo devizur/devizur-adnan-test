@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { getBrandConfig } from "@/lib/brand-config";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
-  const config = getBrandConfig();
-
   // Hide navbar and footer by adding a class to body
   useEffect(() => {
     document.body.setAttribute("data-page", "not-found");

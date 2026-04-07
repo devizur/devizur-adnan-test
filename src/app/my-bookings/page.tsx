@@ -37,7 +37,7 @@ function shiftLabel(timeOfDay: 1 | 2 | 3): string {
 function bookingTitle(entry: CartEntry): string {
   const a = entry.activities[0]?.activity;
   if (a) return a.title || a.productName || "Activity";
-  const p = entry.packages[0];
+  const p = entry.packages[0]?.pkg;
   if (p) return p.title || p.productName || "Package";
   if (entry.foods.length) return "Food add-ons";
   return "Booking";
@@ -47,7 +47,7 @@ function bookingImage(entry: CartEntry): string {
   const a = entry.activities[0]?.activity;
   const fromA = a && "image" in a && typeof (a as { image?: string }).image === "string" ? (a as { image: string }).image : "";
   if (fromA) return fromA;
-  const p = entry.packages[0];
+  const p = entry.packages[0]?.pkg;
   const fromP = p && "image" in p && typeof (p as { image?: string }).image === "string" ? (p as { image: string }).image : "";
   if (fromP) return fromP;
   return "/images/bowling.png";
@@ -190,9 +190,17 @@ function OrderDetailsDialog({
                         </span>
                       </li>
                     ))}
-                    {entry.packages.map((pkg) => (
+                    {entry.packages.map(({ pkg, combination }) => (
                       <li key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
-                        <span className="min-w-0">{pkg.title || pkg.productName}</span>
+                        <span className="min-w-0">
+                          {pkg.title || pkg.productName}
+                          {combination?.attributeCombinationName ? (
+                            <span className="text-zinc-500">
+                              {" "}
+                              · {combination.attributeCombinationName}
+                            </span>
+                          ) : null}
+                        </span>
                         <span className="text-zinc-500 shrink-0">Package</span>
                       </li>
                     ))}
@@ -580,10 +588,18 @@ export default function MyBookingsPage() {
                                 </span>
                               </li>
                             ))}
-                            {entry.packages.map((pkg) => (
+                            {entry.packages.map(({ pkg, combination }) => (
                               <li key={pkg.id} className="flex gap-2">
                                 <span className="text-primary-1/80 shrink-0">+</span>
-                                <span>{pkg.title || pkg.productName}</span>
+                                <span>
+                                  {pkg.title || pkg.productName}
+                                  {combination?.attributeCombinationName ? (
+                                    <span className="text-zinc-600">
+                                      {" "}
+                                      ({combination.attributeCombinationName})
+                                    </span>
+                                  ) : null}
+                                </span>
                               </li>
                             ))}
                             {entry.foods.map(({ food, quantity }) => (

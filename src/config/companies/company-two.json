@@ -1,20 +1,20 @@
 {
-    "name": "Luxe Dining",
-    "logo": "/logos/luxe-dining.svg",
+    "name": "Urban Bite",
+    "logo": "/logos/urban-bite.svg",
     "theme": {
-        "primary-1": "oklch(0.6 0.15 250)",
-        "primary-1-hover": "oklch(0.55 0.15 250)",
-        "primary-2": "oklch(0.5 0.15 250)",
-        "secondary-1": "oklch(0.9 0.05 250)",
-        "secondary-2": "oklch(0.8 0.1 250)",
-        "secondary-3": "oklch(0.7 0.2 300)",
-        "primary": "#29AB87",
-        "background": "oklch(0.98 0.01 250)",
-        "fontFamily": "Oswald",
-        "fontUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap",
-        "radius": "0.5rem"
+        "primary-1": "oklch(0.5 0.15 140)",
+        "primary-1-hover": "oklch(0.45 0.15 140)",
+        "primary-2": "oklch(0.4 0.15 140)",
+        "secondary-1": "oklch(0.95 0.02 140)",
+        "secondary-2": "oklch(0.85 0.05 140)",
+        "secondary-3": "oklch(0.7 0.1 160)",
+        "primary": "#06402A",
+        "background": "oklch(0.99 0.01 140)",
+        "fontFamily": "Shadows Into Light",
+        "fontUrl": "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap",
+        "radius": "0.3rem"
     },
-    "content": {
+  "content": {
         "navContent":{
             "bookings": "My Bookings",
             "logoPath":""
@@ -23,6 +23,13 @@
             "heroTag": "All-in-one Booking + Ordering",
             "heroTitle": "Book Activities & Order Foods",
             "heroSubtitle": "Choose a time slot, select the number of guests, and book instantly—smooth and simple",
+            "emptyState": {
+                "badge": "Home Catalog",
+                "searchBadge": "Search Result",
+                "title": "No products available",
+                "description": "Your catalog is currently empty. Add activities, foods, or packages and they will appear here automatically.",
+                "searchDescription": "We could not find any matching activities, foods, or packages. Please try a different search keyword."
+            },
             "features": [
                 {
                     "title": "Gourmet Experience",

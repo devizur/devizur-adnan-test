@@ -1,11 +1,15 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Inter } from "next/font/google";
 import "./globals.css";
 
-import { getBrandConfig } from "@/lib/brand-config";
+import { loadCompanyFromEngine } from "@/lib/load-company";
+import { resolvedCompanyDisplayName } from "@/lib/company-display-name";
+import { StaticCompanyConfigProvider } from "@/contexts/StaticCompanyConfigContext";
 import ColorComponent from "@/components/color/color";
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +33,10 @@ const inter = Inter({
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { BrandGuard } from "@/components/brand-guard";
+import { CompanyGuard } from "@/components/company-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ReduxProvider } from "@/components/providers/redux-provider";
-import { BookingFlowTokenProvider } from "@/components/providers/booking-flow-token-provider";
+import { InitDataProviter } from "@/components/providers/init-data-proviter";
 import { CartProvider } from "@/contexts/CartContext";
 import { BookingCartProvider } from "@/contexts/BookingCartContext";
 import { ShopDialogProvider } from "@/contexts/ShopDialogContext";
@@ -41,35 +45,36 @@ import { WelcomeDialog } from "@/components/ui/welcome-dialog";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const config = getBrandConfig();
+  const { config, engine } = await loadCompanyFromEngine();
+  const displayName = resolvedCompanyDisplayName(config, engine);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
   const metadataBase = appUrl ? new URL(appUrl.startsWith("http") ? appUrl : `https://${appUrl}`) : undefined;
 
   return {
     title: {
-      default: `${config.name} ||   ${config.content.home.heroTitle }`,
-      template: `%s | ${config.name}`,
+      default: `${displayName} ||   ${config.content.home.heroTitle }`,
+      template: `%s | ${displayName}`,
     },
     description: config.content.home.heroSubtitle,
     metadataBase,
     openGraph: {
-      title: config.name || config.content.home.heroTitle ,
+      title: displayName || config.content.home.heroTitle ,
       description: config.content.home.heroSubtitle,
       url: "/",
-      siteName: config.name,
+      siteName: displayName,
       type: "website",
       images: [
         {
           url: config.logo || "/favicon.ico",
           width: 1200,
           height: 630,
-          alt: `${config.name} logo`,
+          alt: `${displayName} logo`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: config.content.home.heroTitle || config.name,
+      title: config.content.home.heroTitle || displayName,
       description: config.content.home.heroSubtitle,
       images: [config.logo || "/favicon.ico"],
     },
@@ -83,13 +88,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const brandKey = process.env.NEXT_PUBLIC_BRAND;
-  const config = getBrandConfig();
+  const { config, codeName } = await loadCompanyFromEngine();
 
 
   const activeFontFamily = config.theme.fontFamily ? `'${config.theme.fontFamily}', sans-serif` : "var(--font-geist-sans)";
@@ -106,7 +110,7 @@ export default function RootLayout({
       "--accent": config.theme["secondary-3"],
       "--background": config.theme.background,
       "--radius": config.theme.radius,
-      "--brand-font": activeFontFamily,
+      "--company-font": activeFontFamily,
     }}>
       <head>
         {config.theme.fontUrl && (
@@ -118,12 +122,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${inter.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
         <QueryProvider>
+          <StaticCompanyConfigProvider config={config}>
           <ReduxProvider>
-            <BookingFlowTokenProvider>
+            <InitDataProviter>
               <CartProvider>
                 <ShopDialogProvider>
                 <BookingCartProvider>
-                  <BrandGuard currentBrand={brandKey} />
+                  <CompanyGuard currentCompany={codeName} />
                   <Navbar />
                   <SpeedInsights/>
                   <main className="flex-1">
@@ -137,8 +142,9 @@ export default function RootLayout({
                 </BookingCartProvider>
                 </ShopDialogProvider>
               </CartProvider>
-            </BookingFlowTokenProvider>
+            </InitDataProviter>
           </ReduxProvider>
+          </StaticCompanyConfigProvider>
         </QueryProvider>
       </body>
     </html>

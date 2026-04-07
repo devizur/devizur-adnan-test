@@ -14,11 +14,24 @@ import {
   setActivityCombination,
   addPackage,
   removePackage,
+  setPackageCombination,
 } from "@/store";
+import { store } from "@/store/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Activity, AttributeCombinationItem } from "@/lib/api/types";
-import { Check, Loader2, CalendarClock, Package, Ticket } from "lucide-react";
+import type { Activity } from "@/lib/api/types";
+import {
+  pickDefaultCombination,
+  getActivityCardPricingSubtitle,
+  getProductCombinations,
+  attributeOptionsForFlatDisplay,
+  optionsWithSameAttributeId,
+  buildFullCombinationOptionIds,
+  findCombinationByOptionIds,
+  stripGuestDerivedOptionIds,
+  resolveGuestDerivedCombinationUpdate,
+} from "@/lib/booking/catalog-selection";
+import { Check, Loader2, CalendarClock, Package as PackageIcon, Ticket } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
 import { BookingGuests } from "./BookingGuests";
@@ -36,89 +49,6 @@ const SHIFT = [
   { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
   { id: 3, label: "Evening", apiKey: "Evening" as const },
 ] as const;
-
-/** e.g. "1 Game Adult" → 1, "2 Games Kids" → 2 */
-function getGameCountFromCombinationName(name: string): number | null {
-  const m = String(name).trim().match(/^(\d+)\s+Games?\b/i);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-function formatActivityPriceAmount(n: number): string {
-  const rounded = Math.round(n * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-}
-
-/** Min–max price for one game tier (adult/kids variants), e.g. "1 game · $15–$200 per person" */
-function summarizeDynamicPricesForGameCount(
-  combinations: AttributeCombinationItem[],
-  gameCount: number
-): string | null {
-  const subset = combinations.filter(
-    (c) => getGameCountFromCombinationName(c.attributeCombinationName) === gameCount
-  );
-  if (subset.length === 0) return null;
-  const prices = subset
-    .map((c) => c.fixedPrice)
-    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
-  if (prices.length === 0) return null;
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const tier = gameCount === 1 ? "1 game" : `${gameCount} games`;
-  const range =
-    min === max
-      ? `$${formatActivityPriceAmount(min)}`
-      : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)}`;
-  return `${tier} · ${range} per person`;
-}
-
-function fallbackAllCombinationsRange(combinations: AttributeCombinationItem[]): string | null {
-  const prices = combinations
-    .map((c) => c.fixedPrice)
-    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
-  if (prices.length === 0) return null;
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  return min === max
-    ? `$${formatActivityPriceAmount(min)} per person`
-    : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)} per person`;
-}
-
-function getActivityCardPricingSubtitle(
-  activity: Activity,
-  combinations: AttributeCombinationItem[],
-  selected: boolean,
-  selectedCombination: AttributeCombinationItem | undefined
-): string {
-  const slots = (activity as Activity & { timeSlots?: string[] }).timeSlots;
-  if (slots && slots.length > 0) {
-    return slots.join(", ");
-  }
-  if (combinations.length === 0) return "--";
-
-  if (selected && selectedCombination) {
-    const n = getGameCountFromCombinationName(selectedCombination.attributeCombinationName);
-    if (n != null) {
-      const line = summarizeDynamicPricesForGameCount(combinations, n);
-      if (line) return line;
-    }
-  }
-
-  const counts = [
-    ...new Set(
-      combinations
-        .map((c) => getGameCountFromCombinationName(c.attributeCombinationName))
-        .filter((x): x is number => x != null)
-    ),
-  ].sort((a, b) => a - b);
-  if (counts.length > 0) {
-    const line = summarizeDynamicPricesForGameCount(combinations, counts[0]!);
-    if (line) return line;
-  }
-
-  return fallbackAllCombinationsRange(combinations) ?? "--";
-}
 
 /** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
 const catalogCardBtnBase =
@@ -174,7 +104,10 @@ export function StepAvailabilitySelection() {
   const [slotsRequested, setSlotsRequested] = React.useState(false);
 
   const canFetchSlots =
-    !!date && (selectedActivities.length > 0 || selectedPackages.length > 0) && persons.adults + persons.kids > 0;
+    shopId > 0 &&
+    !!date &&
+    (selectedActivities.length > 0 || selectedPackages.length > 0) &&
+    persons.adults + persons.kids > 0;
 
   const slotsParams =
     canFetchSlots && slotsRequested
@@ -182,7 +115,7 @@ export function StepAvailabilitySelection() {
           date,
           timeOfDay,
           activityIds: selectedActivities.map((a) => a.activity.id),
-          packageIds: selectedPackages.map((p) => p.id),
+          packageIds: selectedPackages.map((p) => p.pkg.id),
           selectedBookableProducts: [
             ...selectedActivities.map((a) => ({
               id: (a.activity as { productId?: number }).productId ?? a.activity.id,
@@ -191,7 +124,13 @@ export function StepAvailabilitySelection() {
                   ? a.combination.attributeCombinationSet[0]
                   : a.gameNo,
             })),
-            ...selectedPackages.map((p) => ({ id: p.id, attributeOptionId: 1 })),
+            ...selectedPackages.map((p) => ({
+              id: (p.pkg as { productId?: number }).productId ?? p.pkg.id,
+              attributeOptionId:
+                p.combination?.attributeCombinationSet?.length
+                  ? p.combination.attributeCombinationSet[0]
+                  : 1,
+            })),
           ],
           adults: persons.adults,
           kids: persons.kids,
@@ -207,7 +146,9 @@ export function StepAvailabilitySelection() {
   }, [
     date,
     selectedActivities.map((a) => `${a.activity.id}-${a.combination?.productAttributeCombinationId ?? a.gameNo}`).join(","),
-    selectedPackages.map((p) => p.id).join(","),
+    selectedPackages
+      .map((p) => `${p.pkg.id}-${p.combination?.productAttributeCombinationId ?? 0}`)
+      .join(","),
     persons.adults,
     persons.kids,
   ]);
@@ -244,41 +185,8 @@ export function StepAvailabilitySelection() {
   };
 
  
-  const getCombinations = (activity: Activity): AttributeCombinationItem[] => {
-    const combos = (activity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
-      .attributeCombinations;
-    return Array.isArray(combos) && combos.length > 0 ? combos : [];
-  };
-
   const getSelectedCombination = (activityId: number) =>
     selectedActivities.find((i) => i.activity.id === activityId)?.combination;
-
-  /** Group attributeOptions by attributeName for per-attribute selection UI */
-  const getAttributeGroups = (activity: Activity) => {
-    const options = activity.attributeOptions ?? [];
-    const groups: { attributeId: number; attributeName: string; options: typeof options }[] = [];
-    for (const opt of options) {
-      let group = groups.find((g) => g.attributeId === opt.attributeId);
-      if (!group) {
-        group = { attributeId: opt.attributeId, attributeName: opt.attributeName, options: [] };
-        groups.push(group);
-      }
-      group.options.push(opt);
-    }
-    return groups;
-  };
-
-  /** Find the combination whose attributeCombinationSet matches the given option IDs */
-  const findCombinationByOptions = (activity: Activity, selectedOptionIds: number[]) => {
-    const combos = getCombinations(activity);
-    return combos.find((c) => {
-      const set = c.attributeCombinationSet;
-      return (
-        set.length === selectedOptionIds.length &&
-        selectedOptionIds.every((id) => set.includes(id))
-      );
-    });
-  };
 
   React.useEffect(() => {
     if (!date) {
@@ -300,10 +208,30 @@ export function StepAvailabilitySelection() {
     }
   }, [periodsWithSlots.join(","), timeOfDay, dispatch]);
 
+  /** When adults/kids change, remap hidden age-group options inside each selected combination. */
+  React.useEffect(() => {
+    const { selectedActivities: acts, selectedPackages: pkgs } = store.getState().booking;
+    acts.forEach(({ activity, combination }) => {
+      const next = resolveGuestDerivedCombinationUpdate(activity, combination, persons);
+      if (next) {
+        dispatch(setActivityCombination({ activityId: activity.id, combination: next }));
+      }
+    });
+    pkgs.forEach(({ pkg, combination }) => {
+      const next = resolveGuestDerivedCombinationUpdate(pkg, combination, persons);
+      if (next) {
+        dispatch(setPackageCombination({ packageId: pkg.id, combination: next }));
+      }
+    });
+  }, [persons.adults, persons.kids, dispatch]);
+
   const isActivitySelected = (id: number) => selectedActivities.some((i) => i.activity.id === id);
   const getActivityGameNo = (id: number) =>
     selectedActivities.find((i) => i.activity.id === id)?.gameNo ?? 1;
-  const isPackageSelected = (id: number) => selectedPackages.some((p) => p.id === id);
+  const isPackageSelected = (id: number) => selectedPackages.some((p) => p.pkg.id === id);
+
+  const getSelectedPackageCombination = (packageId: number) =>
+    selectedPackages.find((i) => i.pkg.id === packageId)?.combination;
 
   return (
     <div
@@ -329,25 +257,28 @@ export function StepAvailabilitySelection() {
                 className="hidden size-3 shrink-0 text-zinc-500 sm:block"
                 aria-hidden
               />
-             Activities and         {suggestedPackages.length > 0 ? (
-              <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
-                <Package
-                  className="hidden size-3 shrink-0 text-zinc-500 sm:block"
-                  aria-hidden
-                />
-                Packages
-              </span>
-            ) : null}   List
+              Activities
+              {suggestedPackages.length > 0 ? (
+                <>
+                  <span className="px-0.5 text-zinc-600" aria-hidden>
+                    ·
+                  </span>
+                  <PackageIcon
+                    className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                    aria-hidden
+                  />
+                  Packages
+                </>
+              ) : null}
             </span>
-      
           </div>
           <div className="-mx-0.5 flex flex-row  lg:flex-col min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
-            const combinations = getCombinations(activity);
+            const combinations = getProductCombinations(activity);
             const hasDynamicOptions = combinations.length > 0;
-            const defaultCombo = combinations[0];
+            const defaultCombo = pickDefaultCombination(activity, persons);
             const selectedCombo = selected ? getSelectedCombination(activity.id) : undefined;
             const pricingSubtitle = getActivityCardPricingSubtitle(
               activity,
@@ -379,7 +310,7 @@ export function StepAvailabilitySelection() {
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
                     catalogCardBtnBase,
-                    "shadow-md bg-red shadow-black/30",
+                    "shadow-md shadow-black/30",
                     selected
                       ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
                       : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
@@ -410,53 +341,57 @@ export function StepAvailabilitySelection() {
                   </div>
                 </button>
                 {selected && hasDynamicOptions && (
-                  <div className="mt-2 space-y-1.5 px-0.5 sm:px-0">
-                    {getAttributeGroups(activity).filter((g) => g.attributeName === "Game Type").map((group) => {
+                  <div className="mt-2 px-0.5 sm:px-0">
+                    <div className="flex flex-wrap gap-1.5">
+                      {attributeOptionsForFlatDisplay(activity).map((opt) => {
                         const selectedIds =
                           getSelectedCombination(activity.id)?.attributeCombinationSet ?? [];
+                        const isOptSelected = selectedIds.includes(opt.attributeOptionId);
                         return (
-                          <div key={group.attributeId}>
-                            <div className="flex flex-wrap gap-1.5">
-                              {group.options.map((opt) => {
-                                const isOptSelected = selectedIds.includes(opt.attributeOptionId);
-                                return (
-                                  <button
-                                    key={opt.attributeOptionId}
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const otherIds = selectedIds.filter(
-                                        (id) =>
-                                          !group.options.some(
-                                            (o) => o.attributeOptionId === id
-                                          )
-                                      );
-                                      const newIds = [...otherIds, opt.attributeOptionId];
-                                      const matched = findCombinationByOptions(activity, newIds);
-                                      if (matched) {
-                                        dispatch(
-                                          setActivityCombination({
-                                            activityId: activity.id,
-                                            combination: matched,
-                                          })
-                                        );
-                                      }
-                                    }}
-                                    aria-pressed={isOptSelected}
-                                    aria-label={`${group.attributeName}: ${opt.attributeOptionName}`}
-                                    className={cn(
-                                      optionChipBase,
-                                      isOptSelected ? optionChipActive : optionChipIdle
-                                    )}
-                                  >
-                                    {opt.attributeOptionName}
-                                  </button>
+                          <button
+                            key={`${opt.attributeId}-${opt.attributeOptionId}`}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const sameAttr = optionsWithSameAttributeId(
+                                activity,
+                                opt.attributeId
+                              );
+                              const otherIds = selectedIds.filter(
+                                (id) => !sameAttr.some((o) => o.attributeOptionId === id)
+                              );
+                              const strippedOther = stripGuestDerivedOptionIds(
+                                activity,
+                                otherIds
+                              );
+                              const tentative = [...strippedOther, opt.attributeOptionId];
+                              const merged = buildFullCombinationOptionIds(
+                                activity,
+                                tentative,
+                                persons
+                              );
+                              const matched = findCombinationByOptionIds(activity, merged);
+                              if (matched) {
+                                dispatch(
+                                  setActivityCombination({
+                                    activityId: activity.id,
+                                    combination: matched,
+                                  })
                                 );
-                              })}
-                            </div>
-                          </div>
-                      );
-                    })}
+                              }
+                            }}
+                            aria-pressed={isOptSelected}
+                            aria-label={opt.attributeOptionName}
+                            className={cn(
+                              optionChipBase,
+                              isOptSelected ? optionChipActive : optionChipIdle
+                            )}
+                          >
+                            {opt.attributeOptionName}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 {selected && !hasDynamicOptions && (
@@ -520,49 +455,118 @@ export function StepAvailabilitySelection() {
             ) : null}
             {suggestedPackages.map((pkg) => {
               const selected = isPackageSelected(pkg.id);
+              const pkgCombinations = getProductCombinations(pkg);
+              const hasPkgDynamic = pkgCombinations.length > 0;
+              const defaultPkgCombo = pickDefaultCombination(pkg, persons);
+              const selectedPkgCombo = selected ? getSelectedPackageCombination(pkg.id) : undefined;
+              const pkgPricingSubtitle = getActivityCardPricingSubtitle(
+                pkg,
+                pkgCombinations,
+                selected,
+                selectedPkgCombo
+              );
               return (
-                    <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          selected ? dispatch(removePackage(pkg.id)) : dispatch(addPackage(pkg))
-                        }
-                        aria-pressed={selected}
-                        aria-label={selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`}
+                <div key={pkg.id} className={cn(catalogColumnClass, "relative")}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selected) {
+                        dispatch(removePackage(pkg.id));
+                      } else if (hasPkgDynamic && defaultPkgCombo) {
+                        dispatch(addPackage({ pkg, combination: defaultPkgCombo }));
+                      } else {
+                        dispatch(addPackage({ pkg }));
+                      }
+                    }}
+                    aria-pressed={selected}
+                    aria-label={
+                      selected ? `Remove ${pkg.title} from booking` : `Select ${pkg.title}`
+                    }
+                    className={cn(
+                      catalogCardBtnBase,
+                      "shadow-md shadow-black/30",
+                      selected
+                        ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
+                        : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
+                    )}
+                  >
+                    <div className={catalogCardImageShell}>
+                      <img
+                        src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
+                        alt={pkg.title || "Package image"}
                         className={cn(
-                          catalogCardBtnBase,
-                          "shadow-md shadow-black/30",
-                          selected
-                            ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
-                            : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
+                          catalogCardImgClass,
+                          selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
                         )}
-                      >
-                        <div className={catalogCardImageShell}>
-                          <img
-                            src={pkg.image || `https://picsum.photos/seed/p-${pkg.id}/800/600`}
-                            alt={pkg.title || "Package image"}
-                            className={cn(
-                              catalogCardImgClass,
-                              selected ? "scale-[1.02] brightness-[1.03]" : "group-hover/card:scale-[1.04]"
-                            )}
-                          />
-                          <div className={catalogCardImgOverlay} aria-hidden />
-                          <span className={packageCardBadgeClass}>
-                            <Package className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
-                            Package
-                          </span>
-                          {selected && (
-                            <div className={catalogSelectedCheckClass}>
-                              <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
-                            </div>
-                          )}
+                      />
+                      <div className={catalogCardImgOverlay} aria-hidden />
+                      <span className={packageCardBadgeClass}>
+                        <PackageIcon className="size-2.5 shrink-0 opacity-90 sm:size-3" aria-hidden />
+                        Package
+                      </span>
+                      {selected && (
+                        <div className={catalogSelectedCheckClass}>
+                          <Check className="size-3.5 text-secondary" strokeWidth={2.5} aria-hidden />
                         </div>
-                        <div className={catalogCardBody}>
-                          <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
-                          <p className={catalogCardMetaClass}>{pkg.price}</p>
-                        </div>
-                      </button>
+                      )}
                     </div>
+                    <div className={catalogCardBody}>
+                      <h4 className={catalogCardTitleClass}>{pkg.title}</h4>
+                      <p className={catalogCardMetaClass}>{pkgPricingSubtitle}</p>
+                    </div>
+                  </button>
+                  {selected && hasPkgDynamic && (
+                    <div className="mt-2 px-0.5 sm:px-0">
+                      <div className="flex flex-wrap gap-1.5">
+                        {attributeOptionsForFlatDisplay(pkg).map((opt) => {
+                          const selectedIds =
+                            getSelectedPackageCombination(pkg.id)?.attributeCombinationSet ?? [];
+                          const isOptSelected = selectedIds.includes(opt.attributeOptionId);
+                          return (
+                            <button
+                              key={`${opt.attributeId}-${opt.attributeOptionId}`}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const sameAttr = optionsWithSameAttributeId(
+                                  pkg,
+                                  opt.attributeId
+                                );
+                                const otherIds = selectedIds.filter(
+                                  (id) => !sameAttr.some((o) => o.attributeOptionId === id)
+                                );
+                                const strippedOther = stripGuestDerivedOptionIds(pkg, otherIds);
+                                const tentative = [...strippedOther, opt.attributeOptionId];
+                                const merged = buildFullCombinationOptionIds(
+                                  pkg,
+                                  tentative,
+                                  persons
+                                );
+                                const matched = findCombinationByOptionIds(pkg, merged);
+                                if (matched) {
+                                  dispatch(
+                                    setPackageCombination({
+                                      packageId: pkg.id,
+                                      combination: matched,
+                                    })
+                                  );
+                                }
+                              }}
+                              aria-pressed={isOptSelected}
+                              aria-label={opt.attributeOptionName}
+                              className={cn(
+                                optionChipBase,
+                                isOptSelected ? optionChipActive : optionChipIdle
+                              )}
+                            >
+                              {opt.attributeOptionName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

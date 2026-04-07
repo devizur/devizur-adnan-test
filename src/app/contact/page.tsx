@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { getBrandConfig } from "@/lib/brand-config";
+import { useStaticCompanyConfig } from "@/contexts/StaticCompanyConfigContext";
+import { useResolvedCompanyDisplayName } from "@/contexts/EngineCompanyContext";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +51,8 @@ function InfoCard({
 }
 
 export default function ContactPage() {
-  const config = getBrandConfig();
+  const config = useStaticCompanyConfig();
+  const displayCompanyName = useResolvedCompanyDisplayName();
   const contact = config.content.contact;
   const supportEmail = contact.email?.trim() || "";
   const phone = contact.phone?.trim();
@@ -71,7 +73,7 @@ export default function ContactPage() {
       return;
     }
     if (!supportEmail) {
-      setFormError("Contact email is not configured for this brand.");
+      setFormError("Contact email is not configured for this company.");
       return;
     }
     const subject = encodeURIComponent(`Message from ${name.trim()}`);
@@ -102,7 +104,7 @@ export default function ContactPage() {
                 <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-1/95">
                   Contact
                 </p>
-                <p className="text-xs font-medium tracking-wide text-zinc-500">{config.name}</p>
+                <p className="text-xs font-medium tracking-wide text-zinc-500">{displayCompanyName}</p>
               </div>
             </div>
             <div className="space-y-2.5">

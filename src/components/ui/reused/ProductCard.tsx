@@ -1,5 +1,5 @@
 import React from "react";
-import { FaStar } from "react-icons/fa";
+ 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package } from "@/lib/api/types";
@@ -29,12 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, showTimeSlots = false }
             {item.discount}
           </div>
         )}
-        {item.rating && (
-          <div className="absolute bottom-1.5 left-1.5 bg-primary-1 text-black px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-l-[12px] sm:rounded-l-[15px] rounded-tr-[12px] sm:rounded-tr-[16px] text-[10px] sm:text-xs">
-            <FaStar className="inline w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
-            {item.rating}
-          </div>
-        )}
+      
       </div>
 
       <CardContent className="px-1.5 pb-2">

@@ -51,11 +51,6 @@ export function StepFoodSelection() {
 
   const handleConfirmModifiers = (selectedModifiers: SelectedFoodModifier[]) => {
     if (!modifierFood) return;
-    console.log("[StepFoodSelection] Selected modifiers for food:", {
-      foodId: modifierFood.id,
-      selectedModifiers,
-    });
-
     dispatch(addFood({ food: modifierFood, selectedModifiers }));
     setIsModifierDialogOpen(false);
     setModifierFood(null);

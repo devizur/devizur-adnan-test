@@ -6,7 +6,7 @@ import { cn, displayTimeToApiSlot } from "@/lib/utils";
 import { useGenerateBookingItemSteps } from "@/lib/api/hooks";
 import { useAppDispatch } from "@/store";
 import { setBookingReferenceId } from "@/store/bookingSlice";
-import type { Activity, Package } from "@/lib/api/types";
+import type { Activity, AttributeCombinationItem, Package } from "@/lib/api/types";
 
 /** Parse duration string like "60 mins" to minutes. */
 function parseDurationMins(value: string): number {
@@ -17,35 +17,55 @@ function parseDurationMins(value: string): number {
   return Math.round(num);
 }
 
-/** Parse "HH:mm" to minutes since midnight (e.g. "09:00" → 540, "13:57" → 837). */
-function parseHhMmToMinutes(s: string): number {
-  const parts = String(s || "00:00").trim().split(":");
-  const h = parseInt(parts[0], 10) || 0;
-  const m = parseInt(parts[1], 10) || 0;
-  return h * 60 + m;
+/** Parse various time formats into minutes since midnight without timezone conversion. */
+function parseTimeToMinutes(raw: string): number {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return 0;
+
+  // "9:00 am", "12:30 pm"
+  const m12 = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (m12) {
+    let h = parseInt(m12[1], 10) || 0;
+    const mins = parseInt(m12[2], 10) || 0;
+    const isPm = m12[3] === "pm";
+    if (isPm && h !== 12) h += 12;
+    if (!isPm && h === 12) h = 0;
+    return h * 60 + mins;
+  }
+
+  // "HH:mm" or "HH:mm:ss"
+  const m24 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m24) {
+    const h = parseInt(m24[1], 10) || 0;
+    const mins = parseInt(m24[2], 10) || 0;
+    return h * 60 + mins;
+  }
+
+  // ISO-like strings: "2026-04-06T12:30:00"
+  const isoLike = s.match(/t(\d{2}):(\d{2})/);
+  if (isoLike) {
+    const h = parseInt(isoLike[1], 10) || 0;
+    const mins = parseInt(isoLike[2], 10) || 0;
+    return h * 60 + mins;
+  }
+
+  return 0;
 }
 
 /** Parse display time like "9:00 am" to minutes since midnight. */
 function parseDisplayTimeToMinutes(t: string): number {
-  const s = String(t || "").trim().toLowerCase();
-  const m12 = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
-  if (!m12) return 9 * 60;
-  let h = parseInt(m12[1], 10) || 0;
-  const mins = parseInt(m12[2], 10) || 0;
-  const isPm = m12[3] === "pm";
-  if (isPm && h !== 12) h += 12;
-  if (!isPm && h === 12) h = 0;
-  return h * 60 + mins;
+  const parsed = parseTimeToMinutes(t);
+  return parsed > 0 ? parsed : 9 * 60;
 }
 
-/** Format minutes since midnight to display time like "9:00 AM". */
+/** Format minutes since midnight to display time like "4:58pm". */
 function formatMinutesToTime(m: number): string {
-  const h = Math.floor(m / 60) % 24;
-  const min = m % 60;
-  if (h === 0) return `12:${String(min).padStart(2, "0")} AM`;
-  if (h === 12) return `12:${String(min).padStart(2, "0")} PM`;
-  if (h < 12) return `${h}:${String(min).padStart(2, "0")} AM`;
-  return `${h - 12}:${String(min).padStart(2, "0")} PM`;
+  const safe = ((m % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h24 = Math.floor(safe / 60);
+  const min = safe % 60;
+  const suffix = h24 >= 12 ? "pm" : "am";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(min).padStart(2, "0")}${suffix}`;
 }
 
 function formatTotalDuration(mins: number): string {
@@ -78,12 +98,41 @@ export interface BookingTimelineBarProps {
   selectedDate: string | undefined;
   /** Fallback: build segments from selected items when API returns no data */
   selectedActivities?: { activity: Activity; gameNo: number }[];
-  selectedPackages?: Package[];
+  selectedPackages?: { pkg: Package; combination?: AttributeCombinationItem }[];
   className?: string;
 }
 
 const endpointLabelClass =
-  "w-[2.25rem] shrink-0 text-center text-[8px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:w-[2.5rem]";
+  "w-[4.2rem] shrink-0 text-center text-[10px] font-semibold tracking-[0.06em] text-zinc-500 sm:w-[4.4rem]";
+
+type TimelineSegment = {
+  name: string;
+  durationMins: number;
+  durationLabel: string;
+};
+
+type TimelineSegmentWithTimes = TimelineSegment & {
+  segStartMinutes: number;
+  segEndMinutes: number;
+  segStartLabel: string;
+  segEndLabel: string;
+};
+
+function withSegmentTimes(segments: TimelineSegment[], startMinutes: number): TimelineSegmentWithTimes[] {
+  let cursor = startMinutes;
+  return segments.map((seg) => {
+    const segStartMinutes = cursor;
+    const segEndMinutes = segStartMinutes + seg.durationMins;
+    cursor = segEndMinutes;
+    return {
+      ...seg,
+      segStartMinutes,
+      segEndMinutes,
+      segStartLabel: formatMinutesToTime(segStartMinutes),
+      segEndLabel: formatMinutesToTime(segEndMinutes),
+    };
+  });
+}
 
 export function BookingTimelineBar({
   bookingReferenceId,
@@ -118,7 +167,7 @@ export function BookingTimelineBar({
         durationMins: parseDurationMins(activity.duration || "60 mins"),
       });
     }
-    for (const pkg of selectedPackages) {
+    for (const { pkg } of selectedPackages) {
       items.push({
         name: pkg.productName || pkg.title,
         durationMins: parseDurationMins(pkg.duration || "60 mins"),
@@ -130,38 +179,78 @@ export function BookingTimelineBar({
   const { startMinutes, totalMins, segments } = React.useMemo(() => {
     const start = parseDisplayTimeToMinutes(effectiveTimeSlot);
     if (steps.length > 0) {
-      const firstStart = parseHhMmToMinutes(steps[0]!.startingTime);
-      const lastEnd = parseHhMmToMinutes(steps[steps.length - 1]!.endingTime);
-      const total = lastEnd - firstStart;
-      const segs = steps.map((s) => ({
-        name: s.itemName,
-        durationMins: parseHhMmToMinutes(s.endingTime) - parseHhMmToMinutes(s.startingTime),
+      const parsedSteps = steps.map((s) => {
+        const from = parseTimeToMinutes(s.startingTime);
+        const to = parseTimeToMinutes(s.endingTime);
+        const duration = Math.max(1, to - from);
+        return {
+          name: s.itemName,
+          from,
+          to,
+          durationMins: duration,
+          durationLabel: s.itemDuration || `${duration} mins`,
+        };
+      });
+      const firstStart = parsedSteps[0]?.from ?? start;
+      const lastEnd = parsedSteps[parsedSteps.length - 1]?.to ?? firstStart + 1;
+      const total = Math.max(1, lastEnd - firstStart);
+      const segs: TimelineSegment[] = parsedSteps.map((s) => ({
+        name: s.name,
+        durationMins: s.durationMins,
+        durationLabel: s.durationLabel,
       }));
       return { startMinutes: firstStart, totalMins: total, segments: segs };
     }
     if (slotsResponseReceived && fallbackSegments.length > 0) {
       const total = fallbackSegments.reduce((a, s) => a + s.durationMins, 0);
-      return { startMinutes: start, totalMins: total, segments: fallbackSegments };
+      return {
+        startMinutes: start,
+        totalMins: total,
+        segments: fallbackSegments.map((s): TimelineSegment => ({
+          ...s,
+          durationLabel: `${s.durationMins} mins`,
+        })),
+      };
     }
     return { startMinutes: start, totalMins: 60, segments: [] };
   }, [steps, fallbackSegments, effectiveTimeSlot, slotsResponseReceived]);
 
+  const segmentsWithTimes = React.useMemo(
+    () => withSegmentTimes(segments as TimelineSegment[], startMinutes),
+    [segments, startMinutes]
+  );
+
   const timeMarkers = React.useMemo(() => {
-    const markers: number[] = [];
+    const markerSet = new Set<number>();
     const interval = 60;
     const end = startMinutes + totalMins;
-    let t = Math.floor(startMinutes / interval) * interval;
-    while (t <= end) {
-      markers.push(t);
+
+    markerSet.add(startMinutes);
+    markerSet.add(end);
+
+    // Show times at item boundaries so short/mixed schedules still expose key times.
+    for (const seg of segmentsWithTimes) {
+      markerSet.add(seg.segStartMinutes);
+      markerSet.add(seg.segEndMinutes);
+    }
+
+    let t = Math.ceil(startMinutes / interval) * interval;
+    while (t < end) {
+      markerSet.add(t);
       t += interval;
     }
-    if (markers.length === 0) markers.push(startMinutes, end);
-    return markers;
-  }, [startMinutes, totalMins]);
+
+    return Array.from(markerSet).sort((a, b) => a - b);
+  }, [startMinutes, totalMins, segmentsWithTimes]);
 
   const hasSegments = segments.length > 0;
   const isFetching = slotsResponseReceived && !!selectedDate && !!effectiveTimeSlot;
   const canShowContent = selectedDate && hasSegments;
+  const endMinutes = startMinutes + totalMins;
+  const interiorTimeMarkers = timeMarkers.filter((m) => m > startMinutes && m < endMinutes);
+  const scheduleSummary = segmentsWithTimes
+    .map((s) => `${s.name} (${s.segStartLabel} - ${s.segEndLabel})`)
+    .join("; ");
 
   if (!selectedDate) return null;
 
@@ -197,26 +286,30 @@ export function BookingTimelineBar({
         <div className="h-6 w-16 shrink-0 animate-pulse rounded-full bg-zinc-700/40" aria-hidden />
       </div>
       <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-left text-zinc-400")}>
+          {formatMinutesToTime(startMinutes)}
+        </span>
         <div
           className="min-h-[18px] flex-1 rounded-md bg-zinc-800/50 ring-1 ring-white/6 animate-pulse"
           aria-hidden
         />
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/40")}>End</span>
+        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1/40")}>
+          {formatMinutesToTime(startMinutes + totalMins)}
+        </span>
       </div>
       <div className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px min-w-0">
-        <div className="min-w-0 flex-[3] rounded-sm bg-zinc-700/50 animate-pulse" />
-        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/40 animate-pulse" />
-        <div className="min-w-0 flex-[2] rounded-sm bg-zinc-700/50 animate-pulse" />
+        <div className="min-w-0 flex-3 rounded-sm bg-zinc-700/50 animate-pulse" />
+        <div className="min-w-0 flex-2 rounded-sm bg-zinc-700/40 animate-pulse" />
+        <div className="min-w-0 flex-2 rounded-sm bg-zinc-700/50 animate-pulse" />
       </div>
       <div className="mt-1.5 flex min-h-[14px] items-center overflow-hidden min-w-0">
-        <div className="min-w-0 flex-[3] pr-0.5">
+        <div className="min-w-0 flex-3 pr-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
         </div>
-        <div className="min-w-0 flex-[2] px-0.5">
+        <div className="min-w-0 flex-2 px-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/28 animate-pulse" />
         </div>
-        <div className="min-w-0 flex-[2] pl-0.5">
+        <div className="min-w-0 flex-2 pl-0.5">
           <div className="h-2.5 max-w-[92%] rounded-sm bg-zinc-700/35 animate-pulse" />
         </div>
       </div>
@@ -255,89 +348,93 @@ export function BookingTimelineBar({
   if (isLoading && isFetching) return <LoadingState />;
   if (!canShowContent) return isFetching ? <EmptyState /> : <InitState />;
 
-  const scheduleSummary = segments
-    .map((s) => `${s.name} (${s.durationMins} min)`)
-    .join("; ");
-
   return (
     <div className={cn(shellBase, "px-2.5 py-2 sm:px-3", className)}>
       <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
-        <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
           Schedule
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-zinc-900/80 px-2 py-0.5 text-[9px] font-medium tabular-nums text-zinc-400">
-          <Clock className="size-2.5 text-zinc-500" aria-hidden />
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-zinc-900/80 px-2.5 py-1 text-[10px] font-medium tabular-nums text-zinc-400">
+          <Clock className="size-3 text-zinc-500" aria-hidden />
           {formatTotalDuration(totalMins)}
         </span>
       </div>
-
-      <div className="relative mb-1 flex min-w-0 items-start gap-1.5">
-        <span className={cn(endpointLabelClass, "pt-0.5 text-left")}>Start</span>
-        <div className="relative min-h-[18px] flex-1 min-w-0">
-          {timeMarkers.map((m) => {
-            const pct = totalMins > 0 ? ((m - startMinutes) / totalMins) * 100 : 0;
-            const clamped = Math.max(0, Math.min(100, pct));
-            return (
-              <div
-                key={m}
-                className="absolute top-0 flex flex-col items-center"
-                style={{ left: `${clamped}%`, transform: "translateX(-50%)" }}
-              >
-                <div className="h-2 w-px rounded-full bg-zinc-500" />
-                <span className="mt-0.5 whitespace-nowrap text-[8px] font-medium tabular-nums leading-none text-zinc-500">
-                  {formatMinutesToTime(m)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <span className={cn(endpointLabelClass, "pt-0.5 text-right text-primary-1")}>End</span>
+ 
+      <div className="mb-1 flex min-h-[14px] overflow-hidden min-w-0 leading-none">
+        {segmentsWithTimes.map((seg, idx) => {
+          const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
+          const widthPct = Math.max(0, pct);
+          const showRangeLabels = widthPct >= 18;
+          const showSingleLabel = widthPct < 18;
+          return (
+            <div
+              key={`${seg.name}-${idx}-time-range`}
+              className="min-w-0 px-1"
+              style={{ flex: `0 0 ${widthPct}%` }}
+              title={`${seg.name} — ${seg.segStartLabel} - ${seg.segEndLabel}`}
+            >
+              {showRangeLabels ? (
+                <div className="flex items-center justify-between text-[9px] font-semibold tabular-nums text-zinc-400">
+                  <span className="truncate">{seg.segStartLabel}</span>
+                  <span className="truncate pl-1">{seg.segEndLabel}</span>
+                </div>
+              ) : showSingleLabel ? (
+                <div className="flex items-center justify-center gap-1 text-[9px] font-semibold tabular-nums text-zinc-400">
+                  <span className="truncate">{seg.segStartLabel} - {seg.segEndLabel}</span>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
       <div
-        className="flex h-4 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"
+        className="flex h-6 gap-px overflow-hidden rounded-md border border-white/10 bg-zinc-950/90 p-px shadow-inner shadow-black/50 min-w-0"
         role="img"
         aria-label={`Booking schedule, ${formatTotalDuration(totalMins)} total. ${scheduleSummary}`}
       >
-        {segments.map((seg, idx) => {
+        {segmentsWithTimes.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           const isFirst = idx === 0;
           const isLast = idx === segments.length - 1;
           const widthPct = Math.max(0, pct);
-          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
               key={`${seg.name}-${idx}`}
               className={cn(
-                "min-w-0 bg-linear-to-b shadow-sm ring-1 ring-black/25",
+                "relative min-w-0 bg-linear-to-b shadow-sm ring-1 ring-black/25",
                 color.bg,
                 isFirst && "rounded-l-[5px]",
                 isLast && "rounded-r-[5px]"
               )}
               style={{
                 flex: `0 0 ${widthPct}%`,
-                minWidth: minPx || undefined,
               }}
-              title={`${seg.name} — ${seg.durationMins} min`}
-            />
+              title={`${seg.name} — ${seg.segStartLabel} - ${seg.segEndLabel}`}
+            >
+              <span
+                className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-[10px] font-semibold leading-none text-white/95"
+                title={`${seg.durationLabel} (${seg.segStartLabel} - ${seg.segEndLabel})`}
+              >
+                <span className="truncate">{seg.durationLabel}</span>
+              </span>
+             </div>
           );
         })}
       </div>
 
-      <div className="mt-1.5 flex min-h-[14px] overflow-hidden min-w-0 leading-snug">
-        {segments.map((seg, idx) => {
+      <div className="mt-2 flex min-h-[18px] overflow-hidden min-w-0 leading-snug">
+        {segmentsWithTimes.map((seg, idx) => {
           const pct = totalMins > 0 ? (seg.durationMins / totalMins) * 100 : 0;
           const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
           const widthPct = Math.max(0, pct);
-          const minPx = widthPct > 0 && widthPct < 6 ? 6 : 0;
           return (
             <div
               key={`${seg.name}-${idx}-label`}
               className="min-w-0 flex items-start gap-0.5 px-0.5"
               style={{
                 flex: `0 0 ${widthPct}%`,
-                minWidth: minPx || undefined,
               }}
             >
               <span
@@ -346,10 +443,10 @@ export function BookingTimelineBar({
               />
               <span
                 className={cn(
-                  "min-w-0 truncate text-[9px] font-medium sm:text-[10px]",
+                  "min-w-0 truncate text-[10px] font-medium sm:text-[11px]",
                   color.text
                 )}
-                title={`${seg.name} (${seg.durationMins} min)`}
+                title={`${seg.name} (${seg.segStartLabel} - ${seg.segEndLabel})`}
               >
                 {seg.name}
               </span>

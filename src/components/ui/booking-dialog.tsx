@@ -17,10 +17,8 @@ import { useCart } from "@/contexts/CartContext";
 import { cn, displayTimeToApiSlot } from "@/lib/utils";
 import { bookingApi } from "@/lib/api/services";
 import { toast } from "sonner";
-import {
-  StepAvailabilitySelection,
-  pickDefaultCombination,
-} from "@/components/ui/booking/StepAvailabilitySelection";
+import { StepAvailabilitySelection } from "@/components/ui/booking/StepAvailabilitySelection";
+import { getProductCombinations, pickDefaultCombination } from "@/lib/booking/catalog-selection";
 import { StepFoodSelection } from "@/components/ui/booking/StepFoodSelection";
 import { StepHolderDetails } from "@/components/ui/booking/StepHolderDetails";
 import { StepPayment } from "@/components/ui/booking/StepPayment";
@@ -35,7 +33,7 @@ import {
   setFlowMode,
   setBookingReferenceId,
 } from "@/store/bookingSlice";
-import type { Activity, Package, Food, AttributeCombinationItem } from "@/lib/api/types";
+import type { Activity, Package, Food } from "@/lib/api/types";
 import { X, Clock, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
@@ -98,7 +96,6 @@ export function BookingDialog({
   /** Cart only reflects the current reserved slot — no sync before reserveBooking succeeds */
   const [cartSyncedAfterReserve, setCartSyncedAfterReserve] = React.useState(false);
   const totalItems = cart.getTotalItems();
-  const shopId = useAppSelector((state) => state.shop.shopId);
   const {
     step,
     flowMode,
@@ -170,14 +167,11 @@ export function BookingDialog({
   React.useEffect(() => {
     if (!isOpen) return;
     slotReservedRef.current = false;
-    console.log("[BookingDialog] shopId:", shopId);
     clearCart();
     dispatch(resetBooking());
     const personsAfterReset = store.getState().booking.persons;
     if (initialActivity) {
-      const combos = (initialActivity as Activity & { attributeCombinations?: AttributeCombinationItem[] })
-        .attributeCombinations;
-      const hasCombos = Array.isArray(combos) && combos.length > 0;
+      const hasCombos = getProductCombinations(initialActivity).length > 0;
       const defaultCombo = pickDefaultCombination(initialActivity, personsAfterReset);
       if (hasCombos && defaultCombo) {
         dispatch(addActivity({ activity: initialActivity, gameNo: 1, combination: defaultCombo }));
@@ -191,11 +185,8 @@ export function BookingDialog({
       }
     }
     if (initialPackage) {
-      const pCombos = (
-        initialPackage as Package & { attributeCombinations?: AttributeCombinationItem[] }
-      ).attributeCombinations;
       const defaultPkgCombo = pickDefaultCombination(initialPackage, personsAfterReset);
-      if (Array.isArray(pCombos) && pCombos.length > 0 && defaultPkgCombo) {
+      if (getProductCombinations(initialPackage).length > 0 && defaultPkgCombo) {
         dispatch(addPackage({ pkg: initialPackage, combination: defaultPkgCombo }));
       } else {
         dispatch(addPackage({ pkg: initialPackage }));
@@ -211,7 +202,7 @@ export function BookingDialog({
     setBookingTimerActive(false);
     setRemainingSeconds(REMAINING_TIME);
     setCartSyncedAfterReserve(false);
-  }, [isOpen, shopId, clearCart, dispatch]);
+  }, [isOpen, clearCart, dispatch]);
 
   /** After reserve: keep cart aligned with Redux (food, holder, etc.) — never before reserve. */
   React.useEffect(() => {

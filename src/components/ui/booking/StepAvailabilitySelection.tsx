@@ -19,7 +19,18 @@ import {
 import { store } from "@/store/store";
 import { useActivities, usePackages, useAvailabilitySlots } from "@/lib/api/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Activity, AttributeCombinationItem, Package } from "@/lib/api/types";
+import type { Activity } from "@/lib/api/types";
+import {
+  pickDefaultCombination,
+  getActivityCardPricingSubtitle,
+  getProductCombinations,
+  attributeOptionsForFlatDisplay,
+  optionsWithSameAttributeId,
+  buildFullCombinationOptionIds,
+  findCombinationByOptionIds,
+  stripGuestDerivedOptionIds,
+  resolveGuestDerivedCombinationUpdate,
+} from "@/lib/booking/catalog-selection";
 import { Check, Loader2, CalendarClock, Package as PackageIcon, Ticket } from "lucide-react";
 import { cn, formatTimeForDisplay } from "@/lib/utils";
 import { BookingCalendar, toLocalDateString } from "./BookingCalendar";
@@ -38,200 +49,6 @@ const SHIFT = [
   { id: 2, label: "Afternoon", apiKey: "Afternoon" as const },
   { id: 3, label: "Evening", apiKey: "Evening" as const },
 ] as const;
-
-/** e.g. "1 Game Adult" → 1, "2 Games Kids" → 2 */
-function getGameCountFromCombinationName(name: string): number | null {
-  const m = String(name).trim().match(/^(\d+)\s+Games?\b/i);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-function formatActivityPriceAmount(n: number): string {
-  const rounded = Math.round(n * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-}
-
-/** Min–max price for one game tier (adult/kids variants), e.g. "1 game · $15–$200 per person" */
-function summarizeDynamicPricesForGameCount(
-  combinations: AttributeCombinationItem[],
-  gameCount: number
-): string | null {
-  const subset = combinations.filter(
-    (c) => getGameCountFromCombinationName(c.attributeCombinationName) === gameCount
-  );
-  if (subset.length === 0) return null;
-  const prices = subset
-    .map((c) => c.fixedPrice)
-    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
-  if (prices.length === 0) return null;
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const tier = gameCount === 1 ? "1 game" : `${gameCount} games`;
-  const range =
-    min === max
-      ? `$${formatActivityPriceAmount(min)}`
-      : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)}`;
-  return `${tier} · ${range} per person`;
-}
-
-function fallbackAllCombinationsRange(combinations: AttributeCombinationItem[]): string | null {
-  const prices = combinations
-    .map((c) => c.fixedPrice)
-    .filter((p) => typeof p === "number" && !Number.isNaN(p) && p >= 0);
-  if (prices.length === 0) return null;
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  return min === max
-    ? `$${formatActivityPriceAmount(min)} per person`
-    : `$${formatActivityPriceAmount(min)}–$${formatActivityPriceAmount(max)} per person`;
-}
-
-function getActivityCardPricingSubtitle(
-  activity: Activity,
-  combinations: AttributeCombinationItem[],
-  selected: boolean,
-  selectedCombination: AttributeCombinationItem | undefined
-): string {
-  const slots = (activity as Activity & { timeSlots?: string[] }).timeSlots;
-  if (slots && slots.length > 0) {
-    return slots.join(", ");
-  }
-  if (combinations.length === 0) return "--";
-
-  if (selected && selectedCombination) {
-    const n = getGameCountFromCombinationName(selectedCombination.attributeCombinationName);
-    if (n != null) {
-      const line = summarizeDynamicPricesForGameCount(combinations, n);
-      if (line) return line;
-    }
-    const fp = selectedCombination.fixedPrice;
-    if (typeof fp === "number" && !Number.isNaN(fp) && fp >= 0) {
-      return `$${formatActivityPriceAmount(fp)} per person`;
-    }
-  }
-
-  const counts = [
-    ...new Set(
-      combinations
-        .map((c) => getGameCountFromCombinationName(c.attributeCombinationName))
-        .filter((x): x is number => x != null)
-    ),
-  ].sort((a, b) => a - b);
-  if (counts.length > 0) {
-    const line = summarizeDynamicPricesForGameCount(combinations, counts[0]!);
-    if (line) return line;
-  }
-
-  return fallbackAllCombinationsRange(combinations) ?? "--";
-}
-
-type CatalogProduct = Activity | Package;
-
-/** Age group (etc.): driven by Guests counts — not shown as chips; merged into combinations. */
-const GUEST_DERIVED_ATTRIBUTE_ID = 2;
-
-function getProductCombinations(product: CatalogProduct): AttributeCombinationItem[] {
-  const combos = (product as Activity & { attributeCombinations?: AttributeCombinationItem[] })
-    .attributeCombinations;
-  return Array.isArray(combos) && combos.length > 0 ? combos : [];
-}
-
-function getGuestAttributeOptions(product: CatalogProduct) {
-  return (product.attributeOptions ?? []).filter(
-    (o) => o.attributeId === GUEST_DERIVED_ATTRIBUTE_ID
-  );
-}
-
-function attributeOptionsForFlatDisplay(product: CatalogProduct) {
-  return (product.attributeOptions ?? []).filter(
-    (o) => o.attributeId !== GUEST_DERIVED_ATTRIBUTE_ID
-  );
-}
-
-function optionsWithSameAttributeId(product: CatalogProduct, attributeId: number) {
-  return (product.attributeOptions ?? []).filter((o) => o.attributeId === attributeId);
-}
-
-function pickAgeOptionIdForGroup(
-  options: Array<{ attributeOptionId: number; attributeOptionName: string }>,
-  persons: { adults: number; kids: number }
-): number | undefined {
-  if (options.length === 0) return undefined;
-  const { adults, kids } = persons;
-  const pick = (pred: (name: string) => boolean) =>
-    options.find((o) => pred(o.attributeOptionName))?.attributeOptionId;
-
-  if (adults > 0 && kids === 0) {
-    return pick((name) => /\badult\b|senior|18\s*\+|16\s*\+/i.test(name)) ?? options[0]!.attributeOptionId;
-  }
-  if (kids > 0 && adults === 0) {
-    return (
-      pick((name) => /\bchild\b|\bkids?\b|junior|minor|under\s*\d+/i.test(name)) ??
-      options[options.length - 1]!.attributeOptionId
-    );
-  }
-  if (adults > 0 && kids > 0) {
-    return (
-      pick((name) => /family|mixed|group|both|all\s*ages/i.test(name)) ??
-      pick((name) => /\badult\b/i.test(name)) ??
-      options[0]!.attributeOptionId
-    );
-  }
-  return options[0]!.attributeOptionId;
-}
-
-function collectGuestDerivedAgeOptionIds(
-  product: CatalogProduct,
-  persons: { adults: number; kids: number }
-): number[] {
-  const opts = getGuestAttributeOptions(product);
-  if (opts.length === 0) return [];
-  const id = pickAgeOptionIdForGroup(opts, persons);
-  return id != null ? [id] : [];
-}
-
-function stripGuestDerivedOptionIds(product: CatalogProduct, ids: number[]): number[] {
-  const drop = new Set(
-    getGuestAttributeOptions(product).map((o) => o.attributeOptionId)
-  );
-  return ids.filter((id) => !drop.has(id));
-}
-
-function buildFullCombinationOptionIds(
-  product: CatalogProduct,
-  visibleSelectedIds: number[],
-  persons: { adults: number; kids: number }
-): number[] {
-  const stripped = stripGuestDerivedOptionIds(product, visibleSelectedIds);
-  const ageIds = collectGuestDerivedAgeOptionIds(product, persons);
-  return [...new Set([...stripped, ...ageIds])].sort((a, b) => a - b);
-}
-
-function findCombinationByOptionIds(
-  product: CatalogProduct,
-  selectedOptionIds: number[]
-): AttributeCombinationItem | undefined {
-  const combos = getProductCombinations(product);
-  return combos.find((c) => {
-    const set = c.attributeCombinationSet;
-    return (
-      set.length === selectedOptionIds.length && selectedOptionIds.every((id) => set.includes(id))
-    );
-  });
-}
-
-export function pickDefaultCombination(
-  product: CatalogProduct,
-  persons: { adults: number; kids: number }
-): AttributeCombinationItem | undefined {
-  const combos = getProductCombinations(product);
-  if (combos.length === 0) return undefined;
-  const ageIds = collectGuestDerivedAgeOptionIds(product, persons);
-  if (ageIds.length === 0) return combos[0];
-  const match = combos.find((c) => ageIds.every((id) => c.attributeCombinationSet.includes(id)));
-  return match ?? combos[0];
-}
 
 /** Shared catalog row cards — fixed width so activities + packages share one horizontal scroll row */
 const catalogCardBtnBase =
@@ -365,8 +182,6 @@ export function StepAvailabilitySelection() {
   };
 
  
-  const getCombinations = getProductCombinations;
-
   const getSelectedCombination = (activityId: number) =>
     selectedActivities.find((i) => i.activity.id === activityId)?.combination;
 
@@ -394,36 +209,14 @@ export function StepAvailabilitySelection() {
   React.useEffect(() => {
     const { selectedActivities: acts, selectedPackages: pkgs } = store.getState().booking;
     acts.forEach(({ activity, combination }) => {
-      const combos = getProductCombinations(activity);
-      if (combos.length === 0 || !combination) return;
-      const visibleOnly = stripGuestDerivedOptionIds(
-        activity,
-        combination.attributeCombinationSet
-      );
-      const merged = buildFullCombinationOptionIds(activity, visibleOnly, persons);
-      const next = findCombinationByOptionIds(activity, merged);
-      if (
-        next &&
-        next.productAttributeCombinationId !== combination.productAttributeCombinationId
-      ) {
-        dispatch(
-          setActivityCombination({ activityId: activity.id, combination: next })
-        );
+      const next = resolveGuestDerivedCombinationUpdate(activity, combination, persons);
+      if (next) {
+        dispatch(setActivityCombination({ activityId: activity.id, combination: next }));
       }
     });
     pkgs.forEach(({ pkg, combination }) => {
-      const combos = getProductCombinations(pkg);
-      if (combos.length === 0 || !combination) return;
-      const visibleOnly = stripGuestDerivedOptionIds(
-        pkg,
-        combination.attributeCombinationSet
-      );
-      const merged = buildFullCombinationOptionIds(pkg, visibleOnly, persons);
-      const next = findCombinationByOptionIds(pkg, merged);
-      if (
-        next &&
-        next.productAttributeCombinationId !== combination.productAttributeCombinationId
-      ) {
+      const next = resolveGuestDerivedCombinationUpdate(pkg, combination, persons);
+      if (next) {
         dispatch(setPackageCombination({ packageId: pkg.id, combination: next }));
       }
     });
@@ -461,23 +254,26 @@ export function StepAvailabilitySelection() {
                 className="hidden size-3 shrink-0 text-zinc-500 sm:block"
                 aria-hidden
               />
-             Activities and         {suggestedPackages.length > 0 ? (
-              <span className="flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
-                <PackageIcon
-                  className="hidden size-3 shrink-0 text-zinc-500 sm:block"
-                  aria-hidden
-                />
-                Packages
-              </span>
-            ) : null}   List
+              Activities
+              {suggestedPackages.length > 0 ? (
+                <>
+                  <span className="px-0.5 text-zinc-600" aria-hidden>
+                    ·
+                  </span>
+                  <PackageIcon
+                    className="hidden size-3 shrink-0 text-zinc-500 sm:block"
+                    aria-hidden
+                  />
+                  Packages
+                </>
+              ) : null}
             </span>
-      
           </div>
           <div className="-mx-0.5 flex flex-row  lg:flex-col min-w-0 flex-nowrap items-start gap-2.5 overflow-x-auto px-0.5 pb-2 scrollbar-dark sm:gap-3">
           {activityList.map((activity) => {
             const selected = isActivitySelected(activity.id);
             const gameNo = getActivityGameNo(activity.id);
-            const combinations = getCombinations(activity);
+            const combinations = getProductCombinations(activity);
             const hasDynamicOptions = combinations.length > 0;
             const defaultCombo = pickDefaultCombination(activity, persons);
             const selectedCombo = selected ? getSelectedCombination(activity.id) : undefined;
@@ -511,7 +307,7 @@ export function StepAvailabilitySelection() {
                   aria-label={selected ? `Remove ${activity.title}` : `Select ${activity.title}`}
                   className={cn(
                     catalogCardBtnBase,
-                    "shadow-md bg-red shadow-black/30",
+                    "shadow-md shadow-black/30",
                     selected
                       ? "border-primary-1/45 bg-gradient-to-b from-primary-1/[0.08] to-zinc-950/90 shadow-lg shadow-primary-1/[0.12]"
                       : "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-600/50 hover:bg-zinc-900/70 hover:shadow-lg hover:shadow-black/40"
@@ -656,12 +452,12 @@ export function StepAvailabilitySelection() {
             ) : null}
             {suggestedPackages.map((pkg) => {
               const selected = isPackageSelected(pkg.id);
-              const pkgCombinations = getCombinations(pkg);
+              const pkgCombinations = getProductCombinations(pkg);
               const hasPkgDynamic = pkgCombinations.length > 0;
               const defaultPkgCombo = pickDefaultCombination(pkg, persons);
               const selectedPkgCombo = selected ? getSelectedPackageCombination(pkg.id) : undefined;
               const pkgPricingSubtitle = getActivityCardPricingSubtitle(
-                pkg as Activity,
+                pkg,
                 pkgCombinations,
                 selected,
                 selectedPkgCombo

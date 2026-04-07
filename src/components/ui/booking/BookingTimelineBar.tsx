@@ -419,7 +419,7 @@ export function BookingTimelineBar({
               >
                 <span className="truncate">{seg.durationLabel}</span>
               </span>
-            </div>
+             </div>
           );
         })}
       </div>

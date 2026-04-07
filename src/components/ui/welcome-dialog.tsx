@@ -137,13 +137,7 @@ export function WelcomeDialog() {
                 </AlertDialogDescription>
               </div>
             </div>
-            {!listLoading && shops.length > 0 ? (
-              <span className="shrink-0 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium tabular-nums text-zinc-400 sm:self-center">
-                {search.trim()
-                  ? `${filteredShops.length} match${filteredShops.length === 1 ? "" : "es"}`
-                  : `${shops.length} location${shops.length === 1 ? "" : "s"}`}
-              </span>
-            ) : null}
+        
           </div>
         </AlertDialogHeader>
 
@@ -215,7 +209,7 @@ export function WelcomeDialog() {
                     <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-zinc-800/80 text-zinc-500">
                       <Search className="size-5" aria-hidden />
                     </div>
-                    <p className="text-sm font-medium text-zinc-300">No locations match your search</p>
+                    <p className="text-sm font-medium text-zinc-300">No   match your search</p>
                     <p className="mt-1 max-w-sm text-xs text-zinc-500">
                       Try a shorter phrase or clear the filter.
                     </p>

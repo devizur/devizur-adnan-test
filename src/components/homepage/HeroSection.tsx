@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface HeroSectionProps {
   alignment?: "center" | "left";
-  badgeText: string;
-  title: string;
-  subtitle: string;
-  searchPlaceholder: string;
+  badgeText?: string;
+  title?: string;
+  subtitle?: string;
+  searchPlaceholder?: string;
   showBadge?: boolean;
   showSearch?: boolean;
   fullHeight?: boolean;

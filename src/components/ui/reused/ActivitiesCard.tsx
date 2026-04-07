@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
- 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/api/types";
 import { useCart } from "@/contexts/CartContext";
 import { BookingDialog } from "@/components/ui/booking-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 interface ActivitiesCardProps {
     item: Activity;
@@ -19,26 +20,19 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
     const isInCart = activityItems.some((i) => i.activity.id === item.id);
 
     return (
-        <Card className="p-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
+        <Card className="p-2 gap-2   bg-secondary-2 border border-transparent hover:border transition-transform duration-900 group">
+        <Link href={`/details/${item.id}`} className="flex flex-col gap-2"  >
+        
             <div className="relative h-48 rounded-[10px] overflow-hidden">
                 <img
                     src={item.image}
                     alt={item?.productName}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-               
-                    {item?.discount && (
-                        <div className="absolute top-0 right-0 bg-primary-1 text-black px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-bl-[12px] sm:rounded-bl-[16px] text-[10px] sm:text-xs font-black">
-                            {item.discount}
-                        </div>
-                    )}
-                 
-                
-                  
-               
+
             </div>
 
-            <CardContent className="px-1.5 pb-2">
+            <div className="px-1.5 ">
                 {/* Product name and price */}
                 <div className="flex justify-between items-start">
                     <h3 className="text-xs sm:text-[14px] font-bold text-primary tracking-tight leading-tight">
@@ -53,7 +47,7 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center mb-2 sm:mb-4">
+                <div className="flex justify-between items-center ">
                     <span className="text-gray-500 text-[10px] sm:text-xs font-medium">
                         Duration: {item?.duration || "--"}
                     </span>
@@ -62,16 +56,17 @@ const ActivitiesCard: React.FC<ActivitiesCardProps> = ({ item, showTimeSlots = f
                     </span>
                 </div>
 
+            </div>
+        </Link>
             
+            <BookingDialog initialActivity={item}>
+                <Button
+                    className="w-full cursor-pointer    rounded-[8px] sm:rounded-[10px] text-xs sm:text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
+                >
+                    {isInCart ? "Book Now: Selected" : "Book Now"}
+                </Button>
+            </BookingDialog>
 
-                <BookingDialog initialActivity={item}>
-                    <Button
-                        className="w-full cursor-pointer py-3 sm:py-4 rounded-[8px] sm:rounded-[10px] text-xs sm:text-[15px] bg-primary-1 hover:bg-primary-1/90 font-bold text-secondary"
-                    >
-                        {isInCart ? "Book Now: Selected" : "Book Now"}
-                    </Button>
-                </BookingDialog>
-            </CardContent>
         </Card>
     );
 };

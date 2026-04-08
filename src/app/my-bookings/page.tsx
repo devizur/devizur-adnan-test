@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
-import { fetchOrdersFromBackend } from "@/lib/api/localHttp";
+import { fetchOrdersFromBackend } from "@/lib/api/orderHttp";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import type { CartEntry } from "@/contexts/CartContext";
 import { Calendar, Clock, LogOut, User, RefreshCw, Ticket, ArrowLeft, Eye, Sparkles } from "lucide-react";

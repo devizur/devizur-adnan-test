@@ -79,6 +79,7 @@ export interface RequestOtpRequest {
 export interface RequestOtpResponse {
   success: boolean;
   message?: string;
+  customer?: CustomerLookupItem;
 }
 
 export interface VerifyOtpRequest {
@@ -93,6 +94,19 @@ export interface SignInResponse {
     name: string;
   };
   token: string;
+}
+
+export interface CustomerLookupItem {
+  customerId: number;
+  customerCode: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  city: string;
+  country: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 // Availability slots

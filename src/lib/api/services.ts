@@ -3,6 +3,7 @@ import {
   SignInResponse,
   RequestOtpRequest,
   RequestOtpResponse,
+  CustomerLookupItem,
   VerifyOtpRequest,
   GetAvailabilitySlotsParams,
   BookingDapperStatus,
@@ -202,15 +203,26 @@ export const bookingApi = {
 export const authApi = {
   async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
     try {
-      const response = await bookingEngineUrlHttp.post<RequestOtpResponse>(
-        "/api/auth/request-otp",
-        data
+      const response = await bookingEngineUrlHttp.get<CustomerLookupItem[]>(
+        "/api/customer",
+        { params: { email: data.email.trim() } }
       );
-      return response.data;
+      const customer = Array.isArray(response.data) ? response.data[0] : undefined;
+      if (!customer) {
+        throw new Error("No customer found for this email.");
+      }
+      if (!customer.isActive) {
+        throw new Error("This customer account is inactive.");
+      }
+      return {
+        success: true,
+        message: "Demo OTP sent. Use 0000 to verify.",
+        customer,
+      };
     } catch (error) {
       const err = error as AxiosError<any>;
       const message =
-        (err.response?.data as any)?.message || err.message || "Failed to send OTP";
+        (err.response?.data as any)?.message || err.message || "Failed to find customer";
       throw new Error(message);
     }
   },

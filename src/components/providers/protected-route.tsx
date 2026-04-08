@@ -10,15 +10,16 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
     const router = useRouter();
-    const token = useAppSelector((state) => state.auth?.token ?? null);
+    const user = useAppSelector((state) => state.auth?.user ?? null);
+    const hydrated = useAppSelector((state) => state.auth?.hydrated ?? false);
 
     useEffect(() => {
-        if (token === null) {
+        if (hydrated && user === null) {
             router.push("/sign-in");
         }
-    }, [router, token]);
+    }, [router, user, hydrated]);
 
-    if (!token) {
+    if (!hydrated || !user) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
                 <div className="text-center space-y-4">

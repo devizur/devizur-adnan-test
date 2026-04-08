@@ -2,6 +2,8 @@ import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 import { productApi } from "@/lib/api/productServices";
 import { notFound } from "next/navigation";
+import { BookingDialog } from "@/components/ui/booking-dialog";
+import { Button } from "@/components/ui/button";
 
 type ProductDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -111,6 +113,11 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
                 <div className="rounded-xl border border-primary-1/20 bg-primary-1/8 p-3 text-sm font-semibold uppercase tracking-wide text-primary-1">
                   Price: ----------
                 </div>
+                <BookingDialog>
+                  <Button className="w-full cursor-pointer rounded-lg bg-primary-1 py-3 text-sm font-bold text-secondary hover:bg-primary-1/90 sm:w-auto sm:px-8">
+                    Book Now
+                  </Button>
+                </BookingDialog>
               </div>
             </div>
 
@@ -129,30 +136,7 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
             <section className="grid grid-cols-1 gap-4  ">
             
 
-              <section className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5 w-full">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Attribute Combinations
-                </h2>
-                {product.productAttributeCombinations?.length ? (
-                  <div className="mt-4 space-y-3">
-                    {product.productAttributeCombinations.map((combo) => (
-                      <div
-                        key={combo.productAttributeCombinationId}
-                        className="rounded-xl border border-zinc-700/70 bg-zinc-900/60 p-4"
-                      >
-                        <p className="text-sm font-semibold text-zinc-200">
-                          {combo.attributeCombinationName}
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Option IDs: {combo.attributeCombinationSet.join(", ")}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-zinc-500">No attribute combinations found.</p>
-                )}
-              </section>
+            
             </section>
           </div>
         </div>

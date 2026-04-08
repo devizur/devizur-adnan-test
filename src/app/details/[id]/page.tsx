@@ -133,11 +133,7 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
               />
             </section>
 
-            <section className="grid grid-cols-1 gap-4  ">
             
-
-            
-            </section>
           </div>
         </div>
       </div>

@@ -43,10 +43,10 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
           />
           <div className="relative space-y-6 pl-4 sm:pl-5">
             <div className="flex flex-wrap items-center gap-3">
-              <div
+              {/* <div
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-1/12 ring-1 ring-primary-1/25 shadow-[0_0_24px_-4px_rgba(250,204,21,0.25)]"
                 aria-hidden
-              />
+              /> */}
               <div className="flex min-w-0 flex-col gap-0.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-1/95 sm:text-[11px]">
                   Product details
@@ -126,29 +126,10 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
               />
             </section>
 
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Product Status
-                </h2>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {statusItems.map(({ label, enabled }) => (
-                    <span
-                      key={label}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-xs font-medium",
-                        enabled
-                          ? "border-primary-1/35 bg-primary-1/12 text-primary-1"
-                          : "border-zinc-700/80 bg-zinc-900/70 text-zinc-400"
-                      )}
-                    >
-                      {label} {enabled ? "Yes" : "No"}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <section className="grid grid-cols-1 gap-4  ">
+            
 
-              <section className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5">
+              <section className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5 w-full">
                 <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Attribute Combinations
                 </h2>

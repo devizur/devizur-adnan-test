@@ -1,168 +1,181 @@
-
-
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { cn } from "@/lib/utils";
 import { productApi } from "@/lib/api/productServices";
 import { notFound } from "next/navigation";
 
 type ProductDetailsPageProps = {
-    params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
-    const { id } = await params;
-    const productId = Number(id);
-    if (!Number.isFinite(productId) || productId <= 0) {
-        notFound();
-    }
+  const { id } = await params;
+  const productId = Number(id);
+  if (!Number.isFinite(productId) || productId <= 0) notFound();
 
-    let product: Awaited<ReturnType<typeof productApi.getById>> | null = null;
-    try {
-        product = await productApi.getById(productId);
-    } catch {
-        notFound();
-    }
+  let product: Awaited<ReturnType<typeof productApi.getById>> | null = null;
+  try {
+    product = await productApi.getById(productId);
+  } catch {
+    notFound();
+  }
+  if (!product) notFound();
 
-    if (!product) notFound();
+  const imageUrl =
+    product.thumbnailShortImage ||
+    "https://vueroid.com/wp-content/uploads/2025/09/main_product.png";
 
-    return (
-        <div className="min-w-0 pt-24 sm:pt-32 pb-16 sm:pb-20 text-primary">
+  const statusItems: Array<{ label: string; enabled: boolean }> = [
+    { label: "Active", enabled: Boolean(product.isActive) },
+    { label: "Available Online", enabled: Boolean(product.availableOnline) },
+    { label: "Booking Required", enabled: Boolean(product.isBookingRequired) },
+    { label: "Saleable", enabled: Boolean(product.isSaleable) },
+    { label: "Combo Product", enabled: Boolean(product.isComboProduct) },
+    { label: "Customization", enabled: Boolean(product.isForCustomization) },
+  ];
 
-            <div className={cn(PAGE_CONTENT_CLASS, "space-y-8")}>
-                <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-linear-to-br from-[#1c1c1c] via-[#161616] to-[#141414] px-5 py-6 sm:px-7 sm:py-8 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset]">
-                    <div
-                        className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary-1 via-primary-1/70 to-primary-1/25"
-                        aria-hidden
-                    />
-                    <div className="relative space-y-4 pl-4 sm:pl-5">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div
-                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-1/12 ring-1 ring-primary-1/25 shadow-[0_0_24px_-4px_rgba(250,204,21,0.25)]"
-                                aria-hidden
-                            >
-
-                            </div>
-                            <div className="flex min-w-0 flex-col gap-0.5">
-                                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-1/95">
-                                    Product details
-                                </p>
-                                <p className="text-xs font-medium tracking-wide text-zinc-500"></p>
-                            </div>
-                        </div>
-
-
-                        <div className="w-full flex gap-6">
-
-                            <div className="w-1/2 bg-gray-800 h-96  flex items-center justify-center rounded-lg overflow-hidden">
-
-                                <img src="https://vueroid.com/wp-content/uploads/2025/09/main_product.png" alt="" />
-                            </div>
-                            <div className="space-y-2.5">
-                                <h1 className="text-3xl sm:text-[2.125rem] font-bold text-primary tracking-tight leading-[1.15]">
-                                    {product.productName}
-                                </h1>
-
-                               
-                                <div className="rounded-xl border border-gray-800 text-primary p-3 mt-8">
-                                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Basic Information
-                                    </h2>
-                                    <div className="mt-4 space-y-2 text-xs  ">
-                                        <p><span className="text-muted-foreground">Product ID:</span> {product.productId}</p>
-                                        <p><span className="text-muted-foreground">Code:</span> {product.productCode || "-"}</p>
-                                        <p><span className="text-muted-foreground">Type:</span> {product.productType || "-"}</p>
-                                        <p><span className="text-muted-foreground">Category:</span> {product.categoryName || "-"}</p>
-                                        <p><span className="text-muted-foreground">Subcategory:</span> {product.subCategoryName || "-"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price: $0000.00</div>
-
-                            </div>
-
-                        </div>
-                        <p
-                            className="text-zinc-300 text-sm sm:text-[15px] leading-relaxed max-w-2xl"
-                            dangerouslySetInnerHTML={{
-                                __html: product?.productDescription || "",
-                            }}
-                        />
-
-
-                        <section className="grid grid-cols-1   gap-4 md:grid-cols-2">
-
-
-                            <div className="rounded-2xl border border-gray-900  p-2 ">
-                                <h2 className="text-sm font-semibold uppercase tracking-wide   ">
-                                    Product Status
-                                </h2>
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                    {[
-                                        ["Active", product.isActive],
-                                        ["Available Online", product.availableOnline],
-                                        ["Booking Required", product.isBookingRequired],
-                                        ["Saleable", product.isSaleable],
-                                        ["Combo Product", product.isComboProduct],
-                                        ["Customization", product.isForCustomization],
-                                    ].map(([label, enabled]) => (
-                                        <span
-                                            key={String(label)}
-                                            className={cn(
-                                                "rounded-full border px-3 py-1 text-xs font-medium",
-                                                enabled
-                                                    ? "border-primary/30 bg-primary/10 text-white"
-                                                    : "border-border bg-muted/40 text-white"
-                                            )}
-                                        >
-                                            {label}: {enabled ? "Yes" : "No"}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </section>
-                        <section className="rounded-2xl border border-gray-900  p-2 ">
-                            <h2 className="text-sm font-semibold uppercase tracking-wide  ">
-                                Attribute Combinations
-                            </h2>
-                            {product.productAttributeCombinations?.length ? (
-                                <div className="mt-4 space-y-3">
-                                    {product.productAttributeCombinations.map((combo) => (
-                                        <div
-                                            key={combo.productAttributeCombinationId}
-                                            className="rounded-xl border border-border bg-background/60 p-4"
-                                        >
-                                            <p className="text-sm font-semibold text-foreground">{combo.attributeCombinationName}</p>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                Option IDs: {combo.attributeCombinationSet.join(", ")}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="mt-4 text-sm text-muted-foreground">No attribute combinations found.</p>
-                            )}
-                        </section>
-                    </div>
-                </div>
-
+  return (
+    <div className="min-w-0 pb-16 pt-24 text-primary sm:pb-20 sm:pt-32">
+      <div className={cn(PAGE_CONTENT_CLASS, "space-y-8")}>
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-linear-to-br from-[#1c1c1c] via-[#161616] to-[#141414] px-5 py-6 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset] sm:px-7 sm:py-8">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary-1 via-primary-1/70 to-primary-1/25"
+            aria-hidden
+          />
+          <div className="relative space-y-6 pl-4 sm:pl-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-1/12 ring-1 ring-primary-1/25 shadow-[0_0_24px_-4px_rgba(250,204,21,0.25)]"
+                aria-hidden
+              />
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-1/95 sm:text-[11px]">
+                  Product details
+                </p>
+                <p className="text-xs font-medium tracking-wide text-zinc-500">
+                  Clean overview with booking-ready product metadata
+                </p>
+              </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="relative flex min-h-72 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700/70 bg-zinc-900/70 sm:min-h-88">
+                <img src={imageUrl} alt={product.productName} className="h-full w-full object-cover" />
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/65 to-transparent"
+                  aria-hidden
+                />
+                <div className="absolute bottom-3 left-3 rounded-lg border border-primary-1/25 bg-black/40 px-2.5 py-1 text-[11px] font-medium text-primary-1 backdrop-blur-xs">
+                  #{product.productCode || `ID-${product.productId}`}
+                </div>
+              </div>
 
+              <div className="space-y-4">
+                <h1 className="text-3xl font-bold leading-[1.15] tracking-tight text-primary sm:text-[2.125rem]">
+                  {product.productName}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    product.productType || "General",
+                    product.categoryName || "Uncategorized",
+                    product.subCategoryName || "No subcategory",
+                  ].map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-zinc-700/80 bg-zinc-900/70 px-3 py-1 text-xs font-medium text-zinc-300"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
 
+                <div className="rounded-xl border border-zinc-700/70 bg-[#121212]/70 p-4">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                    Basic Information
+                  </h2>
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-zinc-300 sm:grid-cols-2">
+                    <p>
+                      <span className="text-zinc-500">Product ID:</span> {product.productId}
+                    </p>
+                    <p>
+                      <span className="text-zinc-500">Code:</span> {product.productCode || "-"}
+                    </p>
+                    <p>
+                      <span className="text-zinc-500">Category:</span> {product.categoryName || "-"}
+                    </p>
+                    <p>
+                      <span className="text-zinc-500">Subcategory:</span> {product.subCategoryName || "-"}
+                    </p>
+                  </div>
+                </div>
 
+                <div className="rounded-xl border border-primary-1/20 bg-primary-1/8 p-3 text-sm font-semibold uppercase tracking-wide text-primary-1">
+                  Price: ----------
+                </div>
+              </div>
+            </div>
 
+            <section className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                Description
+              </h2>
+              <div
+                className="mt-3 max-w-none text-sm leading-relaxed text-zinc-300 sm:text-[15px] [&_li]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{
+                  __html: product.productDescription || "<p>No description available.</p>",
+                }}
+              />
+            </section>
 
+            <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  Product Status
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {statusItems.map(({ label, enabled }) => (
+                    <span
+                      key={label}
+                      className={cn(
+                        "rounded-full border px-3 py-1 text-xs font-medium",
+                        enabled
+                          ? "border-primary-1/35 bg-primary-1/12 text-primary-1"
+                          : "border-zinc-700/80 bg-zinc-900/70 text-zinc-400"
+                      )}
+                    >
+                      {label} {enabled ? "Yes" : "No"}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-
-
-
+              <section className="rounded-2xl border border-zinc-800/90 bg-[#121212]/80 p-4 sm:p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  Attribute Combinations
+                </h2>
+                {product.productAttributeCombinations?.length ? (
+                  <div className="mt-4 space-y-3">
+                    {product.productAttributeCombinations.map((combo) => (
+                      <div
+                        key={combo.productAttributeCombinationId}
+                        className="rounded-xl border border-zinc-700/70 bg-zinc-900/60 p-4"
+                      >
+                        <p className="text-sm font-semibold text-zinc-200">
+                          {combo.attributeCombinationName}
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Option IDs: {combo.attributeCombinationSet.join(", ")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-zinc-500">No attribute combinations found.</p>
+                )}
+              </section>
+            </section>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
-
-
-
-
-
-
-

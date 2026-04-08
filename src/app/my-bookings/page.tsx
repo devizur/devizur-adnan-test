@@ -120,6 +120,24 @@ function OrderDetailsDialog({
                 <span className="text-zinc-500">Total paid</span>
                 <span className="font-semibold text-lg">{formatPrice(order.totalAmount)}</span>
               </div>
+              {order.salesOrder?.orderNumber ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Order number</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.orderNumber}</p>
+                </div>
+              ) : null}
+              {order.salesOrder?.uniqueOrderRef ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Unique ref</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.uniqueOrderRef}</p>
+                </div>
+              ) : null}
+              {order.salesOrder?.tokenNumber ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Token</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.tokenNumber}</p>
+                </div>
+              ) : null}
               {order.stripePaymentIntentId ? (
                 <div>
                   <p className="text-xs text-zinc-500 mb-0.5">Stripe payment</p>

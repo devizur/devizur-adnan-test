@@ -36,20 +36,8 @@ function isOrderShape(o: unknown): o is PaidOrderRecord {
 
 /** GET all orders from the order-save server (reads data/orders/*.json). */
 export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
-  try {
-    const { data } = await localHttp.get<{ orders?: unknown; error?: string }>("/orders", {
-      headers: { "Cache-Control": "no-store" },
-    });
-    const raw = data?.orders;
-    if (!Array.isArray(raw)) return [];
-    return raw.filter(isOrderShape);
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response?.data) {
-      const d = err.response.data as { error?: string };
-      throw new Error(d.error || `Could not load orders (${err.response.status})`);
-    }
-    throw err instanceof Error ? err : new Error("Could not load orders");
-  }
+  // Local GET /orders has been removed from this flow.
+  return [];
 }
 
 export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: true; notFound?: boolean }> {
@@ -306,12 +294,49 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
 }
 
 /** POST booking order to booking engine sales order endpoint. */
-export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{ file: string }> {
+export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{
+  file: string;
+  orderId?: number;
+  orderNumber?: string;
+  uniqueOrderRef?: string;
+  tokenNumber?: string;
+  grossAmount?: number;
+  totalLineTax?: number;
+  netAmount?: number;
+  paymentStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}> {
   try {
     const payload = mapOrderToSalesPayload(order);
     console.log("[saveOrderToBackend] sales order payload", payload);
-    await bookingEngineUrlHttp.post("/api/SalesOrder", payload);
-    return { file: "" };
+    const { data } = await bookingEngineUrlHttp.post<{
+      orderId?: number;
+      orderNumber?: string;
+      uniqueOrderRef?: string;
+      tokenNumber?: string;
+      grossAmount?: number;
+      totalLineTax?: number;
+      netAmount?: number;
+      paymentStatus?: string;
+      createdAt?: string;
+      updatedAt?: string;
+    }>("/api/SalesOrder", payload);
+    return {
+      file: "",
+      ...((data ?? {}) as {
+        orderId?: number;
+        orderNumber?: string;
+        uniqueOrderRef?: string;
+        tokenNumber?: string;
+        grossAmount?: number;
+        totalLineTax?: number;
+        netAmount?: number;
+        paymentStatus?: string;
+        createdAt?: string;
+        updatedAt?: string;
+      }),
+    };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.data) {
       const d = err.response.data as { error?: string };

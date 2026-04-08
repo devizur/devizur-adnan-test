@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useCart } from "@/contexts/CartContext";
-import { appendPaidOrder } from "@/lib/paidOrdersStorage";
+import { appendPaidOrder, patchPaidOrder } from "@/lib/paidOrdersStorage";
 import { saveOrderToBackend } from "@/lib/api/orderHttp";
 import { parsePrice } from "@/lib/utils";
 
@@ -62,9 +62,28 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
       setShowSuccess(true);
       if (record) {
         console.log("[paid-order-record]", record);
-        void saveOrderToBackend(record).catch((err) => {
-          console.error("[saveOrderToBackend]", err);
-        });
+        void saveOrderToBackend(record)
+          .then((res) => {
+            patchPaidOrder(record.id, {
+              salesOrder: {
+                orderId: res.orderId,
+                orderNumber: res.orderNumber,
+                uniqueOrderRef: res.uniqueOrderRef,
+                tokenNumber: res.tokenNumber,
+                grossAmount: res.grossAmount,
+                totalLineTax: res.totalLineTax,
+                netAmount: res.netAmount,
+                paymentStatus: res.paymentStatus,
+                createdAt: res.createdAt,
+                updatedAt: res.updatedAt,
+              },
+              serverReceivedAt: res.createdAt ?? record.serverReceivedAt,
+            });
+            console.log("[saveOrderToBackend] sales order response", res);
+          })
+          .catch((err) => {
+            console.error("[saveOrderToBackend]", err);
+          });
       }
     },
     [entries, totalPaymentAmount, clearCart, resetForm]

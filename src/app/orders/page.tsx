@@ -49,6 +49,21 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
         <div>
           <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Order</p>
           <p className="text-sm font-mono text-accent">{order.id}</p>
+          {order.salesOrder?.orderNumber ? (
+            <p className="text-[11px] text-zinc-400 mt-1">
+              No: <span className="font-mono">{order.salesOrder.orderNumber}</span>
+            </p>
+          ) : null}
+          {order.salesOrder?.uniqueOrderRef ? (
+            <p className="text-[10px] text-zinc-600 mt-1">
+              Ref: <span className="font-mono">{order.salesOrder.uniqueOrderRef}</span>
+            </p>
+          ) : null}
+          {order.salesOrder?.tokenNumber ? (
+            <p className="text-[10px] text-zinc-600 mt-1">
+              Token: <span className="font-mono">{order.salesOrder.tokenNumber}</span>
+            </p>
+          ) : null}
           <p className="text-xs text-zinc-500 mt-1">Paid {orderPaidDisplay(order)}</p>
           {order.serverReceivedAt ? (
             <p className="text-[10px] text-zinc-600 mt-0.5">Server saved {order.serverReceivedAt}</p>
@@ -117,6 +132,19 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
           <span className="text-sm font-medium text-zinc-400">Total</span>
           <span className="text-lg font-semibold text-white">{formatPrice(order.totalAmount)}</span>
         </div>
+        {typeof order.salesOrder?.netAmount === "number" ? (
+          <div className="text-right text-xs text-zinc-500">
+            <p>
+              Gross: <span className="font-mono text-zinc-400">{order.salesOrder.grossAmount ?? 0}</span>
+            </p>
+            <p>
+              Tax: <span className="font-mono text-zinc-400">{order.salesOrder.totalLineTax ?? 0}</span>
+            </p>
+            <p>
+              Net: <span className="font-mono text-zinc-300">{order.salesOrder.netAmount}</span>
+            </p>
+          </div>
+        ) : null}
         <Button
           type="button"
           variant="outline"
@@ -222,21 +250,8 @@ export default function OrdersPage() {
                 <h1 className="text-3xl sm:text-[2.125rem] font-bold text-primary tracking-tight leading-[1.15]">
                   Order list
                 </h1>
-                <p className="text-zinc-400 text-sm sm:text-[15px] leading-relaxed max-w-xl">
-                  {source === "backend"
-                    ? "Orders are loaded from your checkout server (JSON files on the API)."
-                    : source === "local"
-                      ? "Could not reach the orders API — showing orders stored in this browser only. Start the Stripe server and refresh."
-                      : "Loading order list…"}
-                </p>
-                {source === "backend" ? (
-                  <p className="text-[11px] text-emerald-500/90 font-medium">Live · backend JSON</p>
-                ) : null}
-                {source === "local" && loadError ? (
-                  <p className="text-[11px] text-amber-400/90 font-medium rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 max-w-xl">
-                    {loadError}
-                  </p>
-                ) : null}
+            
+             
               </div>
             </div>
           </header>

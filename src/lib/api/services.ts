@@ -10,6 +10,7 @@ import {
   RetrieveTimeSlotsResponse,
   AvailabilitySlotsResult,
   GenerateBookingItemStepsResponse,
+  ReserveBookingData,
 } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
@@ -109,13 +110,13 @@ export const bookingApi = {
     bookingReferenceId: string;
     selectedSlot: string;
     selectedDate: string;
-  }): Promise<void> {
+  }): Promise<ReserveBookingData> {
     try {
-      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+      const response = await bookingFlowUrlHttp.post<ApiResponse<ReserveBookingData>>(
         "/api/Booking/reserveBooking",
         params
       );
-      const { success, message } = response.data ?? {};
+      const { success, message, data } = response.data ?? {};
       if (!success) {
         throw new Error(
           typeof message === "string" && message.trim()
@@ -123,6 +124,22 @@ export const bookingApi = {
             : "Failed to reserve this time slot"
         );
       }
+      const d = data;
+      const minutes =
+        d &&
+        typeof d.expiredTimeIntervalInMinutes === "number" &&
+        Number.isFinite(d.expiredTimeIntervalInMinutes) &&
+        d.expiredTimeIntervalInMinutes > 0
+          ? d.expiredTimeIntervalInMinutes
+          : 10;
+      return {
+        bookingId: d && typeof d.bookingId === "number" ? d.bookingId : 0,
+        bookingReferenceId:
+          d && typeof d.bookingReferenceId === "string" && d.bookingReferenceId.trim()
+            ? d.bookingReferenceId
+            : params.bookingReferenceId,
+        expiredTimeIntervalInMinutes: minutes,
+      };
     } catch (error) {
       const err = error as AxiosError<ApiResponse<unknown>>;
       if (err.response?.data && typeof err.response.data === "object") {

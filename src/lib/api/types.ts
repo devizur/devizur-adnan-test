@@ -158,3 +158,10 @@ export interface GenerateBookingItemStepsResponseData extends ApiResponse<Genera
 }
 
 export type GenerateBookingItemStepsResponse = GenerateBookingItemStepsResponseData;
+
+/** POST /api/Booking/reserveBooking — success payload in `data` */
+export interface ReserveBookingData {
+  bookingId: number;
+  bookingReferenceId: string;
+  expiredTimeIntervalInMinutes: number;
+}

@@ -39,7 +39,8 @@ import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
 import { useQueryClient } from "@tanstack/react-query";
 
-const REMAINING_TIME = 60 * 10; // 10 minutes
+/** Default countdown reset when no hold is active (API may omit interval on older backends). */
+const DEFAULT_HOLD_SECONDS = 60 * 10;
 const STEPS_ACTIVITY_FIRST = [
   { id: 1, label: "Availability & Selection" },
   { id: 2, label: "Food Selection" },
@@ -127,7 +128,7 @@ export function BookingDialog({
     [isControlled, onOpenChangeControlled]
   );
 
-  const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
+  const [remainingSeconds, setRemainingSeconds] = React.useState(DEFAULT_HOLD_SECONDS);
   /** Countdown runs only after reserveBooking succeeds; cleared on unreserve / close */
   const [bookingTimerActive, setBookingTimerActive] = React.useState(false);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
@@ -150,7 +151,7 @@ export function BookingDialog({
       queryClient.invalidateQueries({ queryKey: ["availability"] });
       queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
       setBookingTimerActive(false);
-      setRemainingSeconds(REMAINING_TIME);
+      setRemainingSeconds(DEFAULT_HOLD_SECONDS);
       clearCart();
       setCartSyncedAfterReserve(false);
     } catch {
@@ -200,7 +201,7 @@ export function BookingDialog({
       }
     }
     setBookingTimerActive(false);
-    setRemainingSeconds(REMAINING_TIME);
+    setRemainingSeconds(DEFAULT_HOLD_SECONDS);
     setCartSyncedAfterReserve(false);
   }, [isOpen, clearCart, dispatch]);
 
@@ -247,7 +248,7 @@ export function BookingDialog({
 
     if (!isOpen) {
       setBookingTimerActive(false);
-      setRemainingSeconds(REMAINING_TIME);
+      setRemainingSeconds(DEFAULT_HOLD_SECONDS);
       return;
     }
 
@@ -359,7 +360,7 @@ export function BookingDialog({
       }
       setReserveSubmitting(true);
       try {
-        await bookingApi.reserveBooking({
+        const reserveResult = await bookingApi.reserveBooking({
           bookingReferenceId: ref,
           selectedSlot: displayTimeToApiSlot(timeSlot),
           selectedDate: date,
@@ -377,7 +378,11 @@ export function BookingDialog({
           foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
         });
         setCartSyncedAfterReserve(true);
-        setRemainingSeconds(REMAINING_TIME);
+        const holdSeconds = Math.max(
+          1,
+          Math.round(reserveResult.expiredTimeIntervalInMinutes * 60)
+        );
+        setRemainingSeconds(holdSeconds);
         setBookingTimerActive(true);
         dispatch(nextStep());
       } catch (err) {

@@ -41,7 +41,7 @@ export function PaymentStepForm({ payment }: PaymentStepFormProps) {
   } = payment;
 
   return (
-    <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+    <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
       <div className="min-w-0 space-y-2">
         <p className={sectionLabel} >Card & billing</p>
         <StripePaymentElementBlock

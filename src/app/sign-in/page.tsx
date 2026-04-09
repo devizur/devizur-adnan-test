@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/authSlice";
 import type { CustomerLookupItem } from "@/lib/api/types";
-import { saveStoredAuth } from "@/lib/auth-storage";
+import { saveStoredAuth, saveStoredCustomer } from "@/lib/auth-storage";
 
 type Step = "email" | "otp";
 
@@ -61,6 +61,7 @@ export default function SignInPage() {
             },
         };
         saveStoredAuth(authPayload);
+        saveStoredCustomer(activeCustomer);
         dispatch(setCredentials(authPayload));
         router.push("/my-bookings");
     };

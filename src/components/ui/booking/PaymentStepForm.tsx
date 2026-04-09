@@ -35,6 +35,8 @@ export function PaymentStepForm({ payment }: PaymentStepFormProps) {
     totalPaymentAmount,
     amountTotalCents,
     isCartEmpty,
+    isSavingSalesOrder,
+    salesOrderError,
     checkoutMetadata,
     completePaymentSuccess,
     paymentIntentResetKey,
@@ -44,6 +46,16 @@ export function PaymentStepForm({ payment }: PaymentStepFormProps) {
     <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
       <div className="min-w-0 space-y-2">
         <p className={sectionLabel} >Card & billing</p>
+        {isSavingSalesOrder ? (
+          <div className="rounded-md border border-primary-1/25 bg-primary-1/10 px-3 py-2 text-xs text-primary-1 sm:text-sm">
+            Saving order to server…
+          </div>
+        ) : null}
+        {salesOrderError ? (
+          <div className="rounded-md border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs text-red-200 sm:text-sm">
+            {salesOrderError}
+          </div>
+        ) : null}
         <StripePaymentElementBlock
           amountTotalCents={amountTotalCents}
           totalLabel={formatPrice(totalPaymentAmount)}

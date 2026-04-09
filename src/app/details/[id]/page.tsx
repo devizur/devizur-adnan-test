@@ -30,12 +30,13 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
     return null;
   };
 
-  const imageUrl =
+  const imageUrl: string =
     firstNonEmpty(
       product.thumbnailBigImageUrl,
       product.thumbnailShortImageUrl,
-    
-    )  ;
+      product.thumbnailBigImage,
+      product.thumbnailShortImage
+    ) ?? "https://cdn.pixabay.com/photo/2023/03/20/15/37/postcards-7865294_1280.jpg";
 
   return (
     <div className="min-w-0 pb-16 pt-24 text-primary sm:pb-20 sm:pt-32">

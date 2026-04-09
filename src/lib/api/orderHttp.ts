@@ -1,7 +1,9 @@
 import axios from "axios";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import bookingEngineUrlHttp from "@/lib/api/bookingEngineUrlHttp";
+import bookingFlowUrlHttp from "@/lib/api/bookingFlowUrlHttp";
 import type { SalesOrderLine, SalesOrderRequest, SalesOrderResponse } from "@/lib/api/salesOrderTypes";
+import type { ApiResponse } from "@/lib/api/types";
 
 /**
  * Base URL for the local order JSON server (server-for-save-data).
@@ -65,6 +67,38 @@ export async function fetchSalesOrderById(orderId: number): Promise<SalesOrderRe
   }
 }
 
+export type BookingDetailsResponseData = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  bookingStatus: string;
+  bookingStatusId: number;
+  activities: {
+    id: number;
+    noOfSession?: number;
+    startTime: string;
+    endTime: string;
+    activityName: string;
+    attributeOption?: string;
+  }[];
+};
+
+export async function fetchBookingDetailsById(
+  bookingId: number
+): Promise<BookingDetailsResponseData | null> {
+  if (!Number.isFinite(bookingId) || bookingId <= 0) return null;
+  try {
+    const { data } = await bookingFlowUrlHttp.get<ApiResponse<BookingDetailsResponseData>>(
+      "/api/Booking/getBookingDetails",
+      { params: { bookingId } }
+    );
+    if (!data?.success || !data.data) return null;
+    return data.data;
+  } catch {
+    return null;
+  }
+}
+
 /** GET all orders from the order-save server (reads data/orders/*.json). */
 export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
   const local = loadPaidOrders();
@@ -76,30 +110,33 @@ export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
     ),
   ];
   if (ids.length === 0) return [];
-
-  const fetched = await Promise.all(ids.map((id) => fetchSalesOrderById(id)));
+  const latestOrderId = Math.max(...ids);
+  const fetchedOrder = await fetchSalesOrderById(latestOrderId);
   const mapByOrderId = new Map(
     local
       .map((o) => [o.salesOrder?.orderId, o] as const)
       .filter(([id]) => typeof id === "number" && id > 0)
   );
 
-  const merged = fetched
-    .filter((o): o is SalesOrderResponse => !!o && isSalesOrderShape(o))
-    .map((sales) => {
-      const base = mapByOrderId.get(sales.orderId ?? -1);
-      const mapped = mapSalesOrderToPaidOrder(sales);
-      return {
-        ...(base ?? mapped),
-        salesOrder: sales,
-        paidAt: base?.paidAt ?? mapped.paidAt,
-        totalAmount:
-          typeof sales.netAmount === "number"
-            ? sales.netAmount
-            : base?.totalAmount ?? mapped.totalAmount,
-      } satisfies PaidOrderRecord;
-    })
-    .sort((a, b) => b.paidAt - a.paidAt);
+  const merged =
+    fetchedOrder && isSalesOrderShape(fetchedOrder)
+      ? [
+          (() => {
+            const sales = fetchedOrder;
+            const base = mapByOrderId.get(sales.orderId ?? -1);
+            const mapped = mapSalesOrderToPaidOrder(sales);
+            return {
+              ...(base ?? mapped),
+              salesOrder: sales,
+              paidAt: base?.paidAt ?? mapped.paidAt,
+              totalAmount:
+                typeof sales.netAmount === "number"
+                  ? sales.netAmount
+                  : base?.totalAmount ?? mapped.totalAmount,
+            } satisfies PaidOrderRecord;
+          })(),
+        ]
+      : [];
 
   return merged;
 }

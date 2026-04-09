@@ -8,8 +8,9 @@ import { cn, formatPrice } from "@/lib/utils";
 import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
-import { fetchOrdersFromBackend } from "@/lib/api/orderHttp";
+import { fetchBookingDetailsById, fetchOrdersFromBackend } from "@/lib/api/orderHttp";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 function shiftLabel(timeOfDay: 1 | 2 | 3): string {
   if (timeOfDay === 1) return "Morning";
@@ -35,9 +36,30 @@ function orderPaidDisplay(order: PaidOrderRecord): string {
   return "—";
 }
 
+function formatIsoDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelClick: () => void }) {
   const entry = order.entries[0];
   const sales = order.salesOrder;
+  const orderBookingId =
+    typeof sales?.bookingId === "number"
+      ? sales.bookingId
+      : typeof sales?.bookingId === "string"
+        ? Number(sales.bookingId)
+        : 0;
+  const { data: bookingDetails } = useQuery({
+    queryKey: ["orders", "bookingDetails", orderBookingId],
+    queryFn: () => fetchBookingDetailsById(orderBookingId),
+    enabled: orderBookingId > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const adults = entry?.persons.adults ?? 0;
   const kids = entry?.persons.kids ?? 0;
@@ -49,6 +71,18 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
     order.totalAmount > 0
       ? order.totalAmount
       : (sales?.netAmount ?? sales?.grossAmount ?? 0);
+  const timelineSteps = (bookingDetails?.activities ?? [])
+    .filter((a) => a.startTime && a.endTime)
+    .map((a) => ({
+      startingTime: a.startTime,
+      endingTime: a.endTime,
+      itemName: a.attributeOption
+        ? `${a.activityName} (${a.attributeOption})`
+        : a.activityName,
+      itemDuration: typeof a.noOfSession === "number" && a.noOfSession > 0
+        ? `${a.noOfSession} session${a.noOfSession > 1 ? "s" : ""}`
+        : undefined,
+    }));
 
   return (
     <article className="rounded-2xl border border-zinc-800 bg-[#1a1a1a] p-5 sm:p-6 space-y-4">
@@ -160,6 +194,32 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
           </>
         )}
       </div>
+
+      {timelineSteps.length > 0 ? (
+        <div className="border-t border-zinc-800 pt-4">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            Booking schedule
+          </p>
+          <div className="space-y-2 rounded-xl border border-white/8 bg-[#141414]/70 p-3">
+            {timelineSteps.map((step, idx) => (
+              <div
+                key={`${step.itemName}-${idx}-${step.startingTime}`}
+                className="rounded-lg border border-zinc-800/90 bg-zinc-900/50 px-3 py-2"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-zinc-200">{step.itemName}</p>
+                  {step.itemDuration ? (
+                    <span className="text-[10px] text-zinc-500">{step.itemDuration}</span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {formatIsoDateTime(step.startingTime)} - {formatIsoDateTime(step.endingTime)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-4">
         <div className="flex items-baseline gap-3">

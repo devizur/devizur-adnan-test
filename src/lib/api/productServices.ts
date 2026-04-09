@@ -105,7 +105,7 @@ function mapProductToBase(item: ProductAdvancedItem) {
   const { price, fixedPrice } = getPriceFromProduct(item);
   const image = `https://picsum.photos/seed/${item.productId}/800/600`;
   const opts = item.attributeOptions ?? [];
-  const combos = item.attributeCombinations ?? [];
+
   // Derive games from API: e.g. "Game Type" options 1 Game → 1, 2 Games → 2
   const gameTypeAttr = opts.filter((o) => /game\s*type|number\s*of\s*games/i.test(o.attributeName));
   const gameTypeOptionCount =

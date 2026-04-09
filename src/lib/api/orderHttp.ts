@@ -75,11 +75,27 @@ export type BookingDetailsResponseData = {
   bookingStatusId: number;
   activities: {
     id: number;
+    activityId?: number;
+    adultPax?: number;
+    childPax?: number;
     noOfSession?: number;
+    venueActivityId?: number;
+    attributeOptionId?: number;
     startTime: string;
     endTime: string;
     activityName: string;
     attributeOption?: string;
+    resourceType?: string;
+    resources?: {
+      id: number;
+      venueResourceId?: number;
+      venueResource?: string;
+      startTime?: string;
+      endTime?: string;
+      bufferAfter?: string;
+      bufferBefore?: string;
+      quantityUsed?: number;
+    }[];
   }[];
 };
 

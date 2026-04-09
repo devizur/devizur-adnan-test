@@ -11,6 +11,7 @@ import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
 import { fetchBookingDetailsById, fetchOrdersFromBackend } from "@/lib/api/orderHttp";
 import { Calendar, Clock, User, ShoppingBag, ArrowLeft, Receipt } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { BookingTimelineBar } from "@/components/ui/booking/BookingTimelineBar";
 
 function shiftLabel(timeOfDay: 1 | 2 | 3): string {
   if (timeOfDay === 1) return "Morning";
@@ -45,7 +46,35 @@ function formatIsoDateTime(iso: string): string {
   });
 }
 
-function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelClick: () => void }) {
+function formatDurationMinutes(startIso: string, endIso: string): string | null {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return null;
+  const mins = Math.round((end - start) / 60000);
+  return `${mins} min`;
+}
+
+function isoToDate(iso: string | undefined): string | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString().slice(0, 10);
+}
+
+function isoToDisplayTime(iso: string | undefined): string {
+  if (!iso) return "9:00 am";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "9:00 am";
+  return d
+    .toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .toLowerCase();
+}
+
+function OrderCard({ order }: { order: PaidOrderRecord }) {
   const entry = order.entries[0];
   const sales = order.salesOrder;
   const orderBookingId =
@@ -82,7 +111,27 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
       itemDuration: typeof a.noOfSession === "number" && a.noOfSession > 0
         ? `${a.noOfSession} session${a.noOfSession > 1 ? "s" : ""}`
         : undefined,
+      adultPax: a.adultPax ?? 0,
+      childPax: a.childPax ?? 0,
+      resourceType: a.resourceType ?? "",
+      venueActivityId: a.venueActivityId,
+      attributeOptionId: a.attributeOptionId,
+      resources: a.resources ?? [],
     }));
+  const timelineDate = isoToDate(bookingDetails?.startTime);
+  const timelineTime = isoToDisplayTime(bookingDetails?.startTime);
+  const timelineActivities = (bookingDetails?.activities ?? []).map((a) => ({
+    activity: {
+      id: a.activityId ?? a.id,
+      title: a.activityName,
+      productName: a.activityName,
+      duration:
+        typeof a.noOfSession === "number" && a.noOfSession > 0
+          ? `${a.noOfSession * 60} mins`
+          : "60 mins",
+    } as any,
+    gameNo: typeof a.noOfSession === "number" && a.noOfSession > 0 ? a.noOfSession : 1,
+  }));
 
   return (
     <article className="rounded-2xl border border-zinc-800 bg-[#1a1a1a] p-5 sm:p-6 space-y-4">
@@ -200,6 +249,17 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
             Booking schedule
           </p>
+          {timelineDate ? (
+            <div className="mb-3">
+              <BookingTimelineBar
+                bookingReferenceId={undefined}
+                slotsResponseReceived
+                timeSlot={timelineTime}
+                selectedDate={timelineDate}
+                selectedActivities={timelineActivities}
+              />
+            </div>
+          ) : null}
           <div className="space-y-2 rounded-xl border border-white/8 bg-[#141414]/70 p-3">
             {timelineSteps.map((step, idx) => (
               <div
@@ -215,6 +275,57 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
                 <p className="mt-1 text-xs text-zinc-400">
                   {formatIsoDateTime(step.startingTime)} - {formatIsoDateTime(step.endingTime)}
                 </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-zinc-400">
+                  <span className="rounded border border-zinc-700/80 bg-zinc-900/70 px-2 py-0.5">
+                    Pax: {step.adultPax} adult{step.adultPax !== 1 ? "s" : ""}
+                    {step.childPax > 0 ? `, ${step.childPax} child${step.childPax !== 1 ? "ren" : ""}` : ""}
+                  </span>
+                  {step.resourceType ? (
+                    <span className="rounded border border-zinc-700/80 bg-zinc-900/70 px-2 py-0.5">
+                      Resource type: {step.resourceType}
+                    </span>
+                  ) : null}
+                  {typeof step.venueActivityId === "number" ? (
+                    <span className="rounded border border-zinc-700/80 bg-zinc-900/70 px-2 py-0.5">
+                      Venue activity ID: {step.venueActivityId}
+                    </span>
+                  ) : null}
+                  {typeof step.attributeOptionId === "number" ? (
+                    <span className="rounded border border-zinc-700/80 bg-zinc-900/70 px-2 py-0.5">
+                      Attribute option ID: {step.attributeOptionId}
+                    </span>
+                  ) : null}
+                </div>
+                {step.resources.length > 0 ? (
+                  <div className="mt-2 rounded-md border border-zinc-800 bg-[#121212]/70 p-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
+                      Resources
+                    </p>
+                    <div className="mt-1.5 space-y-1.5">
+                      {step.resources.map((r, rIdx) => (
+                        <div key={`${r.id}-${rIdx}`} className="text-xs text-zinc-300">
+                          <p>
+                            {r.venueResource || `Resource #${r.venueResourceId ?? r.id}`}
+                            {typeof r.quantityUsed === "number" ? ` · Qty ${r.quantityUsed}` : ""}
+                          </p>
+                          {r.startTime && r.endTime ? (
+                            <p className="text-[11px] text-zinc-500">
+                              {formatIsoDateTime(r.startTime)} - {formatIsoDateTime(r.endTime)}
+                              {formatDurationMinutes(r.startTime, r.endTime)
+                                ? ` (${formatDurationMinutes(r.startTime, r.endTime)})`
+                                : ""}
+                            </p>
+                          ) : null}
+                          {(r.bufferBefore || r.bufferAfter) ? (
+                            <p className="text-[11px] text-zinc-600">
+                              Buffer: before {r.bufferBefore || "00:00:00"} / after {r.bufferAfter || "00:00:00"}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -244,14 +355,6 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
             ) : null}
           </div>
         ) : null}
-        <Button
-          type="button"
-          variant="outline"
-          className="border-red-900/40 text-red-400 hover:bg-red-950/25 hover:text-red-300 rounded-xl h-9"
-          onClick={onCancelClick}
-        >
-          Cancel order
-        </Button>
       </div>
     </article>
   );
@@ -347,7 +450,7 @@ export default function OrdersPage() {
               </div>
               <div className="space-y-2.5">
                 <h1 className="text-3xl sm:text-[2.125rem] font-bold text-primary tracking-tight leading-[1.15]">
-                  Order list
+                  Order details
                 </h1>
             
              
@@ -371,7 +474,7 @@ export default function OrdersPage() {
           <ul className="space-y-6">
             {orders.map((order) => (
               <li key={order.id}>
-                <OrderCard order={order} onCancelClick={() => setCancelTarget(order)} />
+                <OrderCard order={order} />
               </li>
             ))}
           </ul>

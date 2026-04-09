@@ -34,6 +34,8 @@ export interface ProductDetailsResponse {
   productBarcode: string | null;
   thumbnailBigImage: string | null;
   thumbnailShortImage: string | null;
+  thumbnailBigImageUrl: string | null;
+  thumbnailShortImageUrl: string | null;
   subCategoryId: number | null;
   subCategoryName: string | null;
   categoryId: number | null;

@@ -22,18 +22,20 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
   }
   if (!product) notFound();
 
-  const imageUrl =
-    product.thumbnailShortImage ||
-    "https://vueroid.com/wp-content/uploads/2025/09/main_product.png";
+  const firstNonEmpty = (...urls: Array<string | null | undefined>) => {
+    for (const u of urls) {
+      const s = u?.trim();
+      if (s) return s;
+    }
+    return null;
+  };
 
-  const statusItems: Array<{ label: string; enabled: boolean }> = [
-    { label: "Active", enabled: Boolean(product.isActive) },
-    { label: "Available Online", enabled: Boolean(product.availableOnline) },
-    { label: "Booking Required", enabled: Boolean(product.isBookingRequired) },
-    { label: "Saleable", enabled: Boolean(product.isSaleable) },
-    { label: "Combo Product", enabled: Boolean(product.isComboProduct) },
-    { label: "Customization", enabled: Boolean(product.isForCustomization) },
-  ];
+  const imageUrl =
+    firstNonEmpty(
+      product.thumbnailBigImageUrl,
+      product.thumbnailShortImageUrl,
+    
+    )  ;
 
   return (
     <div className="min-w-0 pb-16 pt-24 text-primary sm:pb-20 sm:pt-32">
@@ -75,6 +77,9 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
                 <h1 className="text-3xl font-bold leading-[1.15] tracking-tight text-primary sm:text-[2.125rem]">
                   {product.productName}
                 </h1>
+                {product.productShortName?.trim() ? (
+                  <p className="text-sm font-medium text-zinc-400">{product.productShortName.trim()}</p>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {[
                     product.productType || "General",
@@ -111,7 +116,10 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
                 </div>
 
                 <div className="rounded-xl border border-primary-1/20 bg-primary-1/8 p-3 text-sm font-semibold uppercase tracking-wide text-primary-1">
-                  Price: ----------
+                  Price:{" "}
+                  {product.costPrice != null && Number.isFinite(Number(product.costPrice))
+                    ? `$${Number(product.costPrice).toFixed(2)}`
+                    : "—"}
                 </div>
                 <BookingDialog>
                   <Button className="w-full cursor-pointer rounded-lg bg-primary-1 py-3 text-sm font-bold text-secondary hover:bg-primary-1/90 sm:w-auto sm:px-8">

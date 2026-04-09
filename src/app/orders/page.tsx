@@ -149,18 +149,10 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
               Ref: <span className="font-mono">{order.salesOrder.uniqueOrderRef}</span>
             </p>
           ) : null}
-          {order.salesOrder?.tokenNumber ? (
-            <p className="text-[10px] text-zinc-600 mt-1">
-              Token: <span className="font-mono">{order.salesOrder.tokenNumber}</span>
-            </p>
-          ) : null}
           <p className="text-xs text-zinc-500 mt-1">Paid {orderPaidDisplay(order)}</p>
-          {order.serverReceivedAt ? (
-            <p className="text-[10px] text-zinc-600 mt-0.5">Server saved {order.serverReceivedAt}</p>
-          ) : null}
           {order.stripePaymentIntentId ? (
             <p className="text-[10px] text-zinc-600 mt-1 font-mono truncate max-w-full" title={order.stripePaymentIntentId}>
-              {order.stripePaymentIntentId}
+              Transaction id: {order.stripePaymentIntentId}
             </p>
           ) : null}
         </div>

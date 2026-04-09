@@ -11,6 +11,10 @@ export const CREDIT_CARD_FEE_RATE = 0.03;
 export interface UsePaymentStepOptions {
   /** Passed to Stripe PaymentIntent metadata (string values only). */
   checkoutMetadata?: Record<string, string>;
+  /** Booking reference from booking state; mapped to SalesOrder.bookingId. */
+  bookingReferenceId?: string;
+  /** Numeric booking id from reserveBooking. */
+  bookingId?: number;
 }
 
 export function usePaymentStep(options?: UsePaymentStepOptions) {
@@ -46,6 +50,8 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
   const amountTotalCents = Math.max(50, Math.round(totalPaymentAmount * 100));
 
   const checkoutMetadata = options?.checkoutMetadata;
+  const bookingReferenceId = options?.bookingReferenceId;
+  const bookingId = options?.bookingId;
 
   const resetForm = React.useCallback(() => {
     setPaymentIntentResetKey((k) => k + 1);
@@ -58,6 +64,8 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
         entries.length > 0
           ? appendPaidOrder(entries, totalPaymentAmount, {
               stripePaymentIntentId: paymentMeta?.stripePaymentIntentId,
+              bookingReferenceId,
+              bookingId,
             })
           : null;
       clearCart();
@@ -84,7 +92,7 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
           setIsSavingSalesOrder(false);
         });
     },
-    [entries, totalPaymentAmount, clearCart, resetForm]
+    [entries, totalPaymentAmount, clearCart, resetForm, bookingReferenceId, bookingId]
   );
 
   const handleCloseSuccess = React.useCallback(() => {

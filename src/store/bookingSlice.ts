@@ -54,6 +54,8 @@ export interface BookingState {
   timeSlot: string;
   /** From retrieveTimeSlots or generateBookingItemSteps – used for subsequent API calls */
   bookingReferenceId: string;
+  /** Numeric booking id returned by reserveBooking, used for SalesOrder.bookingId. */
+  bookingId: number;
   /** Step 1: number of persons */
   persons: BookingPersons;
   /** Step 1: selected activities (game no and/or API attribute combination for dynamic options) */
@@ -88,6 +90,7 @@ const initialState: BookingState = {
   timeOfDay: 1,
   timeSlot: "",
   bookingReferenceId: "",
+  bookingId: 0,
   persons: { adults: 0, kids: 0 },
   selectedActivities: [],
   selectedPackages: [],
@@ -128,6 +131,9 @@ const bookingSlice = createSlice({
     },
     setBookingReferenceId: (state, action: PayloadAction<string>) => {
       state.bookingReferenceId = action.payload;
+    },
+    setBookingId: (state, action: PayloadAction<number>) => {
+      state.bookingId = action.payload;
     },
     setPersons: (state, action: PayloadAction<BookingPersons>) => {
       state.persons = action.payload;
@@ -254,6 +260,7 @@ export const {
   setTimeOfDay,
   setTimeSlot,
   setBookingReferenceId,
+  setBookingId,
   setPersons,
   incrementAdults,
   decrementAdults,

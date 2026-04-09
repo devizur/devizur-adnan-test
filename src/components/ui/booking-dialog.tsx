@@ -32,6 +32,7 @@ import {
   setStep,
   setFlowMode,
   setBookingReferenceId,
+  setBookingId,
 } from "@/store/bookingSlice";
 import type { Activity, Package, Food } from "@/lib/api/types";
 import { X, Clock, ShoppingBag } from "lucide-react";
@@ -150,6 +151,7 @@ export function BookingDialog({
         await bookingApi.unreserveBooking({ bookingReferenceId: ref });
         slotReservedRef.current = false;
         dispatch(setBookingReferenceId(""));
+        dispatch(setBookingId(0));
         queryClient.invalidateQueries({ queryKey: ["availability"] });
         queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
         setBookingTimerActive(false);
@@ -373,6 +375,8 @@ export function BookingDialog({
           selectedSlot: displayTimeToApiSlot(timeSlot),
           selectedDate: date,
         });
+        dispatch(setBookingReferenceId(reserveResult.bookingReferenceId));
+        dispatch(setBookingId(reserveResult.bookingId));
         slotReservedRef.current = true;
         clearCart();
         syncBookingEntry({

@@ -253,6 +253,10 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderRequest {
     : "";
   const customerRef = firstEntry?.holderDetails.email?.trim() || "";
   const hd = firstEntry?.holderDetails;
+  const bookingId =
+    typeof order.bookingId === "number" && Number.isFinite(order.bookingId) && order.bookingId > 0
+      ? order.bookingId
+      : 0;
 
   return {
     orderId: 0,
@@ -307,7 +311,7 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderRequest {
     shopName: "",
     kitchenStatusKey: "",
     deliveryStatusKey: "",
-    bookingId: 0,
+    bookingId,
   };
 }
 

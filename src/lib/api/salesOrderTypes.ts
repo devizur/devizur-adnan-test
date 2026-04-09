@@ -266,5 +266,5 @@ export interface SalesOrderResponse {
   shopName?: string;
   kitchenStatusKey?: string;
   deliveryStatusKey?: string;
-  bookingId?: number;
+  bookingId?: string | number | null;
 }

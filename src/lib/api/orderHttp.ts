@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { PaidOrderRecord } from "@/lib/paidOrdersStorage";
+import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import bookingEngineUrlHttp from "@/lib/api/bookingEngineUrlHttp";
 import type { SalesOrderLine, SalesOrderRequest, SalesOrderResponse } from "@/lib/api/salesOrderTypes";
 
@@ -29,16 +29,79 @@ const localHttp = axios.create({
 
 export default localHttp;
 
-function isOrderShape(o: unknown): o is PaidOrderRecord {
+function isSalesOrderShape(o: unknown): o is SalesOrderResponse {
   if (!o || typeof o !== "object" || Array.isArray(o)) return false;
   const x = o as Record<string, unknown>;
-  return typeof x.id === "string" && Array.isArray(x.entries);
+  return typeof x.orderId === "number";
+}
+
+function mapSalesOrderToPaidOrder(order: SalesOrderResponse): PaidOrderRecord {
+  const orderId = order.orderId ?? 0;
+  const createdAtTs = order.createdAt ? Date.parse(order.createdAt) : Date.now();
+  const paidAt = Number.isNaN(createdAtTs) ? Date.now() : createdAtTs;
+  const totalAmount =
+    typeof order.netAmount === "number"
+      ? order.netAmount
+      : typeof order.grossAmount === "number"
+        ? order.grossAmount
+        : 0;
+  return {
+    id: `so_${orderId || Date.now()}`,
+    paidAt,
+    totalAmount,
+    entries: [],
+    serverReceivedAt: order.createdAt,
+    salesOrder: order,
+  };
+}
+
+export async function fetchSalesOrderById(orderId: number): Promise<SalesOrderResponse | null> {
+  if (!Number.isFinite(orderId) || orderId <= 0) return null;
+  try {
+    const { data } = await bookingEngineUrlHttp.get<SalesOrderResponse>(`/api/SalesOrder/${orderId}`);
+    return data ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** GET all orders from the order-save server (reads data/orders/*.json). */
 export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
-  // Local GET /orders has been removed from this flow.
-  return [];
+  const local = loadPaidOrders();
+  const ids = [
+    ...new Set(
+      local
+        .map((o) => o.salesOrder?.orderId)
+        .filter((id): id is number => typeof id === "number" && id > 0)
+    ),
+  ];
+  if (ids.length === 0) return [];
+
+  const fetched = await Promise.all(ids.map((id) => fetchSalesOrderById(id)));
+  const mapByOrderId = new Map(
+    local
+      .map((o) => [o.salesOrder?.orderId, o] as const)
+      .filter(([id]) => typeof id === "number" && id > 0)
+  );
+
+  const merged = fetched
+    .filter((o): o is SalesOrderResponse => !!o && isSalesOrderShape(o))
+    .map((sales) => {
+      const base = mapByOrderId.get(sales.orderId ?? -1);
+      const mapped = mapSalesOrderToPaidOrder(sales);
+      return {
+        ...(base ?? mapped),
+        salesOrder: sales,
+        paidAt: base?.paidAt ?? mapped.paidAt,
+        totalAmount:
+          typeof sales.netAmount === "number"
+            ? sales.netAmount
+            : base?.totalAmount ?? mapped.totalAmount,
+      } satisfies PaidOrderRecord;
+    })
+    .sort((a, b) => b.paidAt - a.paidAt);
+
+  return merged;
 }
 
 export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: true; notFound?: boolean }> {
@@ -251,26 +314,21 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderRequest {
 /** POST booking order to booking engine sales order endpoint. */
 export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{
   file: string;
-  orderId?: number;
-  orderNumber?: string;
-  uniqueOrderRef?: string;
-  tokenNumber?: string;
-  grossAmount?: number;
-  totalLineTax?: number;
-  netAmount?: number;
-  paymentStatus?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}> {
+} & SalesOrderResponse> {
   try {
     const payload = mapOrderToSalesPayload(order);
     const { data } = await bookingEngineUrlHttp.post<SalesOrderResponse>(
       "/api/SalesOrder",
       payload
     );
+    const orderId = data?.orderId;
+    const fullOrder =
+      typeof orderId === "number" && orderId > 0
+        ? await fetchSalesOrderById(orderId)
+        : null;
     return {
       file: "",
-      ...(data ?? {}),
+      ...((fullOrder ?? data ?? {}) as SalesOrderResponse),
     };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.data) {

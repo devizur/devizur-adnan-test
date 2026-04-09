@@ -37,11 +37,18 @@ function orderPaidDisplay(order: PaidOrderRecord): string {
 
 function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelClick: () => void }) {
   const entry = order.entries[0];
-  if (!entry) return null;
+  const sales = order.salesOrder;
 
-  const adults = entry.persons.adults;
-  const kids = entry.persons.kids;
-  const holder = `${entry.holderDetails.firstName} ${entry.holderDetails.lastName}`.trim() || "—";
+  const adults = entry?.persons.adults ?? 0;
+  const kids = entry?.persons.kids ?? 0;
+  const holder =
+    (entry
+      ? `${entry.holderDetails.firstName} ${entry.holderDetails.lastName}`.trim()
+      : sales?.customerName?.trim()) || "—";
+  const totalShown =
+    order.totalAmount > 0
+      ? order.totalAmount
+      : (sales?.netAmount ?? sales?.grossAmount ?? 0);
 
   return (
     <article className="rounded-2xl border border-zinc-800 bg-[#1a1a1a] p-5 sm:p-6 space-y-4">
@@ -84,65 +91,97 @@ function OrderCard({ order, onCancelClick }: { order: PaidOrderRecord; onCancelC
           <User className="size-4 text-primary-1 shrink-0" />
           {holder}
         </span>
-        <span className="flex items-center gap-1.5">
-          <Calendar className="size-4 text-primary-1 shrink-0" />
-          {entry.date}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Clock className="size-4 text-primary-1 shrink-0" />
-          {entry.timeSlot} · {shiftLabel(entry.timeOfDay)}
-        </span>
-        <span className="text-zinc-500">
-          {adults} adult{adults !== 1 ? "s" : ""}
-          {kids > 0 ? `, ${kids} kid${kids !== 1 ? "s" : ""}` : ""}
-        </span>
+        {entry?.date ? (
+          <span className="flex items-center gap-1.5">
+            <Calendar className="size-4 text-primary-1 shrink-0" />
+            {entry.date}
+          </span>
+        ) : sales?.createdAt ? (
+          <span className="flex items-center gap-1.5">
+            <Calendar className="size-4 text-primary-1 shrink-0" />
+            {new Date(sales.createdAt).toLocaleDateString()}
+          </span>
+        ) : null}
+        {entry?.timeSlot ? (
+          <span className="flex items-center gap-1.5">
+            <Clock className="size-4 text-primary-1 shrink-0" />
+            {entry.timeSlot} · {shiftLabel(entry.timeOfDay)}
+          </span>
+        ) : null}
+        {entry ? (
+          <span className="text-zinc-500">
+            {adults} adult{adults !== 1 ? "s" : ""}
+            {kids > 0 ? `, ${kids} kid${kids !== 1 ? "s" : ""}` : ""}
+          </span>
+        ) : null}
       </div>
 
       <div className="border-t border-zinc-800 pt-4 space-y-2 text-sm">
-        {entry.activities.map(({ activity, gameNo }) => (
-          <div key={`a-${activity.id}`} className="flex justify-between gap-2 text-accent">
-            <span className="min-w-0 truncate">{activity.title || activity.productName}</span>
-            <span className="text-zinc-500 shrink-0">{gameNo} game{gameNo !== 1 ? "s" : ""}</span>
-          </div>
-        ))}
-        {entry.packages.map(({ pkg, combination }) => (
-          <div key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
-            <span className="min-w-0 truncate">
-              {pkg.title || pkg.productName}
-              {combination?.attributeCombinationName ? (
-                <span className="text-zinc-500">
-                  {" "}
-                  · {combination.attributeCombinationName}
+        {sales?.lines?.length ? (
+          sales.lines.map((line, idx) => (
+            <div key={`${line.orderLineSerial}-${idx}`} className="flex justify-between gap-2 text-accent">
+              <span className="min-w-0 truncate">
+                {line.productName || `Product #${line.productId}`}
+                {line.categoryName ? <span className="text-zinc-500"> · {line.categoryName}</span> : null}
+              </span>
+              <span className="text-zinc-500 shrink-0">
+                ×{line.quantity} · {formatPrice(line.lineTotal ?? 0)}
+              </span>
+            </div>
+          ))
+        ) : (
+          <>
+            {entry?.activities.map(({ activity, gameNo }) => (
+              <div key={`a-${activity.id}`} className="flex justify-between gap-2 text-accent">
+                <span className="min-w-0 truncate">{activity.title || activity.productName}</span>
+                <span className="text-zinc-500 shrink-0">{gameNo} game{gameNo !== 1 ? "s" : ""}</span>
+              </div>
+            ))}
+            {entry?.packages.map(({ pkg, combination }) => (
+              <div key={`p-${pkg.id}`} className="flex justify-between gap-2 text-accent">
+                <span className="min-w-0 truncate">
+                  {pkg.title || pkg.productName}
+                  {combination?.attributeCombinationName ? (
+                    <span className="text-zinc-500">
+                      {" "}
+                      · {combination.attributeCombinationName}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-            </span>
-            <span className="text-zinc-500 shrink-0">Package</span>
-          </div>
-        ))}
-        {entry.foods.map(({ food, quantity }) => (
-          <div key={`f-${food.id}`} className="flex justify-between gap-2 text-accent">
-            <span className="min-w-0 truncate">{food.title || food.productName}</span>
-            <span className="text-zinc-500 shrink-0">×{quantity}</span>
-          </div>
-        ))}
+                <span className="text-zinc-500 shrink-0">Package</span>
+              </div>
+            ))}
+            {entry?.foods.map(({ food, quantity }) => (
+              <div key={`f-${food.id}`} className="flex justify-between gap-2 text-accent">
+                <span className="min-w-0 truncate">{food.title || food.productName}</span>
+                <span className="text-zinc-500 shrink-0">×{quantity}</span>
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-4">
         <div className="flex items-baseline gap-3">
           <span className="text-sm font-medium text-zinc-400">Total</span>
-          <span className="text-lg font-semibold text-white">{formatPrice(order.totalAmount)}</span>
+          <span className="text-lg font-semibold text-white">{formatPrice(totalShown)}</span>
         </div>
-        {typeof order.salesOrder?.netAmount === "number" ? (
+        {typeof sales?.netAmount === "number" ? (
           <div className="text-right text-xs text-zinc-500">
             <p>
-              Gross: <span className="font-mono text-zinc-400">{order.salesOrder.grossAmount ?? 0}</span>
+              Gross: <span className="font-mono text-zinc-400">{sales.grossAmount ?? 0}</span>
             </p>
             <p>
-              Tax: <span className="font-mono text-zinc-400">{order.salesOrder.totalLineTax ?? 0}</span>
+              Tax: <span className="font-mono text-zinc-400">{sales.totalLineTax ?? 0}</span>
             </p>
             <p>
-              Net: <span className="font-mono text-zinc-300">{order.salesOrder.netAmount}</span>
+              Net: <span className="font-mono text-zinc-300">{sales.netAmount}</span>
             </p>
+            {sales.customerName ? (
+              <p>
+                Customer: <span className="text-zinc-300">{sales.customerName}</span>
+              </p>
+            ) : null}
           </div>
         ) : null}
         <Button

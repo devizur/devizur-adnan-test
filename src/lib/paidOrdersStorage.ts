@@ -1,4 +1,5 @@
 import type { CartEntry } from "@/contexts/CartContext";
+import type { SalesOrderResponse } from "@/lib/api/salesOrderTypes";
 
 const MAX_ORDERS = 100;
 let inMemoryPaidOrders: PaidOrderRecord[] = [];
@@ -12,18 +13,7 @@ export interface PaidOrderRecord {
   stripePaymentIntentId?: string;
   /** Added by the server when the order file is written. */
   serverReceivedAt?: string;
-  salesOrder?: {
-    orderId?: number;
-    orderNumber?: string;
-    uniqueOrderRef?: string;
-    tokenNumber?: string;
-    grossAmount?: number;
-    totalLineTax?: number;
-    netAmount?: number;
-    paymentStatus?: string;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  salesOrder?: SalesOrderResponse;
 }
 
 export function loadPaidOrders(): PaidOrderRecord[] {

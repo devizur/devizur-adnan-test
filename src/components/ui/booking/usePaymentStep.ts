@@ -70,18 +70,7 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
       void saveOrderToBackend(record)
         .then((res) => {
           patchPaidOrder(record.id, {
-            salesOrder: {
-              orderId: res.orderId,
-              orderNumber: res.orderNumber,
-              uniqueOrderRef: res.uniqueOrderRef,
-              tokenNumber: res.tokenNumber,
-              grossAmount: res.grossAmount,
-              totalLineTax: res.totalLineTax,
-              netAmount: res.netAmount,
-              paymentStatus: res.paymentStatus,
-              createdAt: res.createdAt,
-              updatedAt: res.updatedAt,
-            },
+            salesOrder: res,
             serverReceivedAt: res.createdAt ?? record.serverReceivedAt,
           });
           setShowSuccess(true);

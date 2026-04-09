@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import bookingEngineUrlHttp from "@/lib/api/bookingEngineUrlHttp";
+import type { SalesOrderLine, SalesOrderRequest, SalesOrderResponse } from "@/lib/api/salesOrderTypes";
 
 /**
  * Base URL for the local order JSON server (server-for-save-data).
@@ -58,71 +59,6 @@ export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: tru
   }
 }
 
-type SalesOrderLine = {
-  orderLineId: number;
-  orderId: number;
-  productId: number;
-  orderLineSerial: number;
-  quantity: number;
-  unitPrice: number;
-  appliedOfferId: number;
-  taxPolicyId: number;
-  discount: number;
-  taxAmount: number;
-  modifierTotalPrice: number;
-  lineTotal: number;
-  kitchenStatusKey: string;
-  deliveryStatusKey: string;
-  orderStatusKey: string;
-  discountOrFreeInfo: string;
-  isComboProduct: boolean;
-  productName: string;
-  subCategoryId: number;
-  subCategoryName: string;
-  categoryId: number;
-  categoryName: string;
-  modifiers: unknown[];
-  comboLines: unknown[];
-};
-
-type SalesOrderPayload = {
-  orderId: number;
-  orderNumber: string;
-  uniqueOrderRef: string;
-  shopId: number;
-  customerId: number;
-  salesPersonId: number;
-  salesSessionId: number;
-  orderType: string;
-  grossAmount: number;
-  totalLineTax: number;
-  orderLevelDiscount: number;
-  netAmount: number;
-  paymentStatus: string;
-  createdAt: string;
-  updatedAt: string;
-  appliedOfferId: number;
-  tableIds: unknown[];
-  tokenNumber: string;
-  orderNotes: string;
-  kitchenInstruction: string;
-  deliveryInstruction: string;
-  isSentToKitchen: boolean;
-  createdBy: number;
-  updatedBy: number;
-  posTerminalId: number;
-  taxPolicyId: number;
-  orderLevelTax: number;
-  shopUnitId: number;
-  customerName: string;
-  customerRef: string;
-  lines: SalesOrderLine[];
-  freeItems: unknown[];
-  orderStatusKey: string;
-  kitchenStatusKey: string;
-  deliveryStatusKey: string;
-};
-
 function toMoney(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -136,7 +72,7 @@ function safeName(v: unknown, fallback: string): string {
   return typeof v === "string" && v.trim() ? v : fallback;
 }
 
-function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
+function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderRequest {
   const createdAtIso = new Date(order.paidAt || Date.now()).toISOString();
   const lines: SalesOrderLine[] = [];
   let serial = 1;
@@ -165,12 +101,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: false,
+        modifiers: [],
         productName: safeName(activity.productName, safeName(activity.title, "Activity")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(activity.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -201,12 +137,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: Boolean(pkg.isComboProduct),
+        modifiers: [],
         productName: safeName(pkg.productName, safeName(pkg.title, "Package")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(pkg.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -234,12 +170,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: Boolean(food.isComboProduct),
+        modifiers: [],
         productName: safeName(food.productName, safeName(food.title, "Food")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(food.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -253,6 +189,7 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
     ? `${firstEntry.holderDetails.firstName} ${firstEntry.holderDetails.lastName}`.trim()
     : "";
   const customerRef = firstEntry?.holderDetails.email?.trim() || "";
+  const hd = firstEntry?.holderDetails;
 
   return {
     orderId: 0,
@@ -261,35 +198,53 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
     shopId: 1,
     customerId: 0,
     salesPersonId: 3,
-    salesSessionId: 61,
+    posSessionId: 61,
     orderType: "DineIn",
+    orderLevelDiscount: 0,
+    appliedOfferId: 0,
+    orderNotes: "",
+    posTerminalId: 1,
+    taxPolicyId: 2,
+    orderLevelTax: 0,
+    shopBrandMapId: 0,
+    shopUnitId_DEPRECATED: 0,
+    salesPersonName: "",
+    lines,
+    freeItems: [],
+    orderStatusKey: "",
+    payments: [],
+    billSplits: [],
     grossAmount,
     totalLineTax,
-    orderLevelDiscount: 0,
     netAmount,
     paymentStatus: "Paid",
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    appliedOfferId: 0,
     tableIds: [],
     tokenNumber: "",
-    orderNotes: "",
     kitchenInstruction: "",
     deliveryInstruction: "",
     isSentToKitchen: true,
     createdBy: 3,
     updatedBy: 3,
-    posTerminalId: 1,
-    taxPolicyId: 2,
-    orderLevelTax: 0,
-    shopUnitId: 2,
     customerName,
     customerRef,
-    lines,
-    freeItems: [],
-    orderStatusKey: "",
+    customer: {
+      customerId: 0,
+      customerCode: "",
+      firstName: hd?.firstName?.trim() ?? "",
+      lastName: hd?.lastName?.trim() ?? "",
+      phone: hd?.phone?.trim() ?? "",
+      email: hd?.email?.trim() ?? "",
+      city: "",
+      country: "",
+      isActive: true,
+      createdAt: createdAtIso,
+    },
+    shopName: "",
     kitchenStatusKey: "",
     deliveryStatusKey: "",
+    bookingId: 0,
   };
 }
 
@@ -309,33 +264,13 @@ export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{
 }> {
   try {
     const payload = mapOrderToSalesPayload(order);
-    console.log("[saveOrderToBackend] sales order payload", payload);
-    const { data } = await bookingEngineUrlHttp.post<{
-      orderId?: number;
-      orderNumber?: string;
-      uniqueOrderRef?: string;
-      tokenNumber?: string;
-      grossAmount?: number;
-      totalLineTax?: number;
-      netAmount?: number;
-      paymentStatus?: string;
-      createdAt?: string;
-      updatedAt?: string;
-    }>("/api/SalesOrder", payload);
+    const { data } = await bookingEngineUrlHttp.post<SalesOrderResponse>(
+      "/api/SalesOrder",
+      payload
+    );
     return {
       file: "",
-      ...((data ?? {}) as {
-        orderId?: number;
-        orderNumber?: string;
-        uniqueOrderRef?: string;
-        tokenNumber?: string;
-        grossAmount?: number;
-        totalLineTax?: number;
-        netAmount?: number;
-        paymentStatus?: string;
-        createdAt?: string;
-        updatedAt?: string;
-      }),
+      ...(data ?? {}),
     };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.data) {

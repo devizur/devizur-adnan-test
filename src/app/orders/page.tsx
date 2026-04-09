@@ -108,9 +108,6 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
       itemName: a.attributeOption
         ? `${a.activityName} (${a.attributeOption})`
         : a.activityName,
-      itemDuration: typeof a.noOfSession === "number" && a.noOfSession > 0
-        ? `${a.noOfSession} session${a.noOfSession > 1 ? "s" : ""}`
-        : undefined,
       adultPax: a.adultPax ?? 0,
       childPax: a.childPax ?? 0,
       resourceType: a.resourceType ?? "",
@@ -260,9 +257,6 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-medium text-zinc-200">{step.itemName}</p>
-                  {step.itemDuration ? (
-                    <span className="text-[10px] text-zinc-500">{step.itemDuration}</span>
-                  ) : null}
                 </div>
                 <p className="mt-1 text-xs text-zinc-400">
                   {formatIsoDateTime(step.startingTime)} - {formatIsoDateTime(step.endingTime)}

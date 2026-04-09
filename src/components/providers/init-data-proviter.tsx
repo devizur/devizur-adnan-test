@@ -24,7 +24,7 @@ export function InitDataProviter({
     };
   }, []);
 
-  if (companyPending || !tokenReady) {
+  if (companyPending ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center space-y-4">

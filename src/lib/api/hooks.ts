@@ -82,6 +82,10 @@ export function useActivity(id: number): UseQueryResult<Activity | null, Error> 
     });
 }
 
+// single product detail 
+
+
+
 // Foods hooks – fetches all data; pagination is controlled on the frontend
 export function useFoods(searchTerm?: string): UseQueryResult<Food[], Error> {
     const shopId = useAppSelector((state) => state.shop.shopId);

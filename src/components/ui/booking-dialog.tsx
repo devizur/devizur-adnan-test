@@ -39,7 +39,8 @@ import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
 import { useQueryClient } from "@tanstack/react-query";
 
-const REMAINING_TIME = 60 * 10; // 10 minutes
+/** Default countdown reset when no hold is active (API may omit interval on older backends). */
+const DEFAULT_HOLD_SECONDS = 60 * 10;
 const STEPS_ACTIVITY_FIRST = [
   { id: 1, label: "Availability & Selection" },
   { id: 2, label: "Food Selection" },
@@ -127,7 +128,7 @@ export function BookingDialog({
     [isControlled, onOpenChangeControlled]
   );
 
-  const [remainingSeconds, setRemainingSeconds] = React.useState(REMAINING_TIME);
+  const [remainingSeconds, setRemainingSeconds] = React.useState(DEFAULT_HOLD_SECONDS);
   /** Countdown runs only after reserveBooking succeeds; cleared on unreserve / close */
   const [bookingTimerActive, setBookingTimerActive] = React.useState(false);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
@@ -136,33 +137,52 @@ export function BookingDialog({
   const slotReservedRef = React.useRef(false);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const tryUnreserveSlot = React.useCallback(async () => {
-    if (!slotReservedRef.current) return;
-    const ref = store.getState().booking.bookingReferenceId?.trim();
-    if (!ref) {
-      slotReservedRef.current = false;
-      return;
-    }
-    try {
-      await bookingApi.unreserveBooking({ bookingReferenceId: ref });
-      slotReservedRef.current = false;
-      dispatch(setBookingReferenceId(""));
-      queryClient.invalidateQueries({ queryKey: ["availability"] });
-      queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
-      setBookingTimerActive(false);
-      setRemainingSeconds(REMAINING_TIME);
-      clearCart();
-      setCartSyncedAfterReserve(false);
-    } catch {
-      /* non-blocking: user can still change slot or retry */
-    }
-  }, [dispatch, queryClient, clearCart]);
+  const tryUnreserveSlot = React.useCallback(
+    async (options?: { resetCountdown?: boolean }) => {
+      const resetCountdown = options?.resetCountdown !== false;
+      if (!slotReservedRef.current) return;
+      const ref = store.getState().booking.bookingReferenceId?.trim();
+      if (!ref) {
+        slotReservedRef.current = false;
+        return;
+      }
+      try {
+        await bookingApi.unreserveBooking({ bookingReferenceId: ref });
+        slotReservedRef.current = false;
+        dispatch(setBookingReferenceId(""));
+        queryClient.invalidateQueries({ queryKey: ["availability"] });
+        queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
+        setBookingTimerActive(false);
+        if (resetCountdown) {
+          setRemainingSeconds(DEFAULT_HOLD_SECONDS);
+        }
+        clearCart();
+        setCartSyncedAfterReserve(false);
+      } catch {
+        /* non-blocking: user can still change slot or retry */
+      }
+    },
+    [dispatch, queryClient, clearCart]
+  );
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   const formattedRemaining = `${minutes.toString().padStart(2, "0")}:${seconds
     .toString()
     .padStart(2, "0")}`;
+
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (!open) {
+        void tryUnreserveSlot();
+        setCartSyncedAfterReserve(false);
+        clearCart();
+        dispatch(resetBooking());
+      }
+      setIsOpen(open);
+    },
+    [tryUnreserveSlot, clearCart, dispatch, setIsOpen]
+  );
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -200,7 +220,7 @@ export function BookingDialog({
       }
     }
     setBookingTimerActive(false);
-    setRemainingSeconds(REMAINING_TIME);
+    setRemainingSeconds(DEFAULT_HOLD_SECONDS);
     setCartSyncedAfterReserve(false);
   }, [isOpen, clearCart, dispatch]);
 
@@ -247,7 +267,7 @@ export function BookingDialog({
 
     if (!isOpen) {
       setBookingTimerActive(false);
-      setRemainingSeconds(REMAINING_TIME);
+      setRemainingSeconds(DEFAULT_HOLD_SECONDS);
       return;
     }
 
@@ -276,38 +296,27 @@ export function BookingDialog({
     };
   }, [isOpen, bookingTimerActive]);
 
+  /** When the hold countdown hits 0: release slot, then close via Radix onOpenChange (same path as Cancel/X). */
   React.useEffect(() => {
     if (!isOpen || remainingSeconds !== 0) return;
+    if (!slotReservedRef.current) return;
 
     let cancelled = false;
     void (async () => {
-      await tryUnreserveSlot();
+      /* Do not reset countdown here — that would change `remainingSeconds`, re-run this effect,
+       * fire cleanup (`cancelled = true`), and abort `handleOpenChange(false)` before the dialog closes. */
+      await tryUnreserveSlot({ resetCountdown: false });
       if (cancelled) return;
-      slotReservedRef.current = false;
-      setBookingTimerActive(false);
-      setCartSyncedAfterReserve(false);
-      dispatch(resetBooking());
-      clearCart();
-      queryClient.invalidateQueries({ queryKey: ["availability"] });
-      queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
       toast.info("Your hold expired. This window closed and your cart was cleared.", {
         duration: 8000,
       });
-      setIsOpen(false);
+      handleOpenChange(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [
-    remainingSeconds,
-    isOpen,
-    dispatch,
-    clearCart,
-    setIsOpen,
-    tryUnreserveSlot,
-    queryClient,
-  ]);
+  }, [remainingSeconds, isOpen, tryUnreserveSlot, handleOpenChange]);
 
   const canProceedStep1 = timeSlot && (persons.adults + persons.kids) > 0;
   const hasSelectionStep1 = selectedActivities.length > 0 || selectedPackages.length > 0;
@@ -359,7 +368,7 @@ export function BookingDialog({
       }
       setReserveSubmitting(true);
       try {
-        await bookingApi.reserveBooking({
+        const reserveResult = await bookingApi.reserveBooking({
           bookingReferenceId: ref,
           selectedSlot: displayTimeToApiSlot(timeSlot),
           selectedDate: date,
@@ -377,7 +386,11 @@ export function BookingDialog({
           foods: selectedFoods.map(({ food, quantity }) => ({ food, quantity })),
         });
         setCartSyncedAfterReserve(true);
-        setRemainingSeconds(REMAINING_TIME);
+        const holdSeconds = Math.max(
+          1,
+          Math.round(reserveResult.expiredTimeIntervalInMinutes * 60)
+        );
+        setRemainingSeconds(holdSeconds);
         setBookingTimerActive(true);
         dispatch(nextStep());
       } catch (err) {
@@ -433,16 +446,6 @@ export function BookingDialog({
       void tryUnreserveSlot();
     }
     dispatch(prevStep());
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      void tryUnreserveSlot();
-      setCartSyncedAfterReserve(false);
-      clearCart();
-      dispatch(resetBooking());
-    }
-    setIsOpen(open);
   };
 
   return (

@@ -2,12 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { useRequestOtp, useVerifyOtp } from "@/lib/api/hooks";
+import { useRequestOtp } from "@/lib/api/hooks";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/authSlice";
+import type { CustomerLookupItem } from "@/lib/api/types";
+import { saveStoredAuth } from "@/lib/auth-storage";
 
 type Step = "email" | "otp";
 
@@ -15,16 +16,22 @@ export default function SignInPage() {
     const [step, setStep] = useState<Step>("email");
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
+    const [customer, setCustomer] = useState<CustomerLookupItem | null>(null);
+    const [otpError, setOtpError] = useState<string | null>(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
 
     const requestOtpMutation = useRequestOtp();
-    const verifyOtpMutation = useVerifyOtp();
 
     const handleSendOtp = async (e: FormEvent) => {
         e.preventDefault();
+        setOtpError(null);
         try {
-            await requestOtpMutation.mutateAsync({ email: email.trim() });
+            const result = await requestOtpMutation.mutateAsync({ email: email.trim() });
+            if (!result.customer) {
+                throw new Error("No customer found for this email.");
+            }
+            setCustomer(result.customer);
             setStep("otp");
             setOtp("");
         } catch (error) {
@@ -34,28 +41,40 @@ export default function SignInPage() {
 
     const handleVerifyOtp = async (e: FormEvent) => {
         e.preventDefault();
-        try {
-            const result = await verifyOtpMutation.mutateAsync({
-                email: email.trim(),
-                otp: otp.trim(),
-            });
-            dispatch(setCredentials({ token: result.token, user: result.user }));
-            router.push("/");
-        } catch (error) {
-            console.error("Verify OTP failed:", error);
+        const value = otp.trim();
+        if (value !== "0000") {
+            setOtpError("Invalid OTP. Use demo code 0000.");
+            return;
         }
+        const activeCustomer = customer;
+        if (!activeCustomer) {
+            setOtpError("Customer session expired. Please send OTP again.");
+            setStep("email");
+            return;
+        }
+        setOtpError(null);
+        const authPayload = {
+            user: {
+                id: String(activeCustomer.customerId),
+                email: activeCustomer.email,
+                name: `${activeCustomer.firstName} ${activeCustomer.lastName}`.trim(),
+            },
+        };
+        saveStoredAuth(authPayload);
+        dispatch(setCredentials(authPayload));
+        router.push("/my-bookings");
     };
 
     const backToEmail = () => {
         setStep("email");
         setOtp("");
+        setCustomer(null);
+        setOtpError(null);
         requestOtpMutation.reset();
-        verifyOtpMutation.reset();
     };
 
     const errorMessage =
-        requestOtpMutation.error?.message ||
-        verifyOtpMutation.error?.message;
+        requestOtpMutation.error?.message || otpError;
 
     return (
         <div className="fixed inset-0 z-50 min-h-screen w-full overflow-y-auto bg-[#121212] text-white flex items-center justify-center p-4">
@@ -103,10 +122,13 @@ export default function SignInPage() {
                             type="text"
                             inputMode="numeric"
                             autoComplete="one-time-code"
-                            placeholder="Enter 6-digit code"
+                            placeholder="Enter OTP (demo: 0000)"
                             value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                            maxLength={6}
+                            onChange={(e) => {
+                                setOtpError(null);
+                                setOtp(e.target.value.replace(/\D/g, "").slice(0, 4));
+                            }}
+                            maxLength={4}
                             className="h-12 rounded-lg border-zinc-800 bg-[#1a1a1a] px-4 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-zinc-700 focus-visible:border-zinc-700 text-center text-lg tracking-widest"
                         />
                         {errorMessage && (
@@ -114,11 +136,11 @@ export default function SignInPage() {
                         )}
                         <Button
                             type="submit"
-                            disabled={verifyOtpMutation.isPending || otp.length < 4}
+                            disabled={otp.length < 4}
                             variant="primary"
                             className="w-full h-12 rounded-lg"
                         >
-                            {verifyOtpMutation.isPending ? "Verifying…" : "Verify & Sign In"}
+                            Verify & Sign In
                         </Button>
                         <Button
                             type="button"

@@ -1,7 +1,7 @@
 import type { CartEntry } from "@/contexts/CartContext";
 
-const PAID_ORDERS_KEY = "booking_paid_orders_v1";
 const MAX_ORDERS = 100;
+let inMemoryPaidOrders: PaidOrderRecord[] = [];
 
 export interface PaidOrderRecord {
   id: string;
@@ -12,30 +12,33 @@ export interface PaidOrderRecord {
   stripePaymentIntentId?: string;
   /** Added by the server when the order file is written. */
   serverReceivedAt?: string;
+  salesOrder?: {
+    orderId?: number;
+    orderNumber?: string;
+    uniqueOrderRef?: string;
+    tokenNumber?: string;
+    grossAmount?: number;
+    totalLineTax?: number;
+    netAmount?: number;
+    paymentStatus?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
 export function loadPaidOrders(): PaidOrderRecord[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(PAID_ORDERS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed as PaidOrderRecord[];
-  } catch {
-    return [];
-  }
+  return [...inMemoryPaidOrders];
 }
 
 /** Remove one paid order from browser storage (keeps list in sync after server delete or offline cancel). */
 export function removePaidOrderById(orderId: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const list = loadPaidOrders().filter((o) => o.id !== orderId);
-    localStorage.setItem(PAID_ORDERS_KEY, JSON.stringify(list));
-  } catch {
-    /* ignore */
-  }
+  inMemoryPaidOrders = inMemoryPaidOrders.filter((o) => o.id !== orderId);
+}
+
+export function patchPaidOrder(orderId: string, patch: Partial<PaidOrderRecord>): void {
+  inMemoryPaidOrders = inMemoryPaidOrders.map((o) =>
+    o.id === orderId ? { ...o, ...patch } : o
+  );
 }
 
 export interface AppendPaidOrderExtras {
@@ -48,9 +51,8 @@ export function appendPaidOrder(
   totalAmount: number,
   extras?: AppendPaidOrderExtras
 ): PaidOrderRecord | null {
-  if (typeof window === "undefined" || entries.length === 0) return null;
+  if (entries.length === 0) return null;
   try {
-    const list = loadPaidOrders();
     const record: PaidOrderRecord = {
       id: `ord_${Date.now()}`,
       paidAt: Date.now(),
@@ -60,8 +62,7 @@ export function appendPaidOrder(
         ? { stripePaymentIntentId: extras.stripePaymentIntentId }
         : {}),
     };
-    list.unshift(record);
-    localStorage.setItem(PAID_ORDERS_KEY, JSON.stringify(list.slice(0, MAX_ORDERS)));
+    inMemoryPaidOrders = [record, ...inMemoryPaidOrders].slice(0, MAX_ORDERS);
     return record;
   } catch {
     return null;

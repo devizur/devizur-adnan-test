@@ -3,6 +3,7 @@ import {
   SignInResponse,
   RequestOtpRequest,
   RequestOtpResponse,
+  CustomerLookupItem,
   VerifyOtpRequest,
   GetAvailabilitySlotsParams,
   BookingDapperStatus,
@@ -10,14 +11,15 @@ import {
   RetrieveTimeSlotsResponse,
   AvailabilitySlotsResult,
   GenerateBookingItemStepsResponse,
+  ReserveBookingData,
 } from "./types";
 import bookingEngineUrlHttp from "./bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "./bookingFlowUrlHttp";
 import type { AxiosError } from "axios";
-import { activitiesApi, foodsApi, packagesApi } from "./productServices";
+import { activitiesApi, foodsApi, packagesApi, productApi } from "./productServices";
 import { modifiersApi } from "./modifierServices";
 
-export { activitiesApi, foodsApi, packagesApi, modifiersApi };
+export { activitiesApi, foodsApi, packagesApi, productApi, modifiersApi };
 
 // Availability / slots API – returns all time slots; filter by period client-side
 export const availabilityApi = {
@@ -109,13 +111,13 @@ export const bookingApi = {
     bookingReferenceId: string;
     selectedSlot: string;
     selectedDate: string;
-  }): Promise<void> {
+  }): Promise<ReserveBookingData> {
     try {
-      const response = await bookingFlowUrlHttp.post<ApiResponse<unknown>>(
+      const response = await bookingFlowUrlHttp.post<ApiResponse<ReserveBookingData>>(
         "/api/Booking/reserveBooking",
         params
       );
-      const { success, message } = response.data ?? {};
+      const { success, message, data } = response.data ?? {};
       if (!success) {
         throw new Error(
           typeof message === "string" && message.trim()
@@ -123,6 +125,22 @@ export const bookingApi = {
             : "Failed to reserve this time slot"
         );
       }
+      const d = data;
+      const minutes =
+        d &&
+        typeof d.expiredTimeIntervalInMinutes === "number" &&
+        Number.isFinite(d.expiredTimeIntervalInMinutes) &&
+        d.expiredTimeIntervalInMinutes > 0
+          ? d.expiredTimeIntervalInMinutes
+          : 10;
+      return {
+        bookingId: d && typeof d.bookingId === "number" ? d.bookingId : 0,
+        bookingReferenceId:
+          d && typeof d.bookingReferenceId === "string" && d.bookingReferenceId.trim()
+            ? d.bookingReferenceId
+            : params.bookingReferenceId,
+        expiredTimeIntervalInMinutes: minutes,
+      };
     } catch (error) {
       const err = error as AxiosError<ApiResponse<unknown>>;
       if (err.response?.data && typeof err.response.data === "object") {
@@ -185,15 +203,26 @@ export const bookingApi = {
 export const authApi = {
   async requestOtp(data: RequestOtpRequest): Promise<RequestOtpResponse> {
     try {
-      const response = await bookingEngineUrlHttp.post<RequestOtpResponse>(
-        "/api/auth/request-otp",
-        data
+      const response = await bookingEngineUrlHttp.get<CustomerLookupItem[]>(
+        "/api/customer",
+        { params: { email: data.email.trim() } }
       );
-      return response.data;
+      const customer = Array.isArray(response.data) ? response.data[0] : undefined;
+      if (!customer) {
+        throw new Error("No customer found for this email.");
+      }
+      if (!customer.isActive) {
+        throw new Error("This customer account is inactive.");
+      }
+      return {
+        success: true,
+        message: "Demo OTP sent. Use 0000 to verify.",
+        customer,
+      };
     } catch (error) {
       const err = error as AxiosError<any>;
       const message =
-        (err.response?.data as any)?.message || err.message || "Failed to send OTP";
+        (err.response?.data as any)?.message || err.message || "Failed to find customer";
       throw new Error(message);
     }
   },

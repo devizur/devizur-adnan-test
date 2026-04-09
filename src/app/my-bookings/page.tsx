@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { CancelOrderConfirmDialog } from "@/components/ui/cancel-order-dialog";
 import { PAGE_CONTENT_CLASS } from "@/lib/page-layout";
-import { fetchOrdersFromBackend } from "@/lib/api/localHttp";
+import { fetchOrdersFromBackend } from "@/lib/api/orderHttp";
 import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import type { CartEntry } from "@/contexts/CartContext";
 import { Calendar, Clock, LogOut, User, RefreshCw, Ticket, ArrowLeft, Eye, Sparkles } from "lucide-react";
@@ -24,9 +24,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearAuth } from "@/store/authSlice";
 import { ProtectedRoute } from "@/components/providers/protected-route";
+import { clearStoredAuth } from "@/lib/auth-storage";
 
 function shiftLabel(timeOfDay: 1 | 2 | 3): string {
   if (timeOfDay === 1) return "Morning";
@@ -119,6 +120,24 @@ function OrderDetailsDialog({
                 <span className="text-zinc-500">Total paid</span>
                 <span className="font-semibold text-lg">{formatPrice(order.totalAmount)}</span>
               </div>
+              {order.salesOrder?.orderNumber ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Order number</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.orderNumber}</p>
+                </div>
+              ) : null}
+              {order.salesOrder?.uniqueOrderRef ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Unique ref</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.uniqueOrderRef}</p>
+                </div>
+              ) : null}
+              {order.salesOrder?.tokenNumber ? (
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Token</p>
+                  <p className="font-mono text-xs text-zinc-400">{order.salesOrder.tokenNumber}</p>
+                </div>
+              ) : null}
               {order.stripePaymentIntentId ? (
                 <div>
                   <p className="text-xs text-zinc-500 mb-0.5">Stripe payment</p>
@@ -249,6 +268,7 @@ function OrderDetailsDialog({
 export default function MyBookingsPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const authUser = useAppSelector((state) => state.auth.user);
   const [orders, setOrders] = React.useState<PaidOrderRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -283,8 +303,9 @@ export default function MyBookingsPage() {
   );
 
   const handleLogout = () => {
+    clearStoredAuth();
     dispatch(clearAuth());
-    router.push("/sign-in");
+    router.push("/");
   };
 
   return (
@@ -378,6 +399,14 @@ export default function MyBookingsPage() {
                   <h1 className="text-3xl sm:text-[2.125rem] font-bold text-primary tracking-tight leading-[1.15]">
                     My Bookings
                   </h1>
+                  {authUser ? (
+                    <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-zinc-700/80 bg-[#121212]/70 px-3 py-2 text-xs">
+                      <span className="text-zinc-500">Signed in as</span>
+                      <span className="font-medium text-zinc-200">{authUser.name || "User"}</span>
+                      <span className="text-zinc-600">·</span>
+                      <span className="text-zinc-400">{authUser.email}</span>
+                    </div>
+                  ) : null}
                   <p className="text-zinc-400 text-sm sm:text-[15px] leading-relaxed max-w-xl">
                     {source === "backend"
                       ? "Synced from your checkout server — each card is a booking line from a paid order."

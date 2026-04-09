@@ -47,11 +47,12 @@ export function Navbar() {
         };
     }, [isMobileMenuOpen]);
 
-    const token = useAppSelector((state) => state.auth?.token ?? null);
+    const user = useAppSelector((state) => state.auth?.user ?? null);
     const activeLabel =
         config.navItems.find((item) => item.href === pathname)?.label ?? "Home";
+    const bookingsLabel = user ? navContent.bookings : "Login";
     const handleMyBookingsClick = () => {
-        if (token) {
+        if (user) {
             router.push("/my-bookings");
         } else {
             router.push("/sign-in");
@@ -108,7 +109,7 @@ export function Navbar() {
                         onClick={handleMyBookingsClick}
                         className="hidden md:block px-6 py-2 border bg-primary-1/10 border-primary-1 text-primary-1 text-sm font-semibold rounded-full hover:bg-primary-1 hover:text-black transition-all duration-300 cursor-pointer"
                     >
-                        {navContent.bookings}
+                        {bookingsLabel}
                     </button>
                 </div>
 
@@ -201,9 +202,9 @@ export function Navbar() {
                         }}
                         className="w-full py-3 px-4 border border-primary-1/40 bg-primary-1/10 text-primary-1 text-sm font-semibold rounded-xl hover:bg-primary-1 hover:text-black transition-all duration-200 cursor-pointer"
                     >
-                        {navContent.bookings && navContent.bookings.length > 15
-                            ? navContent.bookings.slice(0, 15) + "..."
-                            : navContent.bookings}</button>
+                        {bookingsLabel && bookingsLabel.length > 15
+                            ? bookingsLabel.slice(0, 15) + "..."
+                            : bookingsLabel}</button>
                 </div>
             </div>
         </>

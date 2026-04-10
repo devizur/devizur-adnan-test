@@ -3,7 +3,7 @@ import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import bookingEngineUrlHttp from "@/lib/api/bookingEngineUrlHttp";
 import bookingFlowUrlHttp from "@/lib/api/bookingFlowUrlHttp";
 import type { SalesOrderLine, SalesOrderRequest, SalesOrderResponse } from "@/lib/api/salesOrderTypes";
-import type { ApiResponse } from "@/lib/api/types";
+import type { ApiResponse, GenerateBookingItemStep } from "@/lib/api/types";
 
 /**
  * Base URL for the local order JSON server (server-for-save-data).
@@ -68,35 +68,38 @@ export async function fetchSalesOrderById(orderId: number): Promise<SalesOrderRe
 }
 
 export type BookingDetailsResponseData = {
-  id: number;
-  startTime: string;
-  endTime: string;
-  bookingStatus: string;
-  bookingStatusId: number;
-  activities: {
+  bookingDetails: {
     id: number;
-    activityId?: number;
-    adultPax?: number;
-    childPax?: number;
-    noOfSession?: number;
-    venueActivityId?: number;
-    attributeOptionId?: number;
     startTime: string;
     endTime: string;
-    activityName: string;
-    attributeOption?: string;
-    resourceType?: string;
-    resources?: {
+    bookingStatus: string;
+    bookingStatusId: number;
+    activities: {
       id: number;
-      venueResourceId?: number;
-      venueResource?: string;
-      startTime?: string;
-      endTime?: string;
-      bufferAfter?: string;
-      bufferBefore?: string;
-      quantityUsed?: number;
+      activityId?: number;
+      adultPax?: number;
+      childPax?: number;
+      noOfSession?: number;
+      venueActivityId?: number;
+      attributeOptionId?: number;
+      startTime: string;
+      endTime: string;
+      activityName: string;
+      attributeOption?: string;
+      resourceType?: string;
+      resources?: {
+        id: number;
+        venueResourceId?: number;
+        venueResource?: string;
+        startTime?: string;
+        endTime?: string;
+        bufferAfter?: string;
+        bufferBefore?: string;
+        quantityUsed?: number;
+      }[];
     }[];
-  }[];
+  };
+  activitySteps: GenerateBookingItemStep[];
 };
 
 export async function fetchBookingDetailsById(
@@ -105,7 +108,7 @@ export async function fetchBookingDetailsById(
   if (!Number.isFinite(bookingId) || bookingId <= 0) return null;
   try {
     const { data } = await bookingFlowUrlHttp.get<ApiResponse<BookingDetailsResponseData>>(
-      "/api/Booking/getBookingDetails",
+      "/api/Booking/getBookingDetailsWithActivitySteps",
       { params: { bookingId } }
     );
     if (!data?.success || !data.data) return null;

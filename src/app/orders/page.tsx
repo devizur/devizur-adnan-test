@@ -83,12 +83,15 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
       : typeof sales?.bookingId === "string"
         ? Number(sales.bookingId)
         : 0;
-  const { data: bookingDetails } = useQuery({
+  const { data: bookingData } = useQuery({
     queryKey: ["orders", "bookingDetails", orderBookingId],
     queryFn: () => fetchBookingDetailsById(orderBookingId),
     enabled: orderBookingId > 0,
     staleTime: 5 * 60 * 1000,
   });
+
+  const bookingDetails = bookingData?.bookingDetails;
+  const activitySteps = bookingData?.activitySteps;
 
   const adults = entry?.persons.adults ?? 0;
   const kids = entry?.persons.kids ?? 0;
@@ -246,6 +249,7 @@ function OrderCard({ order }: { order: PaidOrderRecord }) {
                 timeSlot={timelineTime}
                 selectedDate={timelineDate}
                 selectedActivities={timelineActivities}
+                steps={activitySteps}
               />
             </div>
           ) : null}

@@ -99,6 +99,14 @@ export interface BookingTimelineBarProps {
   /** Fallback: build segments from selected items when API returns no data */
   selectedActivities?: { activity: Activity; gameNo: number }[];
   selectedPackages?: { pkg: Package; combination?: AttributeCombinationItem }[];
+  /** Explicitly provide steps (e.g. from order details) to avoid re-fetching */
+  steps?: {
+    serial: number;
+    startingTime: string;
+    endingTime: string;
+    itemName: string;
+    itemDuration: string;
+  }[];
   className?: string;
 }
 
@@ -141,19 +149,22 @@ export function BookingTimelineBar({
   slotsResponseReceived = false,
   selectedActivities = [],
   selectedPackages = [],
+  steps: providedSteps,
   className,
 }: BookingTimelineBarProps) {
   const dispatch = useAppDispatch();
   const effectiveTimeSlot = timeSlot || "9:00 am";
   const selectedSlotApi = displayTimeToApiSlot(effectiveTimeSlot);
 
-  const { data, isLoading } = useGenerateBookingItemSteps(
+  const { data, isLoading: isQueryLoading } = useGenerateBookingItemSteps(
     bookingReferenceId ?? "",
     selectedSlotApi,
     selectedDate,
-    slotsResponseReceived
+    slotsResponseReceived && !providedSteps
   );
-  const steps = data?.steps ?? [];
+  
+  const steps = providedSteps ?? data?.steps ?? [];
+  const isLoading = isQueryLoading && !providedSteps;
 
   React.useEffect(() => {
     if (data?.bookingReferenceId) dispatch(setBookingReferenceId(data.bookingReferenceId));

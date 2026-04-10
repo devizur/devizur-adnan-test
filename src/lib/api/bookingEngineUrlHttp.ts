@@ -7,6 +7,8 @@ const baseURL = BookingEngineUrl?.replace(/\/+$/, "") ?? "";
 
 const bookingEngineUrlHttp = axios.create({
   baseURL,
+  // Avoid Node proxy parser (`url.parse`) deprecation warnings.
+  proxy: false,
 });
 
 export type CompanyConfigResponse = {
@@ -20,11 +22,9 @@ export async function fetchEngineCompanyConfig(): Promise<CompanyConfigResponse 
   try {
     const hostAddress = ClientUrl ? new URL(ClientUrl).host : "";
 
-    const response = await axios.get<CompanyConfigResponse>(
-      `${baseURL}/api/Company/getCompanyConfigByHost`,
-      {
-        params: { hostAddress },
-      }
+    const response = await bookingEngineUrlHttp.get<CompanyConfigResponse>(
+      "/api/Company/getCompanyConfigByHost",
+      { params: { hostAddress } }
     );
     return response.data ?? null;
   } catch {

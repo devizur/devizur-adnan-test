@@ -32,12 +32,15 @@ import {
   setStep,
   setFlowMode,
   setBookingReferenceId,
+  setBookingId,
+  setHolderDetails,
 } from "@/store/bookingSlice";
 import type { Activity, Package, Food } from "@/lib/api/types";
 import { X, Clock, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CartPopup } from "@/components/ui/CartPopup";
 import { useQueryClient } from "@tanstack/react-query";
+import { loadStoredCustomer } from "@/lib/auth-storage";
 
 /** Default countdown reset when no hold is active (API may omit interval on older backends). */
 const DEFAULT_HOLD_SECONDS = 60 * 10;
@@ -133,6 +136,7 @@ export function BookingDialog({
   const [bookingTimerActive, setBookingTimerActive] = React.useState(false);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const [reserveSubmitting, setReserveSubmitting] = React.useState(false);
+  const [hasLoggedInCustomer, setHasLoggedInCustomer] = React.useState(false);
   /** True after successful POST reserveBooking until unreserve or dialog reset */
   const slotReservedRef = React.useRef(false);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
@@ -150,6 +154,7 @@ export function BookingDialog({
         await bookingApi.unreserveBooking({ bookingReferenceId: ref });
         slotReservedRef.current = false;
         dispatch(setBookingReferenceId(""));
+        dispatch(setBookingId(0));
         queryClient.invalidateQueries({ queryKey: ["availability"] });
         queryClient.invalidateQueries({ queryKey: ["booking", "itemSteps"] });
         setBookingTimerActive(false);
@@ -219,10 +224,36 @@ export function BookingDialog({
         dispatch(setStep(1));
       }
     }
+    const storedCustomer = loadStoredCustomer();
+    if (storedCustomer?.isActive) {
+      const cityCountry = [storedCustomer.city, storedCustomer.country]
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .join(", ");
+      dispatch(
+        setHolderDetails({
+          firstName: storedCustomer.firstName ?? "",
+          lastName: storedCustomer.lastName ?? "",
+          email: storedCustomer.email ?? "",
+          phone: storedCustomer.phone ?? "",
+          address: cityCountry,
+          postCode: "",
+        })
+      );
+      setHasLoggedInCustomer(true);
+    } else {
+      setHasLoggedInCustomer(false);
+    }
     setBookingTimerActive(false);
     setRemainingSeconds(DEFAULT_HOLD_SECONDS);
     setCartSyncedAfterReserve(false);
   }, [isOpen, clearCart, dispatch]);
+
+  React.useEffect(() => {
+    if (!isOpen || !hasLoggedInCustomer) return;
+    if (step !== 3) return;
+    dispatch(setStep(4));
+  }, [dispatch, hasLoggedInCustomer, isOpen, step]);
 
   /** After reserve: keep cart aligned with Redux (food, holder, etc.) — never before reserve. */
   React.useEffect(() => {
@@ -373,6 +404,8 @@ export function BookingDialog({
           selectedSlot: displayTimeToApiSlot(timeSlot),
           selectedDate: date,
         });
+        dispatch(setBookingReferenceId(reserveResult.bookingReferenceId));
+        dispatch(setBookingId(reserveResult.bookingId));
         slotReservedRef.current = true;
         clearCart();
         syncBookingEntry({

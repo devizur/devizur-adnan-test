@@ -11,12 +11,18 @@ export const CREDIT_CARD_FEE_RATE = 0.03;
 export interface UsePaymentStepOptions {
   /** Passed to Stripe PaymentIntent metadata (string values only). */
   checkoutMetadata?: Record<string, string>;
+  /** Booking reference from booking state; mapped to SalesOrder.bookingId. */
+  bookingReferenceId?: string;
+  /** Numeric booking id from reserveBooking. */
+  bookingId?: number;
 }
 
 export function usePaymentStep(options?: UsePaymentStepOptions) {
   const { entries, foodItems, activityItems, packageItems, getTotalItems, clearCart } = useCart();
 
   const [showSuccess, setShowSuccess] = React.useState(false);
+  const [isSavingSalesOrder, setIsSavingSalesOrder] = React.useState(false);
+  const [salesOrderError, setSalesOrderError] = React.useState<string | null>(null);
   const [paymentIntentResetKey, setPaymentIntentResetKey] = React.useState(0);
 
   const foodSubtotal = foodItems.reduce(
@@ -44,6 +50,8 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
   const amountTotalCents = Math.max(50, Math.round(totalPaymentAmount * 100));
 
   const checkoutMetadata = options?.checkoutMetadata;
+  const bookingReferenceId = options?.bookingReferenceId;
+  const bookingId = options?.bookingId;
 
   const resetForm = React.useCallback(() => {
     setPaymentIntentResetKey((k) => k + 1);
@@ -51,42 +59,40 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
 
   const completePaymentSuccess = React.useCallback(
     (paymentMeta?: { stripePaymentIntentId?: string }) => {
+      setSalesOrderError(null);
       const record =
         entries.length > 0
           ? appendPaidOrder(entries, totalPaymentAmount, {
               stripePaymentIntentId: paymentMeta?.stripePaymentIntentId,
+              bookingReferenceId,
+              bookingId,
             })
           : null;
       clearCart();
       resetForm();
-      setShowSuccess(true);
-      if (record) {
-        console.log("[paid-order-record]", record);
-        void saveOrderToBackend(record)
-          .then((res) => {
-            patchPaidOrder(record.id, {
-              salesOrder: {
-                orderId: res.orderId,
-                orderNumber: res.orderNumber,
-                uniqueOrderRef: res.uniqueOrderRef,
-                tokenNumber: res.tokenNumber,
-                grossAmount: res.grossAmount,
-                totalLineTax: res.totalLineTax,
-                netAmount: res.netAmount,
-                paymentStatus: res.paymentStatus,
-                createdAt: res.createdAt,
-                updatedAt: res.updatedAt,
-              },
-              serverReceivedAt: res.createdAt ?? record.serverReceivedAt,
-            });
-            console.log("[saveOrderToBackend] sales order response", res);
-          })
-          .catch((err) => {
-            console.error("[saveOrderToBackend]", err);
-          });
+      if (!record) {
+        setSalesOrderError("Order save failed: missing cart snapshot after payment.");
+        return;
       }
+      setIsSavingSalesOrder(true);
+      void saveOrderToBackend(record)
+        .then((res) => {
+          patchPaidOrder(record.id, {
+            salesOrder: res,
+            serverReceivedAt: res.createdAt ?? record.serverReceivedAt,
+          });
+          setShowSuccess(true);
+        })
+        .catch((err) => {
+          const msg = err instanceof Error ? err.message : "Could not save order to /api/SalesOrder";
+          setSalesOrderError(msg);
+          console.error("[saveOrderToBackend]", err);
+        })
+        .finally(() => {
+          setIsSavingSalesOrder(false);
+        });
     },
-    [entries, totalPaymentAmount, clearCart, resetForm]
+    [entries, totalPaymentAmount, clearCart, resetForm, bookingReferenceId, bookingId]
   );
 
   const handleCloseSuccess = React.useCallback(() => {
@@ -99,6 +105,8 @@ export function usePaymentStep(options?: UsePaymentStepOptions) {
     showSuccess,
     handleCloseSuccess,
     completePaymentSuccess,
+    isSavingSalesOrder,
+    salesOrderError,
     paymentIntentResetKey,
     foodSubtotal,
     activitySubtotal,

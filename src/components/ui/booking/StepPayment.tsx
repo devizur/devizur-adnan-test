@@ -12,11 +12,12 @@ interface StepPaymentProps {
 
 export function StepPayment({ onFlowComplete }: StepPaymentProps) {
   const bookingReferenceId = useAppSelector((s) => s.booking.bookingReferenceId);
+  const bookingId = useAppSelector((s) => s.booking.bookingId);
   const checkoutMetadata = React.useMemo(
     () => (bookingReferenceId ? { bookingReferenceId } : undefined),
     [bookingReferenceId]
   );
-  const payment = usePaymentStep({ checkoutMetadata });
+  const payment = usePaymentStep({ checkoutMetadata, bookingReferenceId, bookingId });
 
   const handleSuccessDone = () => {
     payment.handleCloseSuccess();

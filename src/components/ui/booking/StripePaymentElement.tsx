@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { CardElement, Elements, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
+  Elements,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
 import type { Appearance, Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { createPaymentIntent, fetchStripePublishableKey, isAlreadySucceededPaymentIntentError } from "@/lib/stripeCheckout";
@@ -22,24 +29,24 @@ const bookingPaymentAppearance: Appearance = {
     colorTextSecondary: "#a1a1aa",
     colorTextPlaceholder: "#71717a",
     colorDanger: "#fca5a5",
-    borderRadius: "6px",
+    borderRadius: "7px",
     fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontSizeBase: "15px",
-    fontSizeSm: "13px",
+    fontSizeSm: "12px",
     spacingUnit: "6px",
-    gridRowSpacing: "14px",
+    gridRowSpacing: "12px",
     focusBoxShadow: "0 0 0 2px rgba(250, 204, 21, 0.28)",
-    focusOutline: "0",
+     focusOutline: "0",
   },
   rules: {
     ".Input": {
       backgroundColor: "#1a1a1a",
       border: "1px solid rgba(255, 255, 255, 0.08)",
-      borderRadius: "6px",
-      paddingTop: "11px",
-      paddingBottom: "11px",
-      paddingLeft: "12px",
-      paddingRight: "12px",
+      borderRadius: "7px",
+      paddingTop: "10px",
+      paddingBottom: "10px",
+      paddingLeft: "11px",
+      paddingRight: "11px",
       boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
     },
     ".Input:focus": {
@@ -62,12 +69,12 @@ const bookingPaymentAppearance: Appearance = {
       backgroundColor: "transparent",
       borderColor: "rgba(255, 255, 255, 0.06)",
       borderRadius: "8px",
-      padding: "12px",
+      padding: "10px",
     },
   },
 };
 
-const cardElementOptions = {
+const splitElementOptions = {
   style: {
     base: {
       color: "#f4f4f5",
@@ -114,16 +121,16 @@ function StripePaymentFormInner({
     setMessage(null);
     setSubmitting(true);
     try {
-      const card = elements.getElement(CardElement);
-      if (!card) {
-        setMessage("Card field is not ready");
+      const cardNumber = elements.getElement(CardNumberElement);
+      if (!cardNumber) {
+        setMessage("Card number field is not ready");
         setSubmitting(false);
         return;
       }
 
       const { error, paymentMethod } = await stripe.createPaymentMethod({
         type: "card",
-        card,
+        card: cardNumber,
         billing_details: {
           name: billingDetails.name || undefined,
           email: billingDetails.email || undefined,
@@ -177,11 +184,37 @@ function StripePaymentFormInner({
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
-      <div className="rounded-xl border border-white/[0.08] bg-[#141414]/55 p-3 shadow-sm shadow-black/15 ring-1 ring-white/[0.04] sm:p-4">
-        <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-3 sm:p-3.5">
-          <CardElement options={cardElementOptions} />
+      <div className="rounded-xl border border-white/[0.08] bg-[#141414]/55 p-3.5 shadow-sm shadow-black/15 ring-1 ring-white/[0.04] sm:p-4">
+        <div className="space-y-2.5 sm:space-y-3">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:text-[11px]">
+              Card number
+            </label>
+            <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-2.5 sm:p-3">
+              <CardNumberElement options={splitElementOptions} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:text-[11px]">
+                Expiration
+              </label>
+              <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-2.5 sm:p-3">
+                <CardExpiryElement options={splitElementOptions} />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:text-[11px]">
+                CVC
+              </label>
+              <div className="rounded-lg border border-white/[0.06] bg-[#1e1e1e] p-2.5 sm:p-3">
+                <CardCvcElement options={splitElementOptions} />
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="mt-2.5 text-[10px] leading-relaxed text-zinc-600">
+        <p className="mt-2 text-[11px] leading-relaxed text-zinc-600 sm:text-xs">
           Secured by Stripe — card data never touches our servers.
         </p>
       </div>

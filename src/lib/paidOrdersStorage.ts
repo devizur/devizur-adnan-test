@@ -1,4 +1,5 @@
 import type { CartEntry } from "@/contexts/CartContext";
+import type { SalesOrderResponse } from "@/lib/api/salesOrderTypes";
 
 const MAX_ORDERS = 100;
 let inMemoryPaidOrders: PaidOrderRecord[] = [];
@@ -8,22 +9,15 @@ export interface PaidOrderRecord {
   paidAt: number;
   totalAmount: number;
   entries: CartEntry[];
+  /** Booking flow reference id (UUID from booking APIs). */
+  bookingReferenceId?: string;
+  /** Numeric booking id returned by reserveBooking; used in SalesOrder.bookingId. */
+  bookingId?: number;
   /** Set when payment completes via Stripe Payment Element. */
   stripePaymentIntentId?: string;
   /** Added by the server when the order file is written. */
   serverReceivedAt?: string;
-  salesOrder?: {
-    orderId?: number;
-    orderNumber?: string;
-    uniqueOrderRef?: string;
-    tokenNumber?: string;
-    grossAmount?: number;
-    totalLineTax?: number;
-    netAmount?: number;
-    paymentStatus?: string;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  salesOrder?: SalesOrderResponse;
 }
 
 export function loadPaidOrders(): PaidOrderRecord[] {
@@ -43,6 +37,8 @@ export function patchPaidOrder(orderId: string, patch: Partial<PaidOrderRecord>)
 
 export interface AppendPaidOrderExtras {
   stripePaymentIntentId?: string;
+  bookingReferenceId?: string;
+  bookingId?: number;
 }
 
 /** Snapshot current cart as a paid order (call before clearCart). Returns the record for syncing to the backend. */
@@ -60,6 +56,12 @@ export function appendPaidOrder(
       entries: JSON.parse(JSON.stringify(entries)) as CartEntry[],
       ...(extras?.stripePaymentIntentId
         ? { stripePaymentIntentId: extras.stripePaymentIntentId }
+        : {}),
+      ...(extras?.bookingReferenceId
+        ? { bookingReferenceId: extras.bookingReferenceId }
+        : {}),
+      ...(typeof extras?.bookingId === "number" && Number.isFinite(extras.bookingId)
+        ? { bookingId: extras.bookingId }
         : {}),
     };
     inMemoryPaidOrders = [record, ...inMemoryPaidOrders].slice(0, MAX_ORDERS);

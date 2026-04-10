@@ -27,6 +27,9 @@ function Field({
   label,
   required,
   type = "text",
+  inputMode,
+  maxLength,
+  pattern,
   placeholder,
   value,
   onChange,
@@ -36,6 +39,9 @@ function Field({
   label: string;
   required?: boolean;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number;
+  pattern?: string;
   placeholder: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -51,6 +57,9 @@ function Field({
         type={type}
         id={id}
         name={name}
+        inputMode={inputMode}
+        maxLength={maxLength}
+        pattern={pattern}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -65,7 +74,11 @@ export function StepHolderDetails({ onSubmit }: StepHolderDetailsProps) {
   const { holderDetails } = useAppSelector((state) => state.booking);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+    if (name === "phone") {
+      value = value.replace(/\D+/g, "");
+    }
     dispatch(setHolderDetails({ [name]: value }));
   };
 
@@ -114,7 +127,10 @@ export function StepHolderDetails({ onSubmit }: StepHolderDetailsProps) {
                 label="Phone"
                 required
                 type="tel"
-                placeholder="e.g. +44 7700 900000"
+                inputMode="numeric"
+                maxLength={15}
+                pattern="[0-9]*"
+                placeholder="e.g. 0412345678"
                 value={holderDetails.phone}
                 onChange={handleChange}
               />

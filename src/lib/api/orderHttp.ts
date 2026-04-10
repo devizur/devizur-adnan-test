@@ -1,6 +1,9 @@
 import axios from "axios";
-import type { PaidOrderRecord } from "@/lib/paidOrdersStorage";
+import { loadPaidOrders, type PaidOrderRecord } from "@/lib/paidOrdersStorage";
 import bookingEngineUrlHttp from "@/lib/api/bookingEngineUrlHttp";
+import bookingFlowUrlHttp from "@/lib/api/bookingFlowUrlHttp";
+import type { SalesOrderLine, SalesOrderRequest, SalesOrderResponse } from "@/lib/api/salesOrderTypes";
+import type { ApiResponse, GenerateBookingItemStep } from "@/lib/api/types";
 
 /**
  * Base URL for the local order JSON server (server-for-save-data).
@@ -28,16 +31,133 @@ const localHttp = axios.create({
 
 export default localHttp;
 
-function isOrderShape(o: unknown): o is PaidOrderRecord {
+function isSalesOrderShape(o: unknown): o is SalesOrderResponse {
   if (!o || typeof o !== "object" || Array.isArray(o)) return false;
   const x = o as Record<string, unknown>;
-  return typeof x.id === "string" && Array.isArray(x.entries);
+  return typeof x.orderId === "number";
+}
+
+function mapSalesOrderToPaidOrder(order: SalesOrderResponse): PaidOrderRecord {
+  const orderId = order.orderId ?? 0;
+  const createdAtTs = order.createdAt ? Date.parse(order.createdAt) : Date.now();
+  const paidAt = Number.isNaN(createdAtTs) ? Date.now() : createdAtTs;
+  const totalAmount =
+    typeof order.netAmount === "number"
+      ? order.netAmount
+      : typeof order.grossAmount === "number"
+        ? order.grossAmount
+        : 0;
+  return {
+    id: `so_${orderId || Date.now()}`,
+    paidAt,
+    totalAmount,
+    entries: [],
+    serverReceivedAt: order.createdAt,
+    salesOrder: order,
+  };
+}
+
+export async function fetchSalesOrderById(orderId: number): Promise<SalesOrderResponse | null> {
+  if (!Number.isFinite(orderId) || orderId <= 0) return null;
+  try {
+    const { data } = await bookingEngineUrlHttp.get<SalesOrderResponse>(`/api/SalesOrder/${orderId}`);
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export type BookingDetailsResponseData = {
+  bookingDetails: {
+    id: number;
+    startTime: string;
+    endTime: string;
+    bookingStatus: string;
+    bookingStatusId: number;
+    activities: {
+      id: number;
+      activityId?: number;
+      adultPax?: number;
+      childPax?: number;
+      noOfSession?: number;
+      venueActivityId?: number;
+      attributeOptionId?: number;
+      startTime: string;
+      endTime: string;
+      activityName: string;
+      attributeOption?: string;
+      resourceType?: string;
+      resources?: {
+        id: number;
+        venueResourceId?: number;
+        venueResource?: string;
+        startTime?: string;
+        endTime?: string;
+        bufferAfter?: string;
+        bufferBefore?: string;
+        quantityUsed?: number;
+      }[];
+    }[];
+  };
+  activitySteps: GenerateBookingItemStep[];
+};
+
+export async function fetchBookingDetailsById(
+  bookingId: number
+): Promise<BookingDetailsResponseData | null> {
+  if (!Number.isFinite(bookingId) || bookingId <= 0) return null;
+  try {
+    const { data } = await bookingFlowUrlHttp.get<ApiResponse<BookingDetailsResponseData>>(
+      "/api/Booking/getBookingDetailsWithActivitySteps",
+      { params: { bookingId } }
+    );
+    if (!data?.success || !data.data) return null;
+    return data.data;
+  } catch {
+    return null;
+  }
 }
 
 /** GET all orders from the order-save server (reads data/orders/*.json). */
 export async function fetchOrdersFromBackend(): Promise<PaidOrderRecord[]> {
-  // Local GET /orders has been removed from this flow.
-  return [];
+  const local = loadPaidOrders();
+  const ids = [
+    ...new Set(
+      local
+        .map((o) => o.salesOrder?.orderId)
+        .filter((id): id is number => typeof id === "number" && id > 0)
+    ),
+  ];
+  if (ids.length === 0) return [];
+  const latestOrderId = Math.max(...ids);
+  const fetchedOrder = await fetchSalesOrderById(latestOrderId);
+  const mapByOrderId = new Map(
+    local
+      .map((o) => [o.salesOrder?.orderId, o] as const)
+      .filter(([id]) => typeof id === "number" && id > 0)
+  );
+
+  const merged =
+    fetchedOrder && isSalesOrderShape(fetchedOrder)
+      ? [
+          (() => {
+            const sales = fetchedOrder;
+            const base = mapByOrderId.get(sales.orderId ?? -1);
+            const mapped = mapSalesOrderToPaidOrder(sales);
+            return {
+              ...(base ?? mapped),
+              salesOrder: sales,
+              paidAt: base?.paidAt ?? mapped.paidAt,
+              totalAmount:
+                typeof sales.netAmount === "number"
+                  ? sales.netAmount
+                  : base?.totalAmount ?? mapped.totalAmount,
+            } satisfies PaidOrderRecord;
+          })(),
+        ]
+      : [];
+
+  return merged;
 }
 
 export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: true; notFound?: boolean }> {
@@ -58,71 +178,6 @@ export async function deleteOrderFromBackend(orderId: string): Promise<{ ok: tru
   }
 }
 
-type SalesOrderLine = {
-  orderLineId: number;
-  orderId: number;
-  productId: number;
-  orderLineSerial: number;
-  quantity: number;
-  unitPrice: number;
-  appliedOfferId: number;
-  taxPolicyId: number;
-  discount: number;
-  taxAmount: number;
-  modifierTotalPrice: number;
-  lineTotal: number;
-  kitchenStatusKey: string;
-  deliveryStatusKey: string;
-  orderStatusKey: string;
-  discountOrFreeInfo: string;
-  isComboProduct: boolean;
-  productName: string;
-  subCategoryId: number;
-  subCategoryName: string;
-  categoryId: number;
-  categoryName: string;
-  modifiers: unknown[];
-  comboLines: unknown[];
-};
-
-type SalesOrderPayload = {
-  orderId: number;
-  orderNumber: string;
-  uniqueOrderRef: string;
-  shopId: number;
-  customerId: number;
-  salesPersonId: number;
-  salesSessionId: number;
-  orderType: string;
-  grossAmount: number;
-  totalLineTax: number;
-  orderLevelDiscount: number;
-  netAmount: number;
-  paymentStatus: string;
-  createdAt: string;
-  updatedAt: string;
-  appliedOfferId: number;
-  tableIds: unknown[];
-  tokenNumber: string;
-  orderNotes: string;
-  kitchenInstruction: string;
-  deliveryInstruction: string;
-  isSentToKitchen: boolean;
-  createdBy: number;
-  updatedBy: number;
-  posTerminalId: number;
-  taxPolicyId: number;
-  orderLevelTax: number;
-  shopUnitId: number;
-  customerName: string;
-  customerRef: string;
-  lines: SalesOrderLine[];
-  freeItems: unknown[];
-  orderStatusKey: string;
-  kitchenStatusKey: string;
-  deliveryStatusKey: string;
-};
-
 function toMoney(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -136,7 +191,7 @@ function safeName(v: unknown, fallback: string): string {
   return typeof v === "string" && v.trim() ? v : fallback;
 }
 
-function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
+function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderRequest {
   const createdAtIso = new Date(order.paidAt || Date.now()).toISOString();
   const lines: SalesOrderLine[] = [];
   let serial = 1;
@@ -165,12 +220,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: false,
+        modifiers: [],
         productName: safeName(activity.productName, safeName(activity.title, "Activity")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(activity.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -201,12 +256,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: Boolean(pkg.isComboProduct),
+        modifiers: [],
         productName: safeName(pkg.productName, safeName(pkg.title, "Package")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(pkg.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -234,12 +289,12 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
         orderStatusKey: "",
         discountOrFreeInfo: "No Discount",
         isComboProduct: Boolean(food.isComboProduct),
+        modifiers: [],
         productName: safeName(food.productName, safeName(food.title, "Food")),
         subCategoryId: 0,
         subCategoryName: "",
         categoryId: 0,
         categoryName: safeName(food.category, ""),
-        modifiers: [],
         comboLines: [],
       });
     }
@@ -253,6 +308,11 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
     ? `${firstEntry.holderDetails.firstName} ${firstEntry.holderDetails.lastName}`.trim()
     : "";
   const customerRef = firstEntry?.holderDetails.email?.trim() || "";
+  const hd = firstEntry?.holderDetails;
+  const bookingId =
+    typeof order.bookingId === "number" && Number.isFinite(order.bookingId) && order.bookingId > 0
+      ? order.bookingId
+      : 0;
 
   return {
     orderId: 0,
@@ -261,81 +321,74 @@ function mapOrderToSalesPayload(order: PaidOrderRecord): SalesOrderPayload {
     shopId: 1,
     customerId: 0,
     salesPersonId: 3,
-    salesSessionId: 61,
+    posSessionId: 61,
     orderType: "DineIn",
+    orderLevelDiscount: 0,
+    appliedOfferId: 0,
+    orderNotes: "",
+    posTerminalId: 1,
+    taxPolicyId: 2,
+    orderLevelTax: 0,
+    shopBrandMapId: 0,
+    shopUnitId_DEPRECATED: 0,
+    salesPersonName: "",
+    lines,
+    freeItems: [],
+    orderStatusKey: "",
+    payments: [],
+    billSplits: [],
     grossAmount,
     totalLineTax,
-    orderLevelDiscount: 0,
     netAmount,
     paymentStatus: "Paid",
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    appliedOfferId: 0,
     tableIds: [],
     tokenNumber: "",
-    orderNotes: "",
     kitchenInstruction: "",
     deliveryInstruction: "",
     isSentToKitchen: true,
     createdBy: 3,
     updatedBy: 3,
-    posTerminalId: 1,
-    taxPolicyId: 2,
-    orderLevelTax: 0,
-    shopUnitId: 2,
     customerName,
     customerRef,
-    lines,
-    freeItems: [],
-    orderStatusKey: "",
+    customer: {
+      customerId: 0,
+      customerCode: "",
+      firstName: hd?.firstName?.trim() ?? "",
+      lastName: hd?.lastName?.trim() ?? "",
+      phone: hd?.phone?.trim() ?? "",
+      email: hd?.email?.trim() ?? "",
+      city: "",
+      country: "",
+      isActive: true,
+      createdAt: createdAtIso,
+    },
+    shopName: "",
     kitchenStatusKey: "",
     deliveryStatusKey: "",
+    bookingId,
   };
 }
 
 /** POST booking order to booking engine sales order endpoint. */
 export async function saveOrderToBackend(order: PaidOrderRecord): Promise<{
   file: string;
-  orderId?: number;
-  orderNumber?: string;
-  uniqueOrderRef?: string;
-  tokenNumber?: string;
-  grossAmount?: number;
-  totalLineTax?: number;
-  netAmount?: number;
-  paymentStatus?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}> {
+} & SalesOrderResponse> {
   try {
     const payload = mapOrderToSalesPayload(order);
-    console.log("[saveOrderToBackend] sales order payload", payload);
-    const { data } = await bookingEngineUrlHttp.post<{
-      orderId?: number;
-      orderNumber?: string;
-      uniqueOrderRef?: string;
-      tokenNumber?: string;
-      grossAmount?: number;
-      totalLineTax?: number;
-      netAmount?: number;
-      paymentStatus?: string;
-      createdAt?: string;
-      updatedAt?: string;
-    }>("/api/SalesOrder", payload);
+    const { data } = await bookingEngineUrlHttp.post<SalesOrderResponse>(
+      "/api/SalesOrder",
+      payload
+    );
+    const orderId = data?.orderId;
+    const fullOrder =
+      typeof orderId === "number" && orderId > 0
+        ? await fetchSalesOrderById(orderId)
+        : null;
     return {
       file: "",
-      ...((data ?? {}) as {
-        orderId?: number;
-        orderNumber?: string;
-        uniqueOrderRef?: string;
-        tokenNumber?: string;
-        grossAmount?: number;
-        totalLineTax?: number;
-        netAmount?: number;
-        paymentStatus?: string;
-        createdAt?: string;
-        updatedAt?: string;
-      }),
+      ...((fullOrder ?? data ?? {}) as SalesOrderResponse),
     };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.data) {
